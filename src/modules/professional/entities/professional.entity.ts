@@ -1,6 +1,6 @@
-import { BaseEntity } from "src/common/entities/base-entity";
-import { type UUID } from "src/common/uuid";
-import { Account } from "src/modules/identity/entities/account";
+import { BaseEntity } from "@/common/entities/base-entity";
+import { type UUID } from "@/common/uuid";
+import { Account } from "@/modules/identity/entities/account.entity";
 
 type ProfessionalProps = {
   id: UUID;

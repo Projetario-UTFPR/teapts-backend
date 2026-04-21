@@ -1,5 +1,5 @@
-import { AggregateRoot } from "src/common/entities/aggregate-root";
-import { type UUID } from "src/common/uuid";
+import { AggregateRoot } from "@/common/entities/aggregate-root";
+import { type UUID } from "@/common/uuid";
 
 type MultidisciplinaryTeamProps = {
   id: UUID;

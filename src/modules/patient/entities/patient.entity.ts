@@ -1,6 +1,6 @@
-import { BaseEntity } from "src/common/entities/base-entity";
+import { BaseEntity } from "@/common/entities/base-entity";
 import { type SupportContact } from "../value-objects/support-contact.vo";
-import { Account } from "src/modules/identity/entities/account";
+import { Account } from "@/modules/identity/entities/account.entity";
 
 type PatientProps = {
   account: Account;
