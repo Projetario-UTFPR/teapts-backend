@@ -1,4 +1,4 @@
-import { Argon2HasherAndComparator } from "src/infra/argon2/hasher-and-comparator";
+import { Argon2HasherAndComparator } from "@/infra/argon2/hasher-and-comparator";
 import { randomBytes } from "node:crypto";
 
 describe("Hasher & HashComparator", () => {

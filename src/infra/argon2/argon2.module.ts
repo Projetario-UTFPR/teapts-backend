@@ -1,7 +1,7 @@
 import { Global, Module } from "@nestjs/common";
 import { Argon2HasherAndComparator } from "./hasher-and-comparator";
-import { Hasher } from "src/modules/crypto/hasher";
-import { HashComparator } from "src/modules/crypto/comparator";
+import { Hasher } from "@/modules/crypto/hasher";
+import { HashComparator } from "@/modules/crypto/comparator";
 
 @Global()
 @Module({

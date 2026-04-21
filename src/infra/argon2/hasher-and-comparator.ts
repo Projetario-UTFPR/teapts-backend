@@ -7,8 +7,8 @@
 
 import { Injectable } from "@nestjs/common";
 import * as argon2 from "argon2";
-import { HashComparator } from "src/modules/crypto/comparator";
-import { Hasher } from "src/modules/crypto/hasher";
+import { HashComparator } from "@/modules/crypto/comparator";
+import { Hasher } from "@/modules/crypto/hasher";
 
 @Injectable()
 export class Argon2HasherAndComparator implements Hasher, HashComparator {
