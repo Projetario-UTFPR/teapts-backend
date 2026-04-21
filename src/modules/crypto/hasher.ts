@@ -1,9 +1,9 @@
 export abstract class Hasher {
   /**
-   * Gera um hash seguro a partir de um texto puro.
+   * Generates a hash from `plainText`.
    *
-   * @param plainText O texto original a ser criptografado.
-   * @returns Uma Promise contendo a string do hash gerado.
+   * @param plainText the original content to be hashed
+   * @returns the hash originated from `plainText`
    */
   public abstract hash(plainText: string): Promise<string>;
 }
