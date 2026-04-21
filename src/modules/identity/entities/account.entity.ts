@@ -1,5 +1,5 @@
-import { BaseEntity } from "src/common/entities/base-entity";
-import { generateUUID, type UUID } from "src/common/uuid";
+import { BaseEntity } from "@/common/entities/base-entity";
+import { generateUUID, type UUID } from "@/common/uuid";
 
 type AccountProps = {
   id: UUID;
