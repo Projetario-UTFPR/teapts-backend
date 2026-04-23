@@ -27,6 +27,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "7.7.0",
     "@prisma/client": "7.7.0",
+    "argon2": "0.44.0",
     "dotenv": "17.4.2",
     "fp-ts": "^2.16.11",
     "pg": "8.20.0",
