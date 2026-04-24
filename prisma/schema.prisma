@@ -6,3 +6,69 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Account {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  lastUpdatedAt DateTime? @map("last_updated_at")
+  createdAt     DateTime  @default(now())
+
+  patientProfile       Patient?
+  professionalProfiles Professional[]
+
+  @@map("account")
+}
+
+model Patient {
+  accountId       String @id
+  supportContacts Json[]
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("patient")
+}
+
+model Professional {
+  id         String     @id @default(uuid())
+  specialism Specialism
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  leadingJourneys       TherapeuticJourney[]                            @relation("ResponsibleRelation")
+  journeysWhereIsMember ProfessionalParticipatingOnTherapeuticJourney[]
+
+  @@map("professional")
+}
+
+enum Specialism {
+  Psychologist    @map("psychologist")
+  Doctor          @map("doctor")
+  Physiotherapist @map("physiotherapist")
+
+  @@map("specialism_e")
+}
+
+model ProfessionalParticipatingOnTherapeuticJourney {
+  professionalId String       @map("professional_id")
+  professional   Professional @relation(fields: [professionalId], references: [id])
+
+  therapeuticJourneyId String             @map("therapeutic_journey_id")
+  therapeuticJourney   TherapeuticJourney @relation(fields: [therapeuticJourneyId], references: [id])
+
+  @@id([professionalId, therapeuticJourneyId])
+  @@map("professional_participating_on_therapeutic_journey")
+}
+
+model TherapeuticJourney {
+  id String @id @default(uuid())
+
+  responsibleProfessionalId String       @map("responsible_professional_id")
+  responsibleProfessional   Professional @relation(name: "ResponsibleRelation", fields: [responsibleProfessionalId], references: [id])
+
+  multidisciplinaryTeam ProfessionalParticipatingOnTherapeuticJourney[]
+
+  @@map("therapeutic_journey")
+}
