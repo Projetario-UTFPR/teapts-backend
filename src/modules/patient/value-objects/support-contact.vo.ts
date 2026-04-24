@@ -1,4 +1,4 @@
-import { ValueObject } from "@/common/entities/value-object";
+import { ValueObject } from "../../../common/entities/value-object";
 
 export class SupportContact extends ValueObject {
   public constructor(
