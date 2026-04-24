@@ -28,6 +28,7 @@
     "@prisma/adapter-pg": "7.7.0",
     "@prisma/client": "7.7.0",
     "dotenv": "17.4.2",
+    "dotenv-expand": "13.0.0",
     "fp-ts": "^2.16.11",
     "pg": "8.20.0",
     "reflect-metadata": "^0.2.2",
