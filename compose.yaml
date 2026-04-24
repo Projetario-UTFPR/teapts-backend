@@ -1,6 +1,6 @@
 services:
-  platform_db:
-    container_name: teapts_backend_bd
+  db:
+    container_name: teapts_backend_db
     image: postgres:18
     environment:
       - POSTGRES_USER=${DB_USER}
@@ -9,7 +9,7 @@ services:
     ports:
       - ${DB_PORT}:5432
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - tea_pts_db:/var/lib/postgresql
 
 volumes:
-  pg_data:
+  tea_pts_db:
