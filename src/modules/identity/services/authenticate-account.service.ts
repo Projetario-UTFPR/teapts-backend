@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { HashComparator } from "src/modules/crypto/comparator";
 import { AccountsRepository } from "../repositories/accounts.repository";
 import { pipe } from "fp-ts/lib/function";
 import { either as e, taskEither as te } from "fp-ts";
 import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
-import { ResourceNotFoundError } from "src/common/errors/resource-not-found.error";
 import { Account } from "../entities/account";
+import { HashComparator } from "@/modules/crypto/comparator";
+import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
 
 type Params = {
   email: string;
