@@ -1,0 +1,15 @@
+services:
+  db:
+    container_name: teapts_backend_db
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - tea_pts_db:/var/lib/postgresql
+
+volumes:
+  tea_pts_db:
