@@ -53,25 +53,25 @@ objeto agregador.
 
 ### Services
 
-Services (serviços) são unidades que se comunicam somente na lingua de domínio: eles não conhecem DTOs, presenters,
+Services (serviços) são unidades que se comunicam somente na lingua de domínio: eles não conhecem [DTOs], presenters,
 controllers, nada que esteja acima deles.
 
 Serviços orquestram comandos e manipulam entidades para performar uma ação, garantindo que o estado do sistema seja
 sempre válido e que as regras de negócio prevaleçam.
 
-Esses **nunca** acessam estruturas fora do domínio (por exemplo, DTOs), e portanto, são ineficientes para
+Esses **nunca** acessam estruturas fora do domínio (por exemplo, [DTOs]), e portanto, são ineficientes para
 buscar dados completos para leitura.
 
 ### Queries
 
-Queries são complementos dos repositórios: elas são responsáveis por reunir os dados necessários para montar DTOs.
+Queries são complementos dos repositórios: elas são responsáveis por reunir os dados necessários para montar [DTOs].
 Não criam nem modificam dados, mas leem de várias fontes.
 
 ### Query Handler
 
 Query handlers, assim como services, podem executar regras de negócio (por exemplo, para garantir que o requisitante
 tenha realmente acesso ao recurso requisitado), e, logo, também utilizam repositórios. Entretanto, em contraste
-aos services, query handlers lidam com dados fora do domínio: os DTOs.
+aos services, query handlers lidam com dados fora do domínio: os [DTOs].
 
 Essas unidades são responsáveis pela lógica necessária para obter um dado de leitura completo de uma ou mais
 entidades/agregações do domínio.
@@ -80,16 +80,19 @@ Um query handler **nunca** cria ou modifica um dado, apenas visualiza.
 
 ### Presenters
 
-Presenters são responsáveis por restringir quais dados de um DTO devem ser visíveis dado algum contexto. Eles realizam
+Presenters são responsáveis por restringir quais dados de um [DTO] devem ser visíveis dado algum contexto. Eles realizam
 a transformação final dos dados.
 
-> Por exemplo: uma prévia de uma trajetória terapêutica não precisa conter todos os dados de um DTO de trajetória
+> Por exemplo: uma prévia de uma trajetória terapêutica não precisa conter todos os dados de um [DTO] de trajetória
 > terapêutica, naturalmente.
 
-Assim como DTOs, esses não performam nenhuma operação e servem como uma sacola de dados prontas para ser exibidos
+Assim como [DTOs], esses não performam nenhuma operação e servem como uma sacola de dados prontas para ser exibidos
 para o usuário final.
 
 ### Controllers
 
 Estão na camada de saída (gateway): recebem as requisições HTTP e utilizam de todos os recursos acima para
 efetuar uma operação ou obter uma estrutura pronta para apresentar para o usuário final.
+
+[DTO]: ./dtos.md
+[DTOs]: ./dtos.md
