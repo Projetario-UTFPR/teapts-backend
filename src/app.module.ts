@@ -8,6 +8,7 @@ import { PrismaModule } from "@/infra/prisma/prisma.module";
 import { IdentityModule } from "@/modules/identity/identity.module";
 import { ConfigModule } from "@nestjs/config";
 import datastoreConfig from "@/configs/datastore.config";
+import { AuthModule } from "@/infra/auth/auth.module";
 import appConfig from "@/configs/app.config";
 import keysetConfig from "@/configs/keyset.config";
 
@@ -19,6 +20,7 @@ import keysetConfig from "@/configs/keyset.config";
     ValidationProviderModule,
     PrismaModule,
     IdentityModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
