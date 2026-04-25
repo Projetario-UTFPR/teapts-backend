@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 import { InvalidArgumentError } from "@/common/errors/invalid-argument.error";
-import { ValidationErrorsBag } from "@/infra/http/validation/validation-errors-bag.error";
+import { ValidationErrorsBag } from "@/common/errors/validation-errors-bag.error";
 
 export function mapZodErrorsToValidationErrors(errors: ZodError) {
   const validationErrors = new ValidationErrorsBag();

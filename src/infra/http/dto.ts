@@ -1,4 +1,4 @@
-import { ValidationErrorsBag } from "@/infra/http/validation/validation-errors-bag.error";
+import { ValidationErrorsBag } from "@/common/errors/validation-errors-bag.error";
 import { Either } from "fp-ts/lib/Either";
 
 export interface DTO {
