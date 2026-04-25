@@ -15,9 +15,9 @@ describe("serializeValidationErrors", () => {
     expect(result).toMatchObject({
       some: {
         nested: {
-          arg: [{ message: "error 1", field: "arg" }],
+          arg: ["error 1"],
         },
-        arg: [{ message: "error 1", field: "arg" }],
+        arg: ["error 1"],
       },
     });
   });
@@ -28,6 +28,6 @@ describe("serializeValidationErrors", () => {
     };
 
     const result = serializeValidationErrorsBag(errorsMap) as any;
-    expect(result.a.b.c.d[0].message).toBe("deep");
+    expect(result.a.b.c.d[0]).toBe("deep");
   });
 });
