@@ -1,6 +1,7 @@
 import type { HttpRequest } from "@/infra/http";
 import { ValidationInterceptor } from "@/infra/http/validation-provider/interceptor";
-import { HttpStatus, SetMetadata, ValidationPipe } from "@nestjs/common";
+import { ValidationPipe } from "@/infra/http/validation-provider/pipe";
+import { HttpStatus, SetMetadata } from "@nestjs/common";
 
 const METADATA_KEY = "coreValidationErrorConfig";
 const HANDLER_KEY = "__handler_core_validation_error_config";
@@ -12,7 +13,7 @@ export type ValidationConfig = {
   status?: HttpStatus;
 };
 
-export const ConfigCoreValidation = (config: ValidationConfig) => {
+export const ConfigValidation = (config: ValidationConfig) => {
   return SetMetadata(METADATA_KEY, config);
 };
 
@@ -25,7 +26,7 @@ function getConfigsFromRequest(request: HttpRequest): ValidationConfig {
 }
 
 export default {
-  Config: ConfigCoreValidation,
+  Config: ConfigValidation,
   Pipe: ValidationPipe,
   Interceptor: ValidationInterceptor,
   metadataKey: METADATA_KEY,

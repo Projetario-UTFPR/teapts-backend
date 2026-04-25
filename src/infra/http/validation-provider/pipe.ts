@@ -1,18 +1,26 @@
-import { ArgumentMetadata, Injectable, Paramtype, PipeTransform, Req, Scope } from "@nestjs/common";
+import {
+  ArgumentMetadata,
+  Inject,
+  Injectable,
+  Paramtype,
+  PipeTransform,
+  Scope,
+} from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { either } from "fp-ts";
 import coreValidation from ".";
 import { type HttpRequest } from "@/infra/http";
 import { DTO } from "@/infra/http/dto";
 import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation/exception";
+import { REQUEST } from "@nestjs/core";
 
 /**
  * Validates the body parameter (decorated with `@Body()`).
  * The body value must be an instance of some class which implements the `DTO` interface.
  */
 @Injectable({ scope: Scope.REQUEST })
-export class CoreValidationPipe implements PipeTransform {
-  public constructor(@Req() private readonly request: HttpRequest) {}
+export class ValidationPipe implements PipeTransform {
+  public constructor(@Inject(REQUEST) readonly request: HttpRequest) {}
 
   transform(value: unknown, metadata: ArgumentMetadata) {
     const workableTypes: Paramtype[] = ["body", "query", "param"];
