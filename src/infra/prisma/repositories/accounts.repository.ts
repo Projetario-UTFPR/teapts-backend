@@ -1,6 +1,6 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { PrismaService } from "@/infra/prisma/prisma";
-import { Account } from "@/modules/identity/entities/account.entity";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
 import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
 import { Injectable } from "@nestjs/common";

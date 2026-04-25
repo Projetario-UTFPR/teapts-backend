@@ -5,7 +5,7 @@ import { either as e, taskEither as te } from "fp-ts";
 import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
 import { HashComparator } from "@/modules/crypto/comparator";
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
-import { Account } from "@/modules/identity/entities/account.entity";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 
 type Params = {
   email: string;

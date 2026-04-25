@@ -1,7 +1,7 @@
 import { Either } from "fp-ts/lib/Either";
 import { AccountNotFoundError } from "../errors/account-not-found.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
-import { Account } from "@/modules/identity/entities/account.entity";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 
 export abstract class AccountsRepository {
   public abstract findAccountByEmail(
