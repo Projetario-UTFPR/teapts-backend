@@ -1,3 +1,4 @@
+import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { LoginDto } from "@/modules/identity/dtos/login.dto";
 import { AuthenticateAccountService } from "@/modules/identity/services/authenticate-account.service";
 import { Body, Controller, Post } from "@nestjs/common";
@@ -16,10 +17,7 @@ export class SessionsController {
           email: loginDto.email,
           plainPassword: loginDto.password,
         }),
-      taskEither.getOrElse((error) => {
-        console.log(error as Error);
-        throw error as Error;
-      }),
+      taskEither.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }
