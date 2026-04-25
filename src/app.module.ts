@@ -8,10 +8,12 @@ import { PrismaModule } from "@/infra/prisma/prisma.module";
 import { IdentityModule } from "@/modules/identity/identity.module";
 import { ConfigModule } from "@nestjs/config";
 import datastoreConfig from "@/configs/datastore.config";
+import appConfig from "@/configs/app.config";
+import keysetConfig from "@/configs/keyset.config";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [datastoreConfig] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [datastoreConfig, appConfig, keysetConfig] }),
     Argon2Module,
     ExceptionsModule,
     ValidationProviderModule,
