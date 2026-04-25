@@ -87,3 +87,16 @@ export class LoginDto extends DTO implements LoginSchema {
   // ...
 }
 ```
+
+### Utilizando DTOs
+
+```ts
+@Controller()
+export class SessionsController {
+  @Post("login")
+  public async login(@Body() loginDto: LoginDto): string {
+    const { email, password } = loginDto;
+    // ...
+  }
+}
+```
