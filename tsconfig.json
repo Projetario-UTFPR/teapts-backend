@@ -22,8 +22,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": ["./src/*"] 
+      "@/*": ["./src/*"],
+      "@prisma-gen/*": ["./prisma/generated/*"]
     },
     "types": ["node", "vitest/globals"]
-  },
+  }
 }

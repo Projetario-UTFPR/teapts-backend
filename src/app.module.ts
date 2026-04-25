@@ -6,9 +6,18 @@ import { ExceptionsModule } from "@/infra/http/exceptions/exceptions.module";
 import { ValidationProviderModule } from "@/infra/http/validation-provider/validation-provider.module";
 import { PrismaModule } from "@/infra/prisma/prisma.module";
 import { IdentityModule } from "@/modules/identity/identity.module";
+import { ConfigModule } from "@nestjs/config";
+import datastoreConfig from "@/configs/datastore.config";
 
 @Module({
-  imports: [Argon2Module, PrismaModule, IdentityModule, ExceptionsModule, ValidationProviderModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, load: [datastoreConfig] }),
+    Argon2Module,
+    ExceptionsModule,
+    ValidationProviderModule,
+    PrismaModule,
+    IdentityModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
