@@ -1,4 +1,4 @@
-import { Professional } from "@/modules/professional/entities/professional.entity";
+import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { $Enums, Prisma } from "@prisma-gen/browser";
 
 function specialismFromPrisma(specialism: $Enums.Specialism) {
