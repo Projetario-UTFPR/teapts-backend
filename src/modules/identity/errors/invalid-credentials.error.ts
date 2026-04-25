@@ -1,4 +1,4 @@
-import { UnauthorizedError } from "src/common/errors/unauthorized.error";
+import { UnauthorizedError } from "@/common/errors/unauthorized.error";
 
 export class InvalidCredentialsError extends UnauthorizedError {
   public constructor() {
