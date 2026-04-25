@@ -1,14 +1,25 @@
-import { BaseEntity } from "@/common/entities/base-entity";
-import { type UUID } from "@/common/uuid";
-import { Account } from "@/modules/identity/entities/account.entity";
+import { AggregateRoot } from "@/common/entities/aggregate-root";
+import { generateUUID, type UUID } from "@/common/uuid";
 
 type ProfessionalProps = {
   id: UUID;
-  account: Account;
+  accountId: UUID;
   specialism: Professional.Specialism;
 };
 
-export class Professional extends BaseEntity<ProfessionalProps> {
+export class Professional extends AggregateRoot<ProfessionalProps> {
+  public static create(props: Omit<ProfessionalProps, "id">) {
+    return new this({ ...props, id: generateUUID() });
+  }
+
+  public static createUnchecked(props: ProfessionalProps) {
+    return new this(props);
+  }
+
+  public getId() {
+    return this._props.id;
+  }
+
   public equals(other: Professional): boolean {
     return this._props.id === other._props.id;
   }
@@ -16,8 +27,8 @@ export class Professional extends BaseEntity<ProfessionalProps> {
 
 export namespace Professional {
   export enum Specialism {
-    Therapist = "therapist",
+    Doctor = "doctor",
     Psychologist = "psychologist",
-    Psychiatrist = "psychiatrist",
+    Physiotherapist = "physiotherapist",
   }
 }
