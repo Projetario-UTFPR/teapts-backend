@@ -5,4 +5,4 @@ de códigos existentes, bem como as ferramentas utilizadas. Nesse guia, você ap
 ambiente de desenvolvimento, descobrirá com quais tecnologias estará em contato e aprenderá como o sistema
 está estruturado.
 
-- [Objetos e Arquitetura](./objetos-e-arquitetura.md)
+- [Objetos (de domínio) e Arquitetura](./objetos-e-arquitetura.md)
