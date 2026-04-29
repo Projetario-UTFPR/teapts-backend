@@ -4,25 +4,28 @@ import { type ConfigType } from "@nestjs/config";
 import { JwtVerifyOptions, type JwtSignOptions } from "@nestjs/jwt";
 
 export function getJwtOptions(
-  config: ConfigType<typeof keysetConfig>,
+  keyset: ConfigType<typeof keysetConfig>,
   app: ConfigType<typeof appConfig>,
   expiresIn: JwtSignOptions["expiresIn"] = "1h",
 ) {
+  // we don't put the private, public key nor any secret here because we've configured it all
+  // in the JwtModule.registerAsync() in the AuthModule already.
+  //
+  // defining them here will cause NestJS to throw an error.
+
   const signOptions = {
     algorithm: "RS256",
     issuer: app.APP_URL,
-    audience: app.APP_AUDIENCE,
     expiresIn,
-    privateKey: Buffer.from(config.JWT_PRIVATE_KEY, "base64"),
+    ...(keyset.JWT_AUDIENCE ? { audience: keyset.JWT_AUDIENCE } : {}),
   } satisfies JwtSignOptions;
 
   const verifyOptions = {
     algorithms: ["RS256"],
     issuer: app.APP_URL,
-    audience: app.APP_AUDIENCE,
-    publicKey: Buffer.from(config.JWT_PUBLIC_KEY, "base64"),
     maxAge: expiresIn,
     ignoreExpiration: false,
+    ...(keyset.JWT_AUDIENCE ? { audience: keyset.JWT_AUDIENCE } : {}),
   } satisfies JwtVerifyOptions;
 
   return { signOptions, verifyOptions } as const;
