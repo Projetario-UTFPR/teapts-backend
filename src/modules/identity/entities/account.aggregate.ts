@@ -20,6 +20,10 @@ export class Account extends AggregateRoot<AccountProps> {
     return new this({ ...props, id: generateUUID(), createdAt: new Date() });
   }
 
+  public static createUnchecked(props: AccountProps) {
+    return new this(props);
+  }
+
   public getId() {
     return this._props.id;
   }
