@@ -1,9 +1,9 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
-import { Professional } from "@/modules/professional/entities/professional.entity";
+import { type UUID } from "@/common/uuid";
 
 type TherapeuticJourneyProps = {
-  responsibleProfessional: Professional;
-  multidisciplinaryTeam: Professional[];
+  responsibleProfessionalId: UUID;
+  multidisciplinaryTeamIds: UUID[];
 };
 
 export class TherapeuticJourney extends AggregateRoot<TherapeuticJourneyProps> {}

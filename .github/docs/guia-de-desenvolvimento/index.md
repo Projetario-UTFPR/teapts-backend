@@ -6,3 +6,4 @@ ambiente de desenvolvimento, descobrirá com quais tecnologias estará em contat
 está estruturado.
 
 - [Objetos (de domínio) e Arquitetura](./objetos-e-arquitetura.md)
+- [Configuração do Ambiente de Desenvolvimento](./configurações-do-ambiente.md)
