@@ -3,7 +3,7 @@ import { Public } from "@/infra/auth/decorators/public-route";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { LoginDto } from "@/modules/identity/dtos/login.dto";
 import { AuthenticateAccountService } from "@/modules/identity/services/authenticate-account.service";
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
