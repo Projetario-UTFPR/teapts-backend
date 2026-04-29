@@ -25,7 +25,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       return result instanceof Observable ? await firstValueFrom(result) : await result;
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        const unauthorizedError = new UnauthorizedError({ message: "Você não está autorizado." });
+        const unauthorizedError = new UnauthorizedError();
         exceptionsFactory.fromError(unauthorizedError);
       }
 
