@@ -10,6 +10,8 @@ import { taskEither as te } from "fp-ts";
 import { ProfessionalsRepository } from "@/modules/professional/professionals.repository";
 import { AuthCollection } from "@/infra/auth/auth-collection";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
+import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
+import { UnauthorizedError } from "@/common/errors/unauthorized.error";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -39,6 +41,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       te.map(
         ({ account, professionalProfiles }) => new AuthCollection(account, professionalProfiles),
       ),
+      te.mapLeft((error) => {
+        if (error instanceof IrrecoverableError) return error;
+        return new UnauthorizedError();
+      }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
