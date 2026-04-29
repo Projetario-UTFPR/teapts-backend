@@ -4,13 +4,14 @@ import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { JwtStrategy } from "@/infra/auth/jwt/strategy";
 import { getJwtOptions } from "@/infra/auth/jwt/sign-options";
 import { IdentityModule } from "@/modules/identity/identity.module";
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { type ConfigType } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "@/infra/auth/jwt/guard";
 
+@Global()
 @Module({
   imports: [
     IdentityModule,
