@@ -1,4 +1,5 @@
 import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation/exception";
+import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { serializeValidationErrorsBag } from "@/infra/http/exceptions/validation/serialize-validation-errors";
 import { ArgumentsHost, Catch, ExceptionFilter, Injectable, Scope } from "@nestjs/common";
 
@@ -13,6 +14,6 @@ export class ValidationErrorsBagExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const status = exception.getStatus();
     const errors = serializeValidationErrorsBag(exception.validationErrors.getErrors());
-    return ctx.getResponse().status(status).json({ errors, status });
+    return ctx.getResponse().status(status).json(new ValidationErrorBagPresenter({ errors }));
   }
 }

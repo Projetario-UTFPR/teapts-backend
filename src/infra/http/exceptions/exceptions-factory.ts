@@ -5,6 +5,7 @@ import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
 import { UnauthorizedError } from "@/common/errors/unauthorized.error";
 import { ValidationErrorsBag } from "@/common/errors/validation-errors-bag.error";
+import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation/exception";
 import {
   BadRequestException,
@@ -19,8 +20,8 @@ const internalServerErrorMessage =
 
 function fromError(error: BaseError | ValidationErrorsBag): never {
   if (error instanceof UnauthorizedError) {
-    const { message, cause } = error;
-    throw new UnauthorizedException({ message }, { cause });
+    const { cause } = error;
+    throw new UnauthorizedException(BasicExceptionPresenter.present(error), { cause });
   }
 
   if (error instanceof InvalidArgumentError) {
@@ -47,7 +48,8 @@ function fromError(error: BaseError | ValidationErrorsBag): never {
   }
 
   console.error("An unexpected error occurred and was not properly handled.", { cause: error });
-  throw new InternalServerErrorException({ message: internalServerErrorMessage });
+  const internalError = BasicExceptionPresenter.present({ message: internalServerErrorMessage });
+  throw new InternalServerErrorException(internalError);
 }
 
 export default {

@@ -1,6 +1,7 @@
 import { DTO } from "@/infra/http/dto";
 import { ConfigValidation } from "@/infra/http/validation-provider";
 import { HttpStatus } from "@nestjs/common";
+import { ApiProperty } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
 import z from "zod";
 
@@ -15,9 +16,11 @@ type LoginSchema = z.infer<typeof schema>;
 export class LoginDto extends DTO implements LoginSchema {
   protected schema = schema;
 
+  @ApiProperty({ description: "The account's registered e-mail address." })
   @Expose()
   public readonly email!: string;
 
+  @ApiProperty({ description: "The account's password." })
   @Expose()
   public readonly password!: string;
 }
