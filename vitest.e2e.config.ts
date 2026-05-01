@@ -9,7 +9,7 @@ export default defineConfig({
     include: ["**/*.e2e-spec.ts"],
     globals: true,
     root: "./",
-    // setupFiles: ["./test/test-e2e.ts"],
+    setupFiles: ["./test/setup-e2e.ts"],
     testTimeout: 40000,
   },
   resolve: {
