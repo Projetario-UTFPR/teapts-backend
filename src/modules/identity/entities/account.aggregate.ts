@@ -77,7 +77,19 @@ export class Account extends AggregateRoot<AccountProps> {
     return this === other || this._props.id === other._props.id;
   }
 
+  public getCreatedAt() {
+    return this._props.createdAt;
+  }
+
+  public getLastUpdatedAt() {
+    return this._props.lastUpdatedAt;
+  }
+
   private touch() {
     this._props.lastUpdatedAt = new Date();
   }
+}
+
+export namespace Account {
+  export type Props = AccountProps;
 }
