@@ -3,6 +3,17 @@ import { Prisma } from "@prisma-gen/client";
 
 type RawAccount = Prisma.AccountModel & { professionalProfiles: { id: string }[] };
 
+function intoPrisma(account: Account): Prisma.AccountCreateArgs["data"] {
+  return {
+    id: account.getId().toString(),
+    email: account.getEmail(),
+    name: account.getName(),
+    passwordHash: account.getPasswordHash(),
+    lastUpdatedAt: account.getLastUpdatedAt(),
+    createdAt: account.getCreatedAt(),
+  };
+}
+
 function fromPrisma(raw: RawAccount) {
   return Account.createUnchecked({
     id: raw.id,
@@ -15,4 +26,4 @@ function fromPrisma(raw: RawAccount) {
   });
 }
 
-export default { fromPrisma };
+export default { intoPrisma, fromPrisma };
