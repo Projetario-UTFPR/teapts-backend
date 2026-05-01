@@ -41,12 +41,26 @@ configurar o código HTTP que deve ser retornado diante de um erro de validaçã
 Ele pode ser aplicado sobre DTOs, _controllers_ ou _handlers_ específicos. Por padrão, o código
 HTTP `422` (_Unprocessable Entity_) é utilizado.
 
+## Swagger
+
+Os DTOs são utilizados pelo Swagger para documentar as entradas esperadas por cada _endpoint_. Para
+que eles possam ser utilizados, todas as propriedades também devem ser decoradas com `@ApiProperty()`.
+
+Procure fornecer uma descrição para a propriedade (em inglês) e, quando possível, um exemplo. (Se
+a propriedade é um texto localizado, forneça exemplos em português.) Outras configurações podem ser
+aplicadas para uma propriedade.
+
+Confira: [Tipos & Parâmetros (NestJS - Swagger)]
+
+[Tipos & Parâmetros (NestJS - Swagger)]: https://docs.nestjs.com/openapi/types-and-parameters
+
 ## Exemplo
 
 ### DTO Simples
 
 ```ts
 import { DTO } from "@/infra/http/dto";
+import { ApiProperty } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
 import z from "zod";
 
@@ -60,9 +74,11 @@ type LoginSchema = z.infer<typeof schema>;
 export class LoginDto extends DTO implements LoginSchema {
   protected schema = schema;
 
+  @ApiProperty({ description: "The account's registered e-mail address." })
   @Expose()
   public readonly email!: string;
 
+  @ApiProperty({ description: "The account's password." })
   @Expose()
   public readonly password!: string;
 }
