@@ -12,6 +12,6 @@ import { PrismaProfessionalsRepository } from "@/infra/prisma/repositories/profe
     { provide: AccountsRepository, useClass: PrismaAccountsRepository },
     { provide: ProfessionalsRepository, useClass: PrismaProfessionalsRepository },
   ],
-  exports: [AccountsRepository, ProfessionalsRepository],
+  exports: [PrismaService, AccountsRepository, ProfessionalsRepository],
 })
 export class PrismaModule {}
