@@ -23,7 +23,8 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["./src/*"],
-      "@prisma-gen/*": ["./prisma/generated/*"]
+      "@prisma-gen/*": ["./prisma/generated/*"],
+      "@test/*": ["./test/*"]
     },
     "types": ["node", "vitest/globals"]
   }
