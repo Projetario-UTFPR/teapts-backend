@@ -80,14 +80,15 @@ Um query handler **nunca** cria ou modifica um dado, apenas visualiza.
 
 ### Presenters
 
-Presenters são responsáveis por restringir quais dados de um [DTO] devem ser visíveis dado algum contexto. Eles realizam
-a transformação final dos dados.
+Presenters são responsáveis por restringir quais dados de um [DTO] devem ser visíveis dado algum contexto. Eles
+realizam a transformação final dos dados.
 
 > Por exemplo: uma prévia de uma trajetória terapêutica não precisa conter todos os dados de um [DTO] de trajetória
 > terapêutica, naturalmente.
 
-Assim como [DTOs], esses não performam nenhuma operação e servem como uma sacola de dados prontas para ser exibidos
-para o usuário final.
+Veja mais detalhes sobre _presenters_ em seu [documento específico].
+
+[documento específico]: ./presenters.md
 
 ### Controllers
 
