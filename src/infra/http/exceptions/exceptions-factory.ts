@@ -1,3 +1,4 @@
+import { BadRequestError } from "@/common/errors/bad-request.error";
 import { BaseError } from "@/common/errors/base.error";
 import { InvalidArgumentError } from "@/common/errors/invalid-argument.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
@@ -39,6 +40,10 @@ function fromError(error: BaseError | ValidationErrorsBag): never {
 
   if (error instanceof ResourceNotFoundError) {
     throw new NotFoundException({ message: error.message }, { cause: error });
+  }
+
+  if (error instanceof BadRequestError) {
+    throw new BadRequestException({ message: error.message });
   }
 
   console.error("An unexpected error occurred and was not properly handled.", { cause: error });
