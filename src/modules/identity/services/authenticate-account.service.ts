@@ -3,9 +3,9 @@ import { AccountsRepository } from "../repositories/accounts.repository";
 import { pipe } from "fp-ts/lib/function";
 import { either as e, taskEither as te } from "fp-ts";
 import { InvalidCredentialsError } from "../errors/invalid-credentials.error";
-import { Account } from "../entities/account";
 import { HashComparator } from "@/modules/crypto/comparator";
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 
 type Params = {
   email: string;
@@ -19,11 +19,11 @@ export class AuthenticateAccountService {
     private readonly accountsRepo: AccountsRepository,
   ) {}
 
-  public async execute({ email, plainPassword }: Params) {
+  public execute({ email, plainPassword }: Params) {
     return pipe(
       this.findAccount(email),
       te.chainFirstW((account) => this.verifyPassword(account, plainPassword)),
-    );
+    )();
   }
 
   private findAccount(email: string) {

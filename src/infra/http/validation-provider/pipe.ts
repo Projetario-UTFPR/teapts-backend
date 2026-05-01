@@ -13,6 +13,8 @@ import { type HttpRequest } from "@/infra/http";
 import { DTO } from "@/infra/http/dto";
 import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation/exception";
 import { REQUEST } from "@nestjs/core";
+import { BadRequestError } from "@/common/errors/bad-request.error";
+import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 
 /**
  * Validates the body parameter (decorated with `@Body()`).
@@ -38,6 +40,16 @@ export class ValidationPipe implements PipeTransform {
       typeof metadata.metatype.prototype.validate === "function";
 
     if (!isDtoCompliant) return value;
+
+    // `isDtoCompliant` is not actually important here, but it enforces that this boolean is only
+    // meaningful after we prooved value is DTO compliant
+    const isDtoButItsNull = isDtoCompliant && (typeof value === "undefined" || value === null);
+
+    if (isDtoButItsNull) {
+      const message =
+        "O corpo da requisição recebido é inválido. Esperava um objeto JSON, mas nenhum corpo foi recebido.";
+      exceptionsFactory.fromError(new BadRequestError({ message }));
+    }
 
     const valueAsInstanceOfADto: DTO = plainToInstance(metadata.metatype, value, {
       excludeExtraneousValues: true,
