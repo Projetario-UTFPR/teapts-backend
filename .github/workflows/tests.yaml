@@ -1,0 +1,47 @@
+name: Tests Suits
+
+on:
+  workflow_call:
+    secrets:
+      JWT_PRIVATE_KEY:
+        required: true
+      JWT_PUBLIC_KEY:
+        required: true
+
+jobs:
+  unit_tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+      JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run test
+
+  e2e_tests:
+    name: Run End-to-End Tests
+    runs-on: ubuntu-latest
+    env:
+      JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+      JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Copy Env Vars
+        run: cp .env.sample .env
+
+      - name: Run Tests
+        run: |
+          npm ci
+          npm run test:e2e
