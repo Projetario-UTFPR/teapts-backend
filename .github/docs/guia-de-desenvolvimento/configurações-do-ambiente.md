@@ -21,12 +21,12 @@ O template de variáveis de ambientes é encontrado no arquivo [`.env.sample`](/
 Contudo, a fim de evitar eventuais problemas de segurança, variáveis sensíveis devem ser
 configuradas manualmente mesmo em ambiente de desenvolvimento.
 
-1. Copie as variáveis de ambiente localmente (`cp .env.sample .env`).
+1. Copie o template de variáveis de ambiente (`cp .env.sample .env`).
 2. Gere as chaves pública e privada SHA256, utilizadas para assinar e validar JWTs:
-   - Utilize o script `node scripts/gen-keys.mjs`.
+   - Execute o script `node scripts/gen-keys.mjs`.
    - Copie a chave privada e cole como valor da variável de ambiente `JWT_PRIVATE_KEY`
      (`.env`).
-   - Copie a chave pública e cole como valor da variável de ambiente `JWT_PRIVATE_KEY`
+   - Copie a chave pública e cole como valor da variável de ambiente `JWT_PUBLIC_KEY`
      (`.env`).
 
 Sinta-se a vontade para modificar outras variáveis conforme julgar necessário.

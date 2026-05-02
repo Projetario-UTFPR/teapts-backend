@@ -32,6 +32,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig, swaggerOptions);
   SwaggerModule.setup("/api-docs/v1", app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(appConfigs.PORT);
 }
 bootstrap();
