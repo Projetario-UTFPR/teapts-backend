@@ -6,7 +6,9 @@ const schema = z.object({
   APP_URL: z.url("URL must be a valid URL string."),
   APP_VERSION: z.string().optional(),
   PORT: z.coerce.number().default(3000),
-  NODE_ENV: z.enum(["development", "production"]).default("development"),
+  NODE_ENV: z
+    .preprocess((value) => value || undefined, z.enum(["development", "production", "test"]))
+    .default("production"),
 });
 
 export default registerAs("app", () => schema.parse(process.env));
