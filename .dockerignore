@@ -1,0 +1,11 @@
+.github/
+.vscode/
+.dockerignore
+.git
+node_modules/
+test/
+npm-debug.log
+Dockerfile
+docker-compose*
+README.md
+vitest.*.config.ts
