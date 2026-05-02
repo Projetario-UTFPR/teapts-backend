@@ -10,6 +10,30 @@ services:
       - ${DB_PORT}:5432
     volumes:
       - tea_pts_db:/var/lib/postgresql
+    networks:
+      - app
+
+  app:
+    container_name: teapts_backend
+    build:
+      context: .
+    image: teapts-backend
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+    networks:
+      - app
+    profiles:
+      - full
 
 volumes:
   tea_pts_db:
+
+networks:
+  app:
