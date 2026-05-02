@@ -8,13 +8,15 @@ on:
       JWT_PUBLIC_KEY:
         required: true
 
+env:
+  JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+  JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+  NODE_ENV: test
+
 jobs:
   unit_tests:
     name: Run Unit Tests
     runs-on: ubuntu-latest
-    env:
-      JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-      JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,9 +30,6 @@ jobs:
   e2e_tests:
     name: Run End-to-End & Integration Tests
     runs-on: ubuntu-latest
-    env:
-      JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-      JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,13 +37,14 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Install Dependencies
+        run: npm ci
+
       - name: Copy Env Vars
         run: cp .env.sample .env
 
       - name: Generate Prisma Client
-        run: |
-          npm ci
-          npx prisma generate
+        run: npx prisma generate
 
       - name: Run Tests
         run: npm run test:e2e
