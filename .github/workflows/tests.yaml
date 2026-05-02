@@ -26,7 +26,7 @@ jobs:
       - run: npm run test
 
   e2e_tests:
-    name: Run End-to-End Tests
+    name: Run End-to-End & Integration Tests
     runs-on: ubuntu-latest
     env:
       JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
@@ -41,7 +41,10 @@ jobs:
       - name: Copy Env Vars
         run: cp .env.sample .env
 
-      - name: Run Tests
+      - name: Generate Prisma Client
         run: |
           npm ci
-          npm run test:e2e
+          npx prisma generate
+
+      - name: Run Tests
+        run: npm run test:e2e
