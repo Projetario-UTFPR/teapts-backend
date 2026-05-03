@@ -15,7 +15,8 @@ RUN npm run build
 # remove dev-dependencies, now they are no longer needed
 # we can't do this before (let alone run npm ci --omit=dev above), since this
 # step needs typescript and other develpoment build-tools dependencies.
-RUN npm prune --omit=dev
+RUN rm -rf node_modules
+RUN npm ci --omit=dev
 
 FROM node:24 AS prod
 
