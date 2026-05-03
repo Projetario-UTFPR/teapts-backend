@@ -1,13 +1,11 @@
 import { DTO } from "@/infra/http/dto";
-import { ConfigValidation } from "@/infra/http/validation-provider";
-import { HttpStatus } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
 import z from "zod";
 
 const schema = z.object({
   email: z.email({ error: "O e-mail fornecido é inválido." }),
-  username: z
+  name: z
     .string({
       error: "O nome do usuário é um campo obrigatório e precisa ser um texto.",
     })
@@ -30,9 +28,13 @@ export class SignUpDto extends DTO implements SignUpSchema {
 
   @ApiProperty({ description: "The account's user name." })
   @Expose()
-  public readonly username!: string;
+  public readonly name!: string;
 
   @ApiProperty({ description: "The account's password." })
   @Expose()
   public readonly password!: string;
+}
+
+export namespace SignUpDto {
+  export type Type = SignUpSchema;
 }
