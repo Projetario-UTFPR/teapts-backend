@@ -9,20 +9,18 @@ const schema = z.object({
   email: z.email({ error: "O e-mail fornecido é inválido." }),
   username: z
     .string({
-      error:
-        "O nome do usuário é um campo obrigatório e precisa ser um texto com no mínimo 5 caracteres.",
+      error: "O nome do usuário é um campo obrigatório e precisa ser um texto.",
     })
-    .min(5),
+    .min(5, "Nome de usuário precisa de no mínimo 5 caracteres"),
   password: z
     .string({
-      error: "A senha é um campo obrigatório e precisa ser um texto com no mínimo 8 caracteres.",
+      error: "A senha é um campo obrigatório e precisa ser um texto.",
     })
-    .min(8),
+    .min(8, "Senha precisa de no mínimo 8 caracteres"),
 });
 
 type SignUpSchema = z.infer<typeof schema>;
 
-@ConfigValidation({ status: HttpStatus.BAD_REQUEST })
 export class SignUpDto extends DTO implements SignUpSchema {
   protected schema = schema;
 
