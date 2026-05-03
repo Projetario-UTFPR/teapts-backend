@@ -39,6 +39,7 @@ COPY --from=build-step --chown=server:server /app/node_modules ./node_modules/
 COPY --from=build-step --chown=server:server /app/dist ./dist/
 COPY --from=build-step --chown=server:server /app/prisma ./prisma/
 COPY --from=build-step --chown=server:server /app/package-lock.json /app/package.json ./
+COPY --from=build-step --chown=server:server /app/prisma.config.ts ./
 COPY --from=build-step --chown=server:server /app/scripts/start.sh ./
 
 EXPOSE $PORT
