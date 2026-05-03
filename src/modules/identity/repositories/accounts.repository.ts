@@ -13,6 +13,7 @@ export abstract class AccountsRepository {
   public abstract findAccountById(
     id: UUID,
   ): Promise<Either<IrrecoverableError | AccountNotFoundError, Account>>;
+
   public abstract create(
     account: Account,
   ): Promise<Either<IrrecoverableError | AccountWithEmailAlreadyExistError, Account>>;

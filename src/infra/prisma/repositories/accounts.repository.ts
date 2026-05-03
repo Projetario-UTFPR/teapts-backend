@@ -50,15 +50,9 @@ export class PrismaAccountsRepository extends AccountsRepository {
   public create(
     account: Account,
   ): Promise<Either<IrrecoverableError | AccountWithEmailAlreadyExistError, Account>> {
-    const data = {
-      name: account.getName(),
-      email: account.getEmail(),
-      passwordHash: account.getPasswordHash(),
-    } as const;
-
     return pipe(
       te.tryCatch(
-        () => this.prisma.account.create({ data }),
+        () => this.prisma.account.create({ data: accountsMapper.intoPrisma(account) }),
         (error) => {
           if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === "P2002") {
@@ -78,13 +72,9 @@ export class PrismaAccountsRepository extends AccountsRepository {
         },
       ),
       te.map((rawAccount) =>
-        Account.createFromRaw({
-          id: rawAccount.id,
-          name: rawAccount.name,
-          email: rawAccount.email,
-          passwordHash: rawAccount.passwordHash,
-          createdAt: rawAccount.createdAt,
-          lastUpdatedAt: rawAccount.lastUpdatedAt ?? undefined,
+        this.prisma.account.create({
+          data: accountsMapper.intoPrisma(rawAccount),
+          include: { professionalProfiles: { select: { id: true } } },
         }),
       ),
     )();
