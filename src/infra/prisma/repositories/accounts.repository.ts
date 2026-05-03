@@ -50,17 +50,21 @@ export class PrismaAccountsRepository extends AccountsRepository {
   public create(
     account: Account,
   ): Promise<Either<IrrecoverableError | AccountWithEmailAlreadyExistError, Account>> {
+    const data = accountsMapper.intoPrisma(account);
     return pipe(
       te.tryCatch(
-        () => this.prisma.account.create({ data: accountsMapper.intoPrisma(account) }),
+        () =>
+          this.prisma.account.create({
+            data,
+            include: { professionalProfiles: { select: { id: true } } },
+          }),
         (error) => {
-          if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            if (error.code === "P2002") {
-              const target = error.meta?.target;
-              if (Array.isArray(target) && target.includes("email")) {
-                return new AccountWithEmailAlreadyExistError();
-              }
-            }
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            const target = error.meta?.target;
+            const isEmailUniqueConstraintViolation =
+              target && Array.isArray(target) && target.includes("email");
+
+            if (isEmailUniqueConstraintViolation) return new AccountWithEmailAlreadyExistError();
           }
 
           return new IrrecoverableError({
@@ -71,12 +75,7 @@ export class PrismaAccountsRepository extends AccountsRepository {
           });
         },
       ),
-      te.map((rawAccount) =>
-        this.prisma.account.create({
-          data: accountsMapper.intoPrisma(rawAccount),
-          include: { professionalProfiles: { select: { id: true } } },
-        }),
-      ),
+      te.map((rawAccount) => accountsMapper.fromPrisma(rawAccount)),
     )();
   }
 }
