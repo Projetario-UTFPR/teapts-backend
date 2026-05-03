@@ -1,4 +1,5 @@
 import { Public } from "@/infra/auth/decorators/public-route";
+import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { SignUpDto } from "@/modules/identity/dtos/signUp.dto";
@@ -8,7 +9,7 @@ import { CreateAccountService } from "@/modules/identity/services/create-account
 import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
   ApiConflictResponse,
-  ApiOkResponse,
+  ApiNoContentResponse,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
@@ -20,12 +21,11 @@ export class IdentityController {
 
   @Public()
   @Post("create-account")
-  @ApiOkResponse({
+  @ApiNoContentResponse({
     description: "User succesfully created.",
-    type: Account,
   })
   @ApiConflictResponse({
-    type: AccountWithEmailAlreadyExistError,
+    type: BasicExceptionPresenter,
     description: "Email already in use.",
   })
   @ApiUnprocessableEntityResponse({
