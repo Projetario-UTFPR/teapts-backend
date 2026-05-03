@@ -5,9 +5,12 @@ import { PrismaService } from "@/infra/prisma/prisma";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
 import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma-gen/browser";
+import { Prisma } from "@prisma-gen/client";
 import { pipe } from "fp-ts/lib/function";
 import accountsMapper from "@/infra/prisma/mappers/accounts.mapper";
+import { AccountWithEmailAlreadyExistError } from "@/modules/identity/errors/account-with-email-already-exist.error";
+import { Either } from "fp-ts/lib/Either";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 
 @Injectable()
 export class PrismaAccountsRepository extends AccountsRepository {
@@ -41,6 +44,38 @@ export class PrismaAccountsRepository extends AccountsRepository {
         if (rawAccount === null) return e.left(new AccountNotFoundError());
         return e.right(accountsMapper.fromPrisma(rawAccount));
       }),
+    )();
+  }
+
+  public create(
+    account: Account,
+  ): Promise<Either<IrrecoverableError | AccountWithEmailAlreadyExistError, Account>> {
+    const data = accountsMapper.intoPrisma(account);
+    return pipe(
+      te.tryCatch(
+        () =>
+          this.prisma.account.create({
+            data,
+            include: { professionalProfiles: { select: { id: true } } },
+          }),
+        (error) => {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            const target = error.meta?.target;
+            const isEmailUniqueConstraintViolation =
+              target && Array.isArray(target) && target.includes("email");
+
+            if (isEmailUniqueConstraintViolation) return new AccountWithEmailAlreadyExistError();
+          }
+
+          return new IrrecoverableError({
+            cause: error as Error,
+            message:
+              `Error occurred in ${PrismaAccountsRepository.name} when ` +
+              `trying to save account '${JSON.stringify(data)}'.`,
+          });
+        },
+      ),
+      te.map((rawAccount) => accountsMapper.fromPrisma(rawAccount)),
     )();
   }
 }
