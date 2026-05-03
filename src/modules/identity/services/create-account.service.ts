@@ -10,49 +10,55 @@ import { InvalidCredentialsError } from "@/modules/identity/errors/invalid-crede
 type TCreateAccount = {
   name: string;
   email: string;
-  password: string;
+  plainPassword: string;
   professionalProfilesIds: string[];
 };
 
 @Injectable()
 export class CreateAccountService {
   public constructor(
-    private readonly accountsRepo: AccountsRepository,
     private readonly hasher: Hasher,
+    private readonly accountsRepo: AccountsRepository,
   ) {}
 
   public async execute(params: TCreateAccount) {
-    const { password, ...accountProps } = params;
+    const { plainPassword, ...accountProps } = params;
 
-    this.verifyCredentials(params);
+    const validation = await this.verifyCredentials(params);
 
-    const passwordHash = await this.hasher.hash(password);
+    if (e.isLeft(validation)) {
+      return validation;
+    }
+
+    const passwordHash = await this.hasher.hash(plainPassword);
     const account = Account.create({ ...accountProps, passwordHash });
 
-    return await this.accountsRepo.create(account);
+    const result = await this.accountsRepo.create(account);
+    return e.right(result);
   }
 
-  private verifyCredentials({ email, name, password }) {
-    this.verifyEmailSyntax(email);
-    this.verifyUserNameSyntax(name);
-    this.verifyPasswordSyntax(password);
+  private async verifyCredentials({ email, name, plainPassword }) {
+    const emailValidation = this.verifyEmailSyntax(email);
+    if (emailValidation) return emailValidation;
+
+    const nameValidation = this.verifyUserNameSyntax(name);
+    if (nameValidation) return nameValidation;
+
+    const passwordValidation = this.verifyPasswordSyntax(plainPassword);
+    if (passwordValidation) return passwordValidation;
+
+    return e.right(undefined);
   }
 
   private verifyEmailSyntax(email: string) {
-    return !email.includes("@")
-      ? Promise.resolve(e.left(new InvalidCredentialsError()))
-      : Promise.resolve(e.right(undefined));
+    return !email.includes("@") ? e.left(new InvalidCredentialsError()) : null;
   }
 
   private verifyUserNameSyntax(name: string) {
-    return name.length < 5
-      ? Promise.resolve(e.left(new InvalidCredentialsError()))
-      : Promise.resolve(e.right(undefined));
+    return name.length < 5 ? e.left(new InvalidCredentialsError()) : null;
   }
 
   private verifyPasswordSyntax(password: string) {
-    return password.length < 8
-      ? Promise.resolve(e.left(new InvalidCredentialsError()))
-      : Promise.resolve(e.right(undefined));
+    return password.length < 8 ? e.left(new InvalidCredentialsError()) : null;
   }
 }
