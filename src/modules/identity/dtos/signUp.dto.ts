@@ -22,15 +22,15 @@ type SignUpSchema = z.infer<typeof schema>;
 export class SignUpDto extends DTO implements SignUpSchema {
   protected schema = schema;
 
-  @ApiProperty({ description: "The account's e-mail address." })
+  @ApiProperty({ description: "The account's e-mail address.", example: "john.doe@example.com" })
   @Expose()
   public readonly email!: string;
 
-  @ApiProperty({ description: "The account's user name." })
+  @ApiProperty({ description: "The account's user name.", example: "John Doe" })
   @Expose()
   public readonly name!: string;
 
-  @ApiProperty({ description: "The account's password." })
+  @ApiProperty({ description: "The account's password.", example: "SecurePassword123" })
   @Expose()
   public readonly password!: string;
 }
