@@ -10,16 +10,21 @@ type BaseOptions = {
   hasher?: Hasher;
 };
 
-type Params = Partial<Account.Props>;
+type Params = Partial<Account.Props> & { plainPassword?: string };
 
 async function create(
-  { email = faker.internet.email(), name = faker.person.fullName(), passwordHash }: Params = {},
+  {
+    email = faker.internet.email(),
+    name = faker.person.fullName(),
+    passwordHash,
+    plainPassword = randomBytes(30).toString(),
+  }: Params = {},
   { hasher = new MockHasherAndComparator() }: BaseOptions = {},
 ) {
   return Account.create({
     email,
     name,
-    passwordHash: passwordHash ?? (await hasher.hash(randomBytes(30).toString())),
+    passwordHash: passwordHash ?? (await hasher.hash(plainPassword)),
     professionalProfilesIds: [],
   });
 }
