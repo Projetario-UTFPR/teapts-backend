@@ -60,11 +60,7 @@ export class PrismaAccountsRepository extends AccountsRepository {
           }),
         (error) => {
           if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-            const target = error.meta?.target;
-            const isEmailUniqueConstraintViolation =
-              target && Array.isArray(target) && target.includes("email");
-
-            if (isEmailUniqueConstraintViolation) return new AccountWithEmailAlreadyExistError();
+            return new AccountWithEmailAlreadyExistError();
           }
 
           return new IrrecoverableError({
