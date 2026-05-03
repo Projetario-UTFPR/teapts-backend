@@ -28,16 +28,16 @@ export class IdentityController {
     type: BasicExceptionPresenter,
     description: "Provided credentials are wrong.",
   })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   public createAccount(@Body() signUpDto: SignUpDto) {
-    console.log(signUpDto);
     return pipe(
       () =>
         this.createAccountService.execute({
           email: signUpDto.email,
-          name: signUpDto.username,
+          name: signUpDto.name,
           plainPassword: signUpDto.password,
         }),
+      te.map(() => {}),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
