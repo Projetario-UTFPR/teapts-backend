@@ -33,17 +33,17 @@ ENV DATABASE_URL=
 ENV PORT=80
 ENV NODE_ENV=production
 
-COPY --from=build-step /app/node_modules ./node_modules/
-COPY --from=build-step /app/dist ./dist/
-COPY --from=build-step /app/prisma ./prisma/
-COPY --from=build-step /app/package-lock.json /app/package.json ./
-COPY --from=build-step /app/scripts/start.sh ./
+RUN useradd -m server
+
+COPY --from=build-step --chown=server:server /app/node_modules ./node_modules/
+COPY --from=build-step --chown=server:server /app/dist ./dist/
+COPY --from=build-step --chown=server:server /app/prisma ./prisma/
+COPY --from=build-step --chown=server:server /app/package-lock.json /app/package.json ./
+COPY --from=build-step --chown=server:server /app/scripts/start.sh ./
 
 EXPOSE $PORT
 
-RUN useradd -m server && \
-    chown -R server:server /app && \
-    chmod +x /app/start.sh
+RUN chmod +x /app/start.sh
 
 USER server
 
