@@ -1,5 +1,6 @@
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { BaseError } from "@/common/errors/base.error";
+import { ConflictError } from "@/common/errors/conflict.error";
 import { InvalidArgumentError } from "@/common/errors/invalid-argument.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
@@ -9,6 +10,7 @@ import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter
 import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation/exception";
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
@@ -44,7 +46,11 @@ function fromError(error: BaseError | ValidationErrorsBag): never {
   }
 
   if (error instanceof BadRequestError) {
-    throw new BadRequestException({ message: error.message });
+    throw new BadRequestException(BasicExceptionPresenter.present(error));
+  }
+
+  if (error instanceof ConflictError) {
+    throw new ConflictException(BasicExceptionPresenter.present(error));
   }
 
   console.error("An unexpected error occurred and was not properly handled.", { cause: error });
