@@ -4,9 +4,8 @@ import { Account } from "@/modules/identity/entities/account.aggregate";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
 import { InvalidCredentialsError } from "@/modules/identity/errors/invalid-credentials.error";
 import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
-import { either as e, taskEither as te } from "fp-ts";
+import { either as e } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
-import { pipe } from "zod";
 
 export class InMemoryAccountsRepository extends AccountsRepository {
   public accounts: Account[] = [];
@@ -26,8 +25,7 @@ export class InMemoryAccountsRepository extends AccountsRepository {
     return e.right(account);
   }
   public async create(account: Account): Promise<Either<InvalidCredentialsError, Account>> {
-    const accountCreated = this.accounts.push(account);
-    if (!accountCreated) return e.left(new InvalidCredentialsError());
+    this.accounts.push(account);
     return e.right(account);
   }
 }
