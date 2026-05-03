@@ -29,6 +29,11 @@ services:
       - db
     networks:
       - app
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     profiles:
       - full
 
