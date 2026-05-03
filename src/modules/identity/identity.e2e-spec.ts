@@ -1,17 +1,23 @@
 import { AppModule } from "@/app.module";
+import { PrismaService } from "@/infra/prisma/prisma";
+import { Hasher } from "@/modules/crypto/hasher";
 import { SignUpDto } from "@/modules/identity/dtos/signUp.dto";
 import { faker } from "@faker-js/faker";
 import { type INestApplication } from "@nestjs/common";
 import { Test, type TestingModule } from "@nestjs/testing";
+import accountsFactory from "@test/factories/accounts.factory";
 import supertest from "supertest";
 import request from "supertest";
 import type { App } from "supertest/types";
 
 describe("[e2e] Identity Controller (v1)", () => {
   let app: INestApplication<App>;
+  let prisma: PrismaService;
+  let hasher: Hasher;
 
   const name = faker.person.fullName();
-  const email = "existingandknown@email.com";
+  const email = "anotherknown@email.com";
+  const existingEmail = "existingandknown@email.com";
   const plainPassword = "12345678";
 
   beforeAll(async () => {
@@ -20,6 +26,10 @@ describe("[e2e] Identity Controller (v1)", () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    prisma = app.get(PrismaService);
+    hasher = app.get(Hasher);
+
     await app.init();
   });
 
@@ -36,7 +46,7 @@ describe("[e2e] Identity Controller (v1)", () => {
     const failureResponse = await supertest(app.getHttpServer())
       .post("/v1/identities/create-account")
       .send({
-        email: "existingandknownemail.com",
+        email: "invalidemail.com",
         password: plainPassword,
         name,
       } satisfies SignUpDto.Type)
@@ -76,11 +86,29 @@ describe("[e2e] Identity Controller (v1)", () => {
   });
 
   it("should create an account successfully", async () => {
-    const response = await supertest(app.getHttpServer())
+    await supertest(app.getHttpServer())
       .post("/v1/identities/create-account")
       .send({ name, email, password: plainPassword } satisfies SignUpDto.Type)
       .expect(204);
+  });
 
-    console.log(response.body);
+  it("should not allow to create an account with an email that already exists", async () => {
+    await accountsFactory.createAndPersist(
+      prisma,
+      {
+        email: existingEmail,
+        name,
+        plainPassword,
+      },
+      { hasher },
+    );
+
+    const response = await supertest(app.getHttpServer())
+      .post("/v1/identities/create-account")
+      .send({ name, email: existingEmail, password: plainPassword } satisfies SignUpDto.Type)
+      .expect(409);
+
+    expect(response.body).toHaveProperty("message");
+    expect(response.body.message.includes("email")).toBeTruthy();
   });
 });
