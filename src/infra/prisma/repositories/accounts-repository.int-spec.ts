@@ -8,15 +8,14 @@ import { CreateAccountService } from "@/modules/identity/services/create-account
 import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
 import { MockHasherAndComparator } from "@test/mocks/crypto/mock-hasher-and-comparator";
 import { AccountWithEmailAlreadyExistError } from "@/modules/identity/errors/account-with-email-already-exist.error";
+import { faker } from "@faker-js/faker";
 
 describe("[Integration] Prisma Accounts Repository", () => {
   let hasherAndComparator = new MockHasherAndComparator();
   let accountRepo: AccountsRepository;
   let sut: CreateAccountService;
 
-  const name = "FoooooBar";
-  const email = "existingandknown@email.com";
-  const plainPassword = "12345678";
+  const knownEmail = "existingandknown@email.com";
 
   beforeAll(async () => {
     let app: INestApplication<App>;
@@ -31,17 +30,18 @@ describe("[Integration] Prisma Accounts Repository", () => {
     accountRepo = app.get(AccountsRepository);
     sut = app.get(CreateAccountService);
 
-    const passwordHash = await hasherAndComparator.hash(plainPassword);
-
-    const account = await accountsFactory.create({ name, email, passwordHash });
+    const account = await accountsFactory.create(
+      { email: knownEmail },
+      { hasher: hasherAndComparator },
+    );
 
     accountRepo.create(account);
   });
 
   it("it should deny registiring account that email already exists", async () => {
     const result = await sut.execute({
-      name: "Fooooooa",
-      email: "existingandknown@email.com",
+      name: faker.person.fullName(),
+      email: knownEmail,
       plainPassword: "12345678",
     });
 
@@ -51,8 +51,8 @@ describe("[Integration] Prisma Accounts Repository", () => {
 
   it("it should register the account if all credentials are valid", async () => {
     const result = await sut.execute({
-      name: "Fooooooa",
-      email: "nonexistingemail@email.com",
+      name: faker.person.fullName(),
+      email: "another@email.com",
       plainPassword: "12345678",
     });
 
