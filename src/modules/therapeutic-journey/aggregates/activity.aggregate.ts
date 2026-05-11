@@ -37,6 +37,10 @@ export class Activity extends AggregateRoot<ActivityProps> {
   public static createUnchecked(props: ActivityProps) {
     return new this(props);
   }
+
+  public equals(other: AggregateRoot<ActivityProps>) {
+    return other instanceof Activity && this._props.id === other._props.id;
+  }
 }
 
 export namespace Activity {
