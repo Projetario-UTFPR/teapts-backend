@@ -1,8 +1,9 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
-import { type UUID } from "@/common/uuid";
+import { generateUUID, type UUID } from "@/common/uuid";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 
 type PtsProps = {
+  id: UUID;
   /**
    * The identifier of the patient whom this PTS belongs to.
    */
@@ -37,6 +38,7 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     responsibleProfessionalId,
   }: CreateNewPtsParams) {
     return new this({
+      id: generateUUID(),
       patientId,
       socialSituation,
       responsibleProfessionalId,
@@ -88,5 +90,9 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     ];
 
     return terminalStates.includes(currentState);
+  }
+
+  public equals(other: AggregateRoot<PtsProps>) {
+    return other instanceof ProjetoTerapeuticoSingular && this._props.id === other._props.id;
   }
 }
