@@ -156,6 +156,11 @@ export class PtsTimeline implements IPtsTimeline {
 }
 
 export namespace PtsTimeline {
+  // We keep this encapsulated in such manner in order to avoid ourselves
+  // using this status directly, bypassing the timeline's rules.
+  // It can still be accessed, but will require so many dots that will be
+  // discouraging!
+
   export enum Status {
     Draft = "draft",
     Planning = "planning",
