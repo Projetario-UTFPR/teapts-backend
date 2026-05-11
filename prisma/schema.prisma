@@ -40,8 +40,8 @@ model Professional {
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  leadingJourneys       TherapeuticJourney[]                            @relation("ResponsibleRelation")
-  journeysWhereIsMember ProfessionalParticipatingOnTherapeuticJourney[]
+  leadingJourneys       ProjetoTerapeuticoSingular[]     @relation("ResponsibleRelation")
+  journeysWhereIsMember ProfessionalParticipatingOnPTS[]
 
   @@map("professional")
 }
@@ -54,24 +54,24 @@ enum Specialism {
   @@map("specialism_e")
 }
 
-model ProfessionalParticipatingOnTherapeuticJourney {
+model ProfessionalParticipatingOnPTS {
   professionalId String       @map("professional_id")
   professional   Professional @relation(fields: [professionalId], references: [id])
 
-  therapeuticJourneyId String             @map("therapeutic_journey_id")
-  therapeuticJourney   TherapeuticJourney @relation(fields: [therapeuticJourneyId], references: [id])
+  ProjetoTerapeuticoSingularId String                     @map("therapeutic_journey_id")
+  ProjetoTerapeuticoSingular   ProjetoTerapeuticoSingular @relation(fields: [ProjetoTerapeuticoSingularId], references: [id])
 
-  @@id([professionalId, therapeuticJourneyId])
+  @@id([professionalId, ProjetoTerapeuticoSingularId])
   @@map("professional_participating_on_therapeutic_journey")
 }
 
-model TherapeuticJourney {
+model ProjetoTerapeuticoSingular {
   id String @id @default(uuid())
 
   responsibleProfessionalId String       @map("responsible_professional_id")
   responsibleProfessional   Professional @relation(name: "ResponsibleRelation", fields: [responsibleProfessionalId], references: [id])
 
-  multidisciplinaryTeam ProfessionalParticipatingOnTherapeuticJourney[]
+  multidisciplinaryTeam ProfessionalParticipatingOnPTS[]
 
-  @@map("therapeutic_journey")
+  @@map("projeto_terapeutico_singular")
 }
