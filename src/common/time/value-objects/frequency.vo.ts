@@ -46,16 +46,19 @@ interface IFrequency {
  * ```
  */
 export class Frequency extends ValueObject implements IFrequency {
+  public readonly interval: TimeInterval;
   private constructor(
     public readonly times: number,
-    public readonly interval: TimeInterval,
+    interval: TimeInterval,
     public readonly duration?: TimeDuration,
   ) {
     super();
+    this.interval = Frequency.normalizeInterval(interval);
   }
   public static create({ interval, times, duration }: IFrequency) {
-    // Destructuring com fallback limpa a necessidade de checar Array.isArray múltiplas vezes
-    const [intervalNum, intervalUnit] = Array.isArray(interval) ? interval : [1, interval];
+    const [intervalNum, intervalUnit] = Array.isArray(interval)
+      ? (interval as Exclude<TimeInterval, TimeUnit>) // typescript shit to get type hints for the destructured vars
+      : ([1, interval as TimeUnit] as const);
 
     return pipe(
       e.Do,
@@ -67,10 +70,9 @@ export class Frequency extends ValueObject implements IFrequency {
       e.map(({ durationNum, intervalNum, timesNum }) => {
         let resolvedDuration: TimeDuration | undefined = undefined;
         if (durationNum && duration) resolvedDuration = [durationNum, duration[1]] as const;
+        const resolvedInterval = [intervalNum, intervalUnit] as const;
 
-        const normalizedInterval = this.normalizeInterval([intervalNum, intervalUnit]);
-
-        return new Frequency(timesNum, normalizedInterval, resolvedDuration);
+        return new Frequency(timesNum, resolvedInterval, resolvedDuration);
       }),
     );
   }
@@ -82,8 +84,7 @@ export class Frequency extends ValueObject implements IFrequency {
    * previously existing frequency payload.
    */
   public static createUnchecked({ interval, times, duration }: IFrequency) {
-    const normalizedInterval = this.normalizeInterval(interval);
-    return new Frequency(times, normalizedInterval, duration);
+    return new Frequency(times, interval, duration);
   }
 
   private static ensurePositiveInteger(value: number, label: string) {
