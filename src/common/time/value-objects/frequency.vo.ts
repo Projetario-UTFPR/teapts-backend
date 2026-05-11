@@ -31,7 +31,7 @@ interface IFrequency {
  * Frequency.create({
  *  times: 3,
  *  interval: TimeUnit.Day,
- *  duration: [2, TimeUnit.Month].
+ *  duration: [2, TimeUnit.Month]
  * })
  * ```
  *
