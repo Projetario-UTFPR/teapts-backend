@@ -2,9 +2,12 @@ import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
 import professionalMapper from "@/infra/prisma/mappers/professional.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
+import { Professional } from "@/modules/professional/entities/professional.aggregate";
+import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { ProfessionalsRepository } from "@/modules/professional/professionals.repository";
 import { Injectable } from "@nestjs/common";
-import { taskEither as te } from "fp-ts";
+import { either as e, taskEither as te } from "fp-ts";
+import { Either } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 
 @Injectable()
@@ -26,6 +29,27 @@ export class PrismaProfessionalsRepository extends ProfessionalsRepository {
           }),
       ),
       te.map((rawProfessionals) => rawProfessionals.map(professionalMapper.fromPrisma)),
+    )();
+  }
+
+  public findById(
+    id: UUID,
+  ): Promise<Either<IrrecoverableError | ProfessionalProfileNotFoundError, Professional>> {
+    return pipe(
+      te.tryCatch(
+        () => this.prisma.professional.findFirst({ where: { id: id.toString() } }),
+        (error) =>
+          new IrrecoverableError({
+            message:
+              `Error occurred in ${PrismaProfessionalsRepository.name} when trying to find ` +
+              `professional by id "${id.toString()}".`,
+            cause: error as Error,
+          }),
+      ),
+      te.chainEitherKW((row) => {
+        if (!row) return e.left(new ProfessionalProfileNotFoundError(id));
+        return e.right(professionalMapper.fromPrisma(row));
+      }),
     )();
   }
 }
