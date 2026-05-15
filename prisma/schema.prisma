@@ -28,7 +28,9 @@ model Patient {
   accountId       String @id
   supportContacts Json[]
 
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account                        Account                      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  documents                      Document[]
+  projetosTerapeuticosSingulares ProjetoTerapeuticoSingular[]
 
   @@map("patient")
 }
@@ -42,6 +44,7 @@ model Professional {
 
   leadingJourneys       ProjetoTerapeuticoSingular[]     @relation("ResponsibleRelation")
   journeysWhereIsMember ProfessionalParticipatingOnPTS[]
+  activities            Activity[]
 
   @@map("professional")
 }
@@ -65,13 +68,91 @@ model ProfessionalParticipatingOnPTS {
   @@map("professional_participating_on_therapeutic_journey")
 }
 
+enum PtsStatus {
+  Draft     @map("draft")
+  Planning  @map("planning")
+  Running   @map("running")
+  Concluded @map("concluded")
+  Cancelled @map("cancelled")
+  Rejected  @map("rejected")
+
+  @@map("pts_state_e")
+}
+
 model ProjetoTerapeuticoSingular {
-  id String @id @default(uuid())
+  id              String    @id @default(uuid())
+  socialSituation String    @db.Text
+  status          PtsStatus
+  createdAt       DateTime  @default(now()) @map("createdAt")
+  acceptedAt      DateTime? @map("acceptedAt")
+  rejectedAt      DateTime? @map("rejectedAt")
+  beganAt         DateTime? @map("beganAt")
+  concludedAt     DateTime? @map("concludedAt")
+  cancelledAt     DateTime? @map("cancelledAt")
+
+  patientId String  @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [accountId])
 
   responsibleProfessionalId String       @map("responsible_professional_id")
   responsibleProfessional   Professional @relation(name: "ResponsibleRelation", fields: [responsibleProfessionalId], references: [id])
 
   multidisciplinaryTeam ProfessionalParticipatingOnPTS[]
 
+  activities Activity[]
+
   @@map("projeto_terapeutico_singular")
+}
+
+model Document {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?   @db.VarChar(4096)
+  documentUrl   String    @map("document_url") @db.VarChar(16384)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastUpdatedAt DateTime? @map("last_updated_at")
+
+  patient          Patient @relation(fields: [patientAccountId], references: [accountId])
+  patientAccountId String  @map("patient_account_id")
+
+  activityReferringToDocuments ActivityReferringToDocument[]
+
+  @@map("document")
+}
+
+model ActivityReferringToDocument {
+  activityId String   @map("activity_id")
+  activity   Activity @relation(fields: [activityId], references: [id])
+
+  documentId String   @map("document_id")
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@id([activityId, documentId])
+  @@map("activity_referring_to_document_rel")
+}
+
+enum ActivityState {
+  Suggested @map("suggested")
+  Rejected  @map("rejected")
+  Running   @map("running")
+  Archived  @map("archived")
+
+  @@map("activity_state_e")
+}
+
+model Activity {
+  id        String        @id @default(uuid())
+  title     String
+  frequency Json
+  state     ActivityState
+  createdAt DateTime      @map("created_at")
+
+  assigneeProfessionalId String       @map("assignee_professional_id")
+  assigneeProfessional   Professional @relation(fields: [assigneeProfessionalId], references: [id])
+
+  activityReferringToDocuments ActivityReferringToDocument[]
+
+  projetoTerapeuticoSingular   ProjetoTerapeuticoSingular? @relation(fields: [projetoTerapeuticoSingularId], references: [id])
+  projetoTerapeuticoSingularId String?                     @map("projeto_terapeutico_singular_id")
+
+  @@map("activity")
 }
