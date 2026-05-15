@@ -81,6 +81,11 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.timeline.status === PtsTimeline.Status.Concluded;
   }
 
+  public isActive() {
+    const activeStatuses = [PtsTimeline.Status.Planning, PtsTimeline.Status.Running];
+    return activeStatuses.includes(this._props.timeline.status);
+  }
+
   public isTerminated() {
     const currentState = this._props.timeline.status;
     const terminalStates = [
