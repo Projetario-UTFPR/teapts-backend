@@ -4,11 +4,16 @@ import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggreg
 import { Either } from "fp-ts/lib/Either";
 
 export abstract class PtsRepository {
-  public abstract ptsExistsByPatientId(
+  /**
+   * Checks whether is there an active PTS owned by the patient of id `patientId`.
+   *
+   * @note an 'active' PTS is a PTS that has either `Running` or `Planning` state.
+   */
+  public abstract activePtsExistsByPatientId(
     patientId: UUID,
   ): Promise<Either<IrrecoverableError, boolean>>;
 
   public abstract createNewPts(
     pts: ProjetoTerapeuticoSingular,
-  ): Promise<Either<IrrecoverableError, boolean>>;
+  ): Promise<Either<IrrecoverableError, ProjetoTerapeuticoSingular>>;
 }
