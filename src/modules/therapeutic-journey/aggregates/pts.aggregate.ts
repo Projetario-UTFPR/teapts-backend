@@ -1,0 +1,98 @@
+import { AggregateRoot } from "@/common/entities/aggregate-root";
+import { generateUUID, type UUID } from "@/common/uuid";
+import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
+
+type PtsProps = {
+  id: UUID;
+  /**
+   * The identifier of the patient whom this PTS belongs to.
+   */
+  patientId: UUID;
+  /**
+   * The identifier of the professional (profile) leading this PTS.
+   */
+  responsibleProfessionalId: UUID;
+  /**
+   * The identifiers of every professional (profile) involved with this PTS.
+   */
+  multidisciplinaryTeamIds: UUID[];
+  /**
+   * A text containing info about the patient (identified by `patientId`) regarding their social
+   * situation. E.g., who they live with, whether they have support network (and who they are),
+   * social vulnerability they're under, their desires and goals, _et cetera_.
+   */
+  socialSituation: string;
+  timeline: PtsTimeline;
+};
+
+type CreateNewPtsParams = {
+  patientId: UUID;
+  responsibleProfessionalId: UUID;
+  socialSituation: string;
+};
+
+export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
+  public static create({
+    patientId,
+    socialSituation,
+    responsibleProfessionalId,
+  }: CreateNewPtsParams) {
+    return new this({
+      id: generateUUID(),
+      patientId,
+      socialSituation,
+      responsibleProfessionalId,
+      timeline: PtsTimeline.create(),
+      multidisciplinaryTeamIds: [],
+    });
+  }
+
+  /**
+   * Rehydrates a PTS instance, i.e., creates a PTS from an existing PTS.
+   *
+   * @note This method does not perform any check nor provide any default value. Only use
+   * it to get a PTS instance for some already existing PTS.
+   */
+  public static createUnchecked(props: PtsProps) {
+    return new this(props);
+  }
+
+  public isDraft() {
+    return this._props.timeline.status === PtsTimeline.Status.Draft;
+  }
+
+  public isRejected() {
+    return this._props.timeline.status === PtsTimeline.Status.Rejected;
+  }
+
+  public isPlanning() {
+    return this._props.timeline.status === PtsTimeline.Status.Planning;
+  }
+
+  public isRunning() {
+    return this._props.timeline.status === PtsTimeline.Status.Running;
+  }
+
+  public isCancelled() {
+    return this._props.timeline.status === PtsTimeline.Status.Cancelled;
+  }
+
+  public isConcluded() {
+    return this._props.timeline.status === PtsTimeline.Status.Concluded;
+  }
+
+  public isTerminated() {
+    const currentState = this._props.timeline.status;
+    const terminalStates = [
+      PtsTimeline.Status.Cancelled,
+      PtsTimeline.Status.Rejected,
+      PtsTimeline.Status.Concluded,
+    ];
+
+    return terminalStates.includes(currentState);
+  }
+
+  public equals(other: AggregateRoot<PtsProps>) {
+    return other instanceof ProjetoTerapeuticoSingular && this._props.id === other._props.id;
+  }
+}
