@@ -52,8 +52,8 @@ export class PtsTimeline implements IPtsTimeline {
     });
   }
 
-  public static createUnchecked(status: IPtsTimeline) {
-    return new PtsTimeline(status);
+  public static createUnchecked(props: IPtsTimeline) {
+    return new PtsTimeline(props);
   }
 
   public acceptAndBeginPlanning() {
