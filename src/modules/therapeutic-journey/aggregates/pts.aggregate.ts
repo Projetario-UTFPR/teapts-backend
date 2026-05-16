@@ -33,6 +33,7 @@ type CreateNewPtsParams = {
   patientId: UUID;
   responsibleProfessionalId: UUID;
   socialSituation: string;
+  multidisciplinaryTeamIds?: UUID[];
 };
 
 export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
@@ -40,14 +41,22 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     patientId,
     socialSituation,
     responsibleProfessionalId,
+    multidisciplinaryTeamIds = [],
   }: CreateNewPtsParams) {
+    // We gotta ensure responsible professional ain't being put in the multidisciplinary team,
+    // we can infer it belongs to the team because it is the responsible professional... No need
+    // to keep it redundant.
+    multidisciplinaryTeamIds = multidisciplinaryTeamIds.filter(
+      (professionalId) => professionalId !== responsibleProfessionalId,
+    );
+
     return new this({
       id: generateUUID(),
       patientId,
       socialSituation,
       responsibleProfessionalId,
       timeline: PtsTimeline.create(),
-      multidisciplinaryTeamIds: [],
+      multidisciplinaryTeamIds,
     });
   }
 
