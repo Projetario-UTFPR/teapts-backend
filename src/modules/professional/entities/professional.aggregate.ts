@@ -20,12 +20,22 @@ export class Professional extends AggregateRoot<ProfessionalProps> {
     return this._props.id;
   }
 
+  public getAccountId() {
+    return this._props.accountId;
+  }
+
+  public getSpecialism() {
+    return this._props.specialism;
+  }
+
   public equals(other: Professional): boolean {
     return this._props.id === other._props.id;
   }
 }
 
 export namespace Professional {
+  export type Props = ProfessionalProps;
+
   export enum Specialism {
     Doctor = "doctor",
     Psychologist = "psychologist",
