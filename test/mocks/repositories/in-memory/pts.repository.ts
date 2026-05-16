@@ -6,12 +6,12 @@ import { either } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 
 export class InMemoryPtsRepository extends PtsRepository {
-  public projetos: ProjetoTerapeuticoSingular[] = [];
+  public items: ProjetoTerapeuticoSingular[] = [];
 
   public async activePtsExistsByPatientId(
     patientId: UUID,
   ): Promise<Either<IrrecoverableError, boolean>> {
-    const patientsPts = this.projetos.filter((pts) => pts.belongsToPatient(patientId));
+    const patientsPts = this.items.filter((pts) => pts.belongsToPatient(patientId));
     const activePts = patientsPts.find((pts) => pts.isActive());
     return either.right(Boolean(activePts));
   }
@@ -19,7 +19,7 @@ export class InMemoryPtsRepository extends PtsRepository {
   public async createNewPts(
     pts: ProjetoTerapeuticoSingular,
   ): Promise<Either<IrrecoverableError, ProjetoTerapeuticoSingular>> {
-    this.projetos.push(pts);
+    this.items.push(pts);
     return either.right(pts);
   }
 }
