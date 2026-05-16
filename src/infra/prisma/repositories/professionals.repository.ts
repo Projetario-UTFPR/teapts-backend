@@ -1,6 +1,6 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
-import professionalMapper from "@/infra/prisma/mappers/professional.mapper";
+import professionalMapper from "@/infra/prisma/mappers/professionals.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
