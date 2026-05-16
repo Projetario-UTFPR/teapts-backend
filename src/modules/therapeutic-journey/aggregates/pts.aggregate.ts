@@ -1,5 +1,6 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
 import { generateUUID, type UUID } from "@/common/uuid";
+import { Patient } from "@/modules/patient/entities/patient.entity";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 
 type PtsProps = {
@@ -55,6 +56,11 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
    */
   public static createUnchecked(props: PtsProps) {
     return new this(props);
+  }
+
+  public belongsToPatient(patient: Patient | UUID) {
+    if (patient instanceof Patient) return this._props.id === patient.getId();
+    return this._props.id === patient;
   }
 
   public isDraft() {
