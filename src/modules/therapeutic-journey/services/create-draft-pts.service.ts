@@ -9,8 +9,8 @@ import type { UUID } from "@/common/uuid";
 import { PatientAlreadyHasActivePtsError } from "@/modules/therapeutic-journey/errors/patient-already-has-active-pts.error";
 
 type Params = {
-  professionalId: string;
-  patientId: string;
+  professionalId: UUID;
+  patientId: UUID;
   socialSituation: string;
 };
 
