@@ -12,6 +12,7 @@ type Params = {
   professionalId: UUID;
   patientId: UUID;
   socialSituation: string;
+  multidisciplinaryTeamIds?: UUID[];
 };
 
 @Injectable()
@@ -22,7 +23,7 @@ export class CreateDraftPtsService {
     private readonly professionalsRepo: ProfessionalsRepository,
   ) {}
 
-  public execute({ professionalId, patientId, socialSituation }: Params) {
+  public execute({ professionalId, patientId, socialSituation, multidisciplinaryTeamIds }: Params) {
     return pipe(
       te.Do,
       te.apS("patientAccount", () => this.accountsRepo.findAccountById(patientId)),
@@ -33,6 +34,7 @@ export class CreateDraftPtsService {
           patientId: patientAccount.getId(),
           responsibleProfessionalId: professional.getId(),
           socialSituation,
+          multidisciplinaryTeamIds,
         });
 
         return te.right(pts);

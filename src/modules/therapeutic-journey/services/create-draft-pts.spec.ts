@@ -1,3 +1,4 @@
+import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { PatientAlreadyHasActivePtsError } from "@/modules/therapeutic-journey/errors/patient-already-has-active-pts.error";
 import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/create-draft-pts.service";
 import { faker } from "@faker-js/faker";
@@ -67,7 +68,57 @@ describe("[Service] Create Draft PTS Service", async () => {
     ).toBe(0);
   });
 
-  it("should allow to create a PTS with a initial multidisciplinary team defined", async () => {});
+  it("should allow to create a PTS with a initial multidisciplinary team defined", async () => {
+    const { patient, professional } = await getEntities();
+
+    const professionals = await Promise.all(
+      Array.from({ length: 10 }).map(() => professionalsFactory.create()),
+    );
+
+    const multidisciplinaryTeamIds = professionals.map((professional) => professional.getId());
+
+    const result = await sut.execute({
+      patientId: patient.getId(),
+      professionalId: professional.getId(),
+      socialSituation: faker.lorem.paragraphs(5),
+      multidisciplinaryTeamIds,
+    });
+
+    assert(either.isRight(result));
+
+    const pts = result.right;
+    expect(pts.toSnapshot().multidisciplinaryTeamIds).toEqual(
+      expect.arrayContaining(multidisciplinaryTeamIds),
+    );
+  });
+
+  it("should silently refuse to include the responsible professional in the list of ids of the professionals from the multidisciplinary team", async () => {
+    const { patient, professional } = await getEntities();
+
+    const professionals = await Promise.all(
+      Array.from({ length: 10 }).map(() => professionalsFactory.create()),
+    );
+
+    const multidisciplinaryTeamIds = [
+      professional.getId(),
+      ...professionals.map((professional) => professional.getId()),
+    ];
+
+    const result = await sut.execute({
+      patientId: patient.getId(),
+      professionalId: professional.getId(),
+      socialSituation: faker.lorem.paragraphs(5),
+      multidisciplinaryTeamIds,
+    });
+
+    assert(either.isRight(result));
+
+    const pts = result.right;
+
+    expect(pts.toSnapshot().multidisciplinaryTeamIds).not.toEqual(
+      expect.arrayContaining([professional.getId()]),
+    );
+  });
 
   it("should not let no professional create a new PTS for a patient that already has an active PTS", async () => {
     const { patient, professional } = await getEntities();
@@ -96,5 +147,24 @@ describe("[Service] Create Draft PTS Service", async () => {
       result.left,
       "it should deny it because patient already has an active PTS",
     ).toBeInstanceOf(PatientAlreadyHasActivePtsError);
+  });
+
+  it("should not allow any entity but a professional to create a PTS", async () => {
+    const { patient } = await getEntities();
+    const anotherAccount = await accountsFactory.create();
+    accountsRepository.accounts.push(anotherAccount);
+
+    const result = await sut.execute({
+      patientId: patient.getId(),
+      professionalId: anotherAccount.getId(),
+      socialSituation: faker.lorem.paragraph(),
+    });
+
+    assert(
+      either.isLeft(result),
+      "it should not have let a ordinary account, with no professional profiles, create a PTS for a patient",
+    );
+
+    expect(result.left).toBeInstanceOf(ProfessionalProfileNotFoundError);
   });
 });
