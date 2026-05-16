@@ -1,7 +1,10 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
 import { generateUUID, type UUID } from "@/common/uuid";
 import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
+import { either } from "fp-ts";
+import { pipe } from "fp-ts/lib/function";
 
 type PtsProps = {
   id: UUID;
@@ -58,9 +61,36 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return new this(props);
   }
 
+  public getId() {
+    return this._props.id;
+  }
+
+  public getSocialSituation() {
+    return this._props.socialSituation;
+  }
+
+  public acceptAndBeginPlanning() {
+    return pipe(
+      this._props.timeline.acceptAndBeginPlanning(),
+      either.map((newTimeline) => {
+        this._props.timeline = newTimeline;
+      }),
+    );
+  }
+
+  /**
+   * Checks whether `professional` is the responsible professional of this PTS.
+   */
+  public isResponsabilityOfProfessional(professional: Professional | UUID) {
+    const professionalId =
+      professional instanceof Professional ? professional.getId() : professional;
+
+    return this._props.responsibleProfessionalId === professionalId;
+  }
+
   public belongsToPatient(patient: Patient | UUID) {
-    if (patient instanceof Patient) return this._props.id === patient.getId();
-    return this._props.id === patient;
+    const patientId = patient instanceof Patient ? patient.getId() : patient;
+    return this._props.patientId === patientId;
   }
 
   public isDraft() {
@@ -106,4 +136,8 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
   public equals(other: AggregateRoot<PtsProps>) {
     return other instanceof ProjetoTerapeuticoSingular && this._props.id === other._props.id;
   }
+}
+
+export namespace ProjetoTerapeuticoSingular {
+  export type Props = PtsProps;
 }
