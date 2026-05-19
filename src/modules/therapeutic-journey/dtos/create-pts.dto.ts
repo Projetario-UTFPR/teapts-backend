@@ -1,6 +1,6 @@
 import { type UUID } from "@/common/uuid";
 import { DTO } from "@/infra/http/dto";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
 import z from "zod";
 
@@ -10,10 +10,12 @@ const schema = z.object({
     .uuid("O ID do profissional fornecido é inválido.")
     .transform((id) => id as UUID),
   socialSituation: z.string("A situação social precisa ser um texto."),
-  multidisciplinaryTeamIds: z.array(
-    z.uuid("O ID fornecido para este profissional é inválido."),
-    "Você deve enviar os identificadores dos profissionais que comporão a equipe multidisciplinar.",
-  ),
+  multidisciplinaryTeamIds: z
+    .array(
+      z.uuid("O ID fornecido para este profissional é inválido."),
+      "Você deve enviar os identificadores dos profissionais que comporão a equipe multidisciplinar.",
+    )
+    .optional(),
 });
 
 type CreatePtsSchema = z.infer<typeof schema>;
@@ -43,7 +45,7 @@ export class CreatePtsDto extends DTO implements CreatePtsSchema {
   public readonly socialSituation!: string;
 
   @Expose()
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
       "The identifiers of the initial professionals composing the multidisciplinary team of this PTS.",
     type: "array",
@@ -53,5 +55,5 @@ export class CreatePtsDto extends DTO implements CreatePtsSchema {
         "The identifier of one professional to be member of the multidisciplinary team of this PTS.",
     },
   })
-  public readonly multidisciplinaryTeamIds!: string[];
+  public readonly multidisciplinaryTeamIds?: string[];
 }
