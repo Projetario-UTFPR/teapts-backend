@@ -56,11 +56,17 @@ function intoPrisma(
 }
 
 function fromPrisma(
-  raw: Prisma.ProjetoTerapeuticoSingularModel & { multidisciplinaryTeamIds: string[] },
+  raw: Prisma.ProjetoTerapeuticoSingularModel & {
+    multidisciplinaryTeam: {
+      professionalId: string;
+    }[];
+  },
 ): ProjetoTerapeuticoSingular {
   return ProjetoTerapeuticoSingular.createUnchecked({
     id: raw.id,
-    multidisciplinaryTeamIds: raw.multidisciplinaryTeamIds,
+    multidisciplinaryTeamIds: raw.multidisciplinaryTeam.map(
+      (professional) => professional.professionalId,
+    ),
     patientId: raw.patientId,
     responsibleProfessionalId: raw.responsibleProfessionalId,
     socialSituation: raw.socialSituation,

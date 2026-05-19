@@ -65,15 +65,7 @@ async function createAndPersist(prismaService: PrismaService, params?: CreatePar
         }),
       ),
     ),
-    taskEither.map((row) => {
-      const { multidisciplinaryTeam, ...rawPts } = row;
-
-      const multidisciplinaryTeamIds = multidisciplinaryTeam.map(
-        ({ professionalId }) => professionalId,
-      );
-
-      ptsMapper.fromPrisma({ ...rawPts, multidisciplinaryTeamIds });
-    }),
+    taskEither.map((row) => ptsMapper.fromPrisma(row)),
   )();
 }
 
