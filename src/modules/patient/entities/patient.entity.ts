@@ -1,15 +1,24 @@
 import { BaseEntity } from "@/common/entities/base-entity";
 import { type SupportContact } from "../value-objects/support-contact.vo";
-import { Account } from "@/modules/identity/entities/account.aggregate";
+import { type UUID } from "@/common/uuid";
+import { either } from "fp-ts";
 
 type PatientProps = {
-  account: Account;
+  accountId: UUID;
   supportContacts: SupportContact[];
 };
 
 export class Patient extends BaseEntity<PatientProps> {
+  public static create(props: PatientProps) {
+    return either.right(new this(props));
+  }
+
+  public static createUnchecked(props: PatientProps) {
+    return new this(props);
+  }
+
   public getId() {
-    return this._props.account.getId();
+    return this._props.accountId;
   }
 
   public getSupportContacts(): Readonly<SupportContact[]> {
@@ -23,4 +32,8 @@ export class Patient extends BaseEntity<PatientProps> {
   public equals(other: Patient): boolean {
     return this === other || this.getId() === other.getId();
   }
+}
+
+export namespace Patient {
+  export type Props = PatientProps;
 }

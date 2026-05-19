@@ -1,6 +1,10 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
 import { generateUUID, type UUID } from "@/common/uuid";
+import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
+import { either } from "fp-ts";
+import { pipe } from "fp-ts/lib/function";
 
 type PtsProps = {
   id: UUID;
@@ -29,6 +33,7 @@ type CreateNewPtsParams = {
   patientId: UUID;
   responsibleProfessionalId: UUID;
   socialSituation: string;
+  multidisciplinaryTeamIds?: UUID[];
 };
 
 export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
@@ -36,14 +41,22 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     patientId,
     socialSituation,
     responsibleProfessionalId,
+    multidisciplinaryTeamIds = [],
   }: CreateNewPtsParams) {
+    // We gotta ensure responsible professional ain't being put in the multidisciplinary team,
+    // we can infer it belongs to the team because it is the responsible professional... No need
+    // to keep it redundant.
+    multidisciplinaryTeamIds = multidisciplinaryTeamIds.filter(
+      (professionalId) => professionalId !== responsibleProfessionalId,
+    );
+
     return new this({
       id: generateUUID(),
       patientId,
       socialSituation,
       responsibleProfessionalId,
       timeline: PtsTimeline.create(),
-      multidisciplinaryTeamIds: [],
+      multidisciplinaryTeamIds,
     });
   }
 
@@ -55,6 +68,38 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
    */
   public static createUnchecked(props: PtsProps) {
     return new this(props);
+  }
+
+  public getId() {
+    return this._props.id;
+  }
+
+  public getSocialSituation() {
+    return this._props.socialSituation;
+  }
+
+  public acceptAndBeginPlanning() {
+    return pipe(
+      this._props.timeline.acceptAndBeginPlanning(),
+      either.map((newTimeline) => {
+        this._props.timeline = newTimeline;
+      }),
+    );
+  }
+
+  /**
+   * Checks whether `professional` is the responsible professional of this PTS.
+   */
+  public isResponsabilityOfProfessional(professional: Professional | UUID) {
+    const professionalId =
+      professional instanceof Professional ? professional.getId() : professional;
+
+    return this._props.responsibleProfessionalId === professionalId;
+  }
+
+  public belongsToPatient(patient: Patient | UUID) {
+    const patientId = patient instanceof Patient ? patient.getId() : patient;
+    return this._props.patientId === patientId;
   }
 
   public isDraft() {
@@ -81,6 +126,11 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.timeline.status === PtsTimeline.Status.Concluded;
   }
 
+  public isActive() {
+    const activeStatuses = [PtsTimeline.Status.Planning, PtsTimeline.Status.Running];
+    return activeStatuses.includes(this._props.timeline.status);
+  }
+
   public isTerminated() {
     const currentState = this._props.timeline.status;
     const terminalStates = [
@@ -95,4 +145,8 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
   public equals(other: AggregateRoot<PtsProps>) {
     return other instanceof ProjetoTerapeuticoSingular && this._props.id === other._props.id;
   }
+}
+
+export namespace ProjetoTerapeuticoSingular {
+  export type Props = PtsProps;
 }
