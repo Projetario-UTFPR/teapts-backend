@@ -9,6 +9,7 @@ import datastoreConfig from "@/configs/datastore.config";
 import { AuthModule } from "@/infra/auth/auth.module";
 import appConfig from "@/configs/app.config";
 import keysetConfig from "@/configs/keyset.config";
+import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeutic-journey.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import keysetConfig from "@/configs/keyset.config";
     PrismaModule,
     IdentityModule,
     AuthModule,
+    TherapeuticJourneyModule,
   ],
 })
 export class AppModule {}
