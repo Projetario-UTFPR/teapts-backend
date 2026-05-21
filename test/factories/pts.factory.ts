@@ -6,6 +6,7 @@ import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-tim
 import { faker } from "@faker-js/faker";
 import patientsFactory from "@test/factories/patients.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
+import { resolvePatient, resolveProfessional } from "@test/factories/utils";
 import { either, taskEither } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
@@ -52,20 +53,35 @@ async function create({
 }
 
 async function createAndPersist(prismaService: PrismaService, params?: CreateParams) {
+  const patient = await resolvePatient(prismaService, params?.patientId);
+
+  const responsibleProfessional = await resolveProfessional(
+    prismaService,
+    params?.responsibleProfessionalId,
+  );
+
   return await pipe(
-    () => create(params),
+    () =>
+      create({
+        ...params,
+        responsibleProfessionalId: responsibleProfessional.getId(),
+        patientId: patient.getId(),
+      }),
     taskEither.map(ptsMapper.intoPrisma),
     taskEither.chain((data) =>
-      taskEither.fromTask(() =>
-        prismaService.projetoTerapeuticoSingular.create({
-          data,
-          include: {
-            multidisciplinaryTeam: { select: { professionalId: true } },
-          },
-        }),
+      taskEither.tryCatch(
+        () =>
+          prismaService.projetoTerapeuticoSingular.create({
+            data,
+            include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+          }),
+        (error) => error,
       ),
     ),
     taskEither.map((row) => ptsMapper.fromPrisma(row)),
+    taskEither.getOrElse((error) => {
+      throw error;
+    }),
   )();
 }
 
