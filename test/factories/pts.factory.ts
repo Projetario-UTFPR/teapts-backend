@@ -6,7 +6,8 @@ import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-tim
 import { faker } from "@faker-js/faker";
 import patientsFactory from "@test/factories/patients.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
-import { either, taskEither } from "fp-ts";
+import { resolvePatient, resolveProfessional } from "@test/factories/utils";
+import { taskEither } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
 type CreateTimeLineParams = Partial<Parameters<typeof PtsTimeline.createUnchecked>[0]>;
@@ -30,51 +31,46 @@ async function create({
   timeline = createTimeline(),
 }: CreateParams = {}) {
   responsibleProfessionalId ??= (await professionalsFactory.create()).getId();
+  patientId ??= (await patientsFactory.create()).getId();
 
-  return pipe(
-    patientId
-      ? either.right(patientId)
-      : pipe(
-          await patientsFactory.create(),
-          either.map((patient) => patient.getId()),
-        ),
-    either.map((patientId) =>
-      ProjetoTerapeuticoSingular.createUnchecked({
-        patientId,
-        responsibleProfessionalId,
-        socialSituation,
-        id,
-        multidisciplinaryTeamIds,
-        timeline,
-      }),
-    ),
-  );
+  return ProjetoTerapeuticoSingular.createUnchecked({
+    patientId,
+    responsibleProfessionalId,
+    socialSituation,
+    id,
+    multidisciplinaryTeamIds,
+    timeline,
+  });
 }
 
 async function createAndPersist(prismaService: PrismaService, params?: CreateParams) {
+  const patient = await resolvePatient(prismaService, params?.patientId);
+
+  const responsibleProfessional = await resolveProfessional(
+    prismaService,
+    params?.responsibleProfessionalId,
+  );
+
+  const pts = await create({
+    ...params,
+    responsibleProfessionalId: responsibleProfessional.getId(),
+    patientId: patient.getId(),
+  });
+
   return await pipe(
-    () => create(params),
-    taskEither.map(ptsMapper.intoPrisma),
-    taskEither.chain((data) =>
-      taskEither.fromTask(() =>
+    taskEither.tryCatch(
+      () =>
         prismaService.projetoTerapeuticoSingular.create({
-          data,
-          include: {
-            multidisciplinaryTeam: { select: { professionalId: true } },
-          },
+          data: ptsMapper.intoPrisma(pts),
+          include: { multidisciplinaryTeam: { select: { professionalId: true } } },
         }),
-      ),
+      (error) => error,
     ),
-    taskEither.map((row) => {
-      const { multidisciplinaryTeam, ...rawPts } = row;
-
-      const multidisciplinaryTeamIds = multidisciplinaryTeam.map(
-        ({ professionalId }) => professionalId,
-      );
-
-      ptsMapper.fromPrisma({ ...rawPts, multidisciplinaryTeamIds });
+    taskEither.map((row) => ptsMapper.fromPrisma(row)),
+    taskEither.getOrElse((error) => {
+      throw error;
     }),
   )();
 }
 
-export default { create, createAndPersist };
+export default { create, createAndPersist, createTimeline };

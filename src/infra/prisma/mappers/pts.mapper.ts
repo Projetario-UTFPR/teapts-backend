@@ -40,6 +40,10 @@ function intoPrisma(
   pts: ProjetoTerapeuticoSingular,
 ): Prisma.ProjetoTerapeuticoSingularCreateArgs["data"] {
   const snapshot = pts.toSnapshot();
+  const multidisciplinaryTeam = snapshot.multidisciplinaryTeamIds.map((id) => ({
+    professionalId: id.toString(),
+  }));
+
   return {
     socialSituation: snapshot.socialSituation,
     status: statusIntoPrisma(snapshot.timeline.status),
@@ -52,15 +56,22 @@ function intoPrisma(
     id: snapshot.id.toString(),
     patientId: snapshot.patientId.toString(),
     responsibleProfessionalId: snapshot.responsibleProfessionalId.toString(),
+    multidisciplinaryTeam: { createMany: { data: multidisciplinaryTeam } },
   };
 }
 
 function fromPrisma(
-  raw: Prisma.ProjetoTerapeuticoSingularModel & { multidisciplinaryTeamIds: string[] },
+  raw: Prisma.ProjetoTerapeuticoSingularModel & {
+    multidisciplinaryTeam: {
+      professionalId: string;
+    }[];
+  },
 ): ProjetoTerapeuticoSingular {
   return ProjetoTerapeuticoSingular.createUnchecked({
     id: raw.id,
-    multidisciplinaryTeamIds: raw.multidisciplinaryTeamIds,
+    multidisciplinaryTeamIds: raw.multidisciplinaryTeam.map(
+      (professional) => professional.professionalId,
+    ),
     patientId: raw.patientId,
     responsibleProfessionalId: raw.responsibleProfessionalId,
     socialSituation: raw.socialSituation,

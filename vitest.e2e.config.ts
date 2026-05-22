@@ -11,6 +11,7 @@ export default defineConfig({
     root: "./",
     setupFiles: ["./test/setup-e2e.ts"],
     testTimeout: 40000,
+    strictTags: false,
   },
   resolve: {
     tsconfigPaths: true,

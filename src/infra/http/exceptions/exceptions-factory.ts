@@ -1,6 +1,7 @@
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { BaseError } from "@/common/errors/base.error";
 import { ConflictError } from "@/common/errors/conflict.error";
+import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { InvalidArgumentError } from "@/common/errors/invalid-argument.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
@@ -11,6 +12,7 @@ import { ValidationErrorsBagException } from "@/infra/http/exceptions/validation
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
@@ -24,6 +26,11 @@ function fromError(error: BaseError | ValidationErrorsBag): never {
   if (error instanceof UnauthorizedError) {
     const { cause } = error;
     throw new UnauthorizedException(BasicExceptionPresenter.present(error), { cause });
+  }
+
+  if (error instanceof ForbiddenError) {
+    const { cause } = error;
+    throw new ForbiddenException(BasicExceptionPresenter.present(error), { cause });
   }
 
   if (error instanceof InvalidArgumentError) {
