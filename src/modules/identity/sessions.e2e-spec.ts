@@ -35,7 +35,9 @@ describe("[e2e] Sessions Controller (v1)", () => {
     await app.init();
     prisma = app.get(PrismaService);
     hasher = app.get(Hasher);
+  });
 
+  beforeEach(async () => {
     const passwordHash = await hasher.hash(password);
     account = await accountsFactory.createAndPersist(prisma, { passwordHash });
   });
