@@ -18,34 +18,35 @@ describe("[Service] Create Draft PTS Service", async () => {
   let sut: CreateDraftPtsService;
 
   beforeEach(() => {
-    ptsRepository = new InMemoryPtsRepository();
     accountsRepository = new InMemoryAccountsRepository();
     professionalsRepository = new InMemoryProfessionalsRepository();
+    ptsRepository = new InMemoryPtsRepository(professionalsRepository);
     sut = new CreateDraftPtsService(ptsRepository, accountsRepository, professionalsRepository);
   });
 
   const getEntities = async () => {
     const patientAccount = await accountsFactory.create();
-    const patientResult = await patientsFactory.create({ accountId: patientAccount.getId() });
+    const profesisonalAccount = await accountsFactory.create();
 
-    assert(either.isRight(patientResult));
+    const patient = await patientsFactory.create({ accountId: patientAccount.getId() });
+    const professional = await professionalsFactory.create({
+      accountId: profesisonalAccount.getId(),
+    });
 
-    const patient = patientResult.right;
-    const professional = await professionalsFactory.create();
-
-    accountsRepository.accounts.push(patientAccount);
+    accountsRepository.accounts.push(patientAccount, profesisonalAccount);
     professionalsRepository.professionals.push(professional);
 
-    return { patientAccount, patient, professional };
+    return { patientAccount, patient, profesisonalAccount, professional };
   };
 
   test("successfull creation contracts", async () => {
-    const { patient, professional } = await getEntities();
+    const { patient, professional, profesisonalAccount } = await getEntities();
 
     const result = await sut.execute({
       patientId: patient.getId(),
       professionalId: professional.getId(),
       socialSituation: faker.lorem.paragraphs(5),
+      accountId: profesisonalAccount.getId(),
     });
 
     assert(either.isRight(result), "it should have created the PTS successfully");
@@ -69,12 +70,13 @@ describe("[Service] Create Draft PTS Service", async () => {
   });
 
   it("should allow to create a PTS with a initial multidisciplinary team defined", async () => {
-    const { patient, professional } = await getEntities();
+    const { patient, professional, profesisonalAccount } = await getEntities();
 
     const professionals = await Promise.all(
       Array.from({ length: 10 }).map(() => professionalsFactory.create()),
     );
 
+    professionalsRepository.professionals.push(...professionals);
     const multidisciplinaryTeamIds = professionals.map((professional) => professional.getId());
 
     const result = await sut.execute({
@@ -82,6 +84,7 @@ describe("[Service] Create Draft PTS Service", async () => {
       professionalId: professional.getId(),
       socialSituation: faker.lorem.paragraphs(5),
       multidisciplinaryTeamIds,
+      accountId: profesisonalAccount.getId(),
     });
 
     assert(either.isRight(result));
@@ -93,11 +96,13 @@ describe("[Service] Create Draft PTS Service", async () => {
   });
 
   it("should silently refuse to include the responsible professional in the list of ids of the professionals from the multidisciplinary team", async () => {
-    const { patient, professional } = await getEntities();
+    const { patient, professional, profesisonalAccount } = await getEntities();
 
     const professionals = await Promise.all(
       Array.from({ length: 10 }).map(() => professionalsFactory.create()),
     );
+
+    professionalsRepository.professionals.push(...professionals);
 
     const multidisciplinaryTeamIds = [
       professional.getId(),
@@ -109,6 +114,7 @@ describe("[Service] Create Draft PTS Service", async () => {
       professionalId: professional.getId(),
       socialSituation: faker.lorem.paragraphs(5),
       multidisciplinaryTeamIds,
+      accountId: profesisonalAccount.getId(),
     });
 
     assert(either.isRight(result));
@@ -121,20 +127,17 @@ describe("[Service] Create Draft PTS Service", async () => {
   });
 
   it("should not let no professional create a new PTS for a patient that already has an active PTS", async () => {
-    const { patient, professional } = await getEntities();
+    const { patient, professional, profesisonalAccount } = await getEntities();
 
-    const ptsResult = await ptsFactory.create({ patientId: patient.getId() });
-    assert(either.isRight(ptsResult));
-
-    const pts = ptsResult.right;
-    assert(either.isRight(pts.acceptAndBeginPlanning()));
-
+    const pts = await ptsFactory.create({ patientId: patient.getId() });
+    pts.acceptAndBeginPlanning();
     ptsRepository.items.push(pts);
 
     const result = await sut.execute({
       patientId: patient.getId(),
       professionalId: professional.getId(),
       socialSituation: faker.lorem.paragraphs(5),
+      accountId: profesisonalAccount.getId(),
     });
 
     assert(
@@ -150,7 +153,7 @@ describe("[Service] Create Draft PTS Service", async () => {
   });
 
   it("should not allow any entity but a professional to create a PTS", async () => {
-    const { patient } = await getEntities();
+    const { patient, profesisonalAccount } = await getEntities();
     const anotherAccount = await accountsFactory.create();
     accountsRepository.accounts.push(anotherAccount);
 
@@ -158,6 +161,7 @@ describe("[Service] Create Draft PTS Service", async () => {
       patientId: patient.getId(),
       professionalId: anotherAccount.getId(),
       socialSituation: faker.lorem.paragraph(),
+      accountId: profesisonalAccount.getId(),
     });
 
     assert(
