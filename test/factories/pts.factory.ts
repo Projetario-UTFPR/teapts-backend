@@ -73,4 +73,4 @@ async function createAndPersist(prismaService: PrismaService, params?: CreatePar
   )();
 }
 
-export default { create, createAndPersist };
+export default { create, createAndPersist, createTimeline };
