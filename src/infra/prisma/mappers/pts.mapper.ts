@@ -40,6 +40,10 @@ function intoPrisma(
   pts: ProjetoTerapeuticoSingular,
 ): Prisma.ProjetoTerapeuticoSingularCreateArgs["data"] {
   const snapshot = pts.toSnapshot();
+  const multidisciplinaryTeam = snapshot.multidisciplinaryTeamIds.map((id) => ({
+    professionalId: id.toString(),
+  }));
+
   return {
     socialSituation: snapshot.socialSituation,
     status: statusIntoPrisma(snapshot.timeline.status),
@@ -52,6 +56,7 @@ function intoPrisma(
     id: snapshot.id.toString(),
     patientId: snapshot.patientId.toString(),
     responsibleProfessionalId: snapshot.responsibleProfessionalId.toString(),
+    multidisciplinaryTeam: { createMany: { data: multidisciplinaryTeam } },
   };
 }
 
