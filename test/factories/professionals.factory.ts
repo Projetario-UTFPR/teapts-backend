@@ -29,6 +29,9 @@ async function createAndPersist(prismaService: PrismaService, params?: Params) {
       taskEither.fromTask(() => prismaService.professional.create({ data })),
     ),
     taskEither.map(professionalMapper.fromPrisma),
+    // we don't really care atp, it's just for testing purposes, if it fails, it means there is a problem
+    // in the test... just go fix it
+    taskEither.getOrElse((error) => error),
   )();
 }
 

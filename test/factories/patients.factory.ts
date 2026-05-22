@@ -20,6 +20,7 @@ async function createAndPersist(prismaService: PrismaService, params?: Params) {
     taskEither.map(patientsMapper.intoPrisma),
     taskEither.chain((data) => taskEither.fromTask(() => prismaService.patient.create({ data }))),
     taskEither.map(patientsMapper.fromPrisma),
+    taskEither.getOrElse((error) => error),
   )();
 }
 
