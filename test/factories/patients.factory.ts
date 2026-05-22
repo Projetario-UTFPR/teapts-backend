@@ -3,22 +3,28 @@ import patientsMapper from "@/infra/prisma/mappers/patients.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Patient } from "@/modules/patient/entities/patient.entity";
 import { resolveAccount } from "@test/factories/utils";
-import { taskEither } from "fp-ts";
+import { either, taskEither } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
 type Params = Partial<Patient.Props>;
 
 async function create({ accountId = generateUUID(), supportContacts = [] }: Params = {}) {
-  return Patient.create({ accountId, supportContacts });
+  return pipe(
+    Patient.create({ accountId, supportContacts }),
+    either.getOrElseW((error) => {
+      throw error;
+    }),
+  );
 }
 
 async function createAndPersist(prismaService: PrismaService, params?: Params) {
   let account = await resolveAccount(prismaService, params?.accountId);
+  const patient = await create({ ...params, accountId: account.getId() });
 
   return await pipe(
-    () => create({ ...params, accountId: account.getId() }),
-    taskEither.map(patientsMapper.intoPrisma),
-    taskEither.chain((data) => taskEither.fromTask(() => prismaService.patient.create({ data }))),
+    taskEither.fromTask(() =>
+      prismaService.patient.create({ data: patientsMapper.intoPrisma(patient) }),
+    ),
     taskEither.map(patientsMapper.fromPrisma),
     taskEither.getOrElse((error) => error),
   )();
