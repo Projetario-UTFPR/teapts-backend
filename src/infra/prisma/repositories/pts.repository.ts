@@ -18,7 +18,6 @@ export class PrismaPtsRepository extends PtsRepository {
     super();
   }
 
-  // TODO: add integration tests to this method
   public activePtsExistsByPatientId(patientId: UUID): Promise<Either<IrrecoverableError, boolean>> {
     return pipe(
       te.tryCatch(
