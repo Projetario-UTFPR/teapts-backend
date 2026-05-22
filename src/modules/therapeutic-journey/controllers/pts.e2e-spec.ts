@@ -55,13 +55,11 @@ describe("[e2e] PTS Controller (v1)", () => {
     patient = await patientsFactory.createAndPersist(prisma);
 
     const accessTokenResult = await tokensService.execute({ account });
-    assert(e.isRight(accessTokenResult));
-    professionalAccountToken = accessTokenResult.right.accessToken;
+    if (e.isLeft(accessTokenResult)) {
+      throw new Error("Didn't issued an access token correctly for the test.");
+    }
 
-    assert(
-      professional.getAccountId() === account.getId(),
-      "factory should correctly set the given account id",
-    );
+    professionalAccountToken = accessTokenResult.right.accessToken;
   });
 
   const getValidParams = () => ({
@@ -75,7 +73,7 @@ describe("[e2e] PTS Controller (v1)", () => {
     expect(response.body, "response should be a validation bag object").toHaveProperty("errors");
   };
 
-  test("create PTS route requires authentication", async () => {
+  test("create PTS route requires authentication", { tags: ["storeNewPts"] }, async () => {
     await request(app.getHttpServer()).post("/v1/pts/create").send(getValidParams()).expect(401);
   });
 
@@ -83,88 +81,104 @@ describe("[e2e] PTS Controller (v1)", () => {
     [{ professionalId: undefined }, "professionalId"] as const,
     [{ patientId: undefined }, "patientId"] as const,
     [{ socialSituation: undefined }, "socialSituation"] as const,
-  ])("should return 422 when `$1` is missing", async (override, missingProperty) => {
-    const body = {
-      ...getValidParams(),
-      ...override,
-    };
+  ])(
+    "should return 422 when `$1` is missing",
+    { tags: ["storeNewPts"] },
+    async (override, missingProperty) => {
+      const body = {
+        ...getValidParams(),
+        ...override,
+      };
 
-    const response = await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${professionalAccountToken}` })
-      .send(body)
-      .expect(422);
+      const response = await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(422);
 
-    assertIsValidationErrorsBag(response);
-    expect(response.body.errors).toHaveProperty(missingProperty);
-  });
+      assertIsValidationErrorsBag(response);
+      expect(response.body.errors).toHaveProperty(missingProperty);
+    },
+  );
 
-  it("should return 403 when the professionalId does not belong to the authenticated account", async () => {
-    // a second account whose professional will NOT belong to the first account
-    const anotherAccount = await accountsFactory.createAndPersist(
-      prisma,
-      { plainPassword: "12345657" },
-      { hasher },
-    );
+  it(
+    "should return 403 when the professionalId does not belong to the authenticated account",
+    { tags: ["storeNewPts"] },
+    async () => {
+      // a second account whose professional will NOT belong to the first account
+      const anotherAccount = await accountsFactory.createAndPersist(
+        prisma,
+        { plainPassword: "12345657" },
+        { hasher },
+      );
 
-    const anotherAccessTokenResult = await tokensService.execute({ account: anotherAccount });
-    assert(either.isRight(anotherAccessTokenResult));
-    const { accessToken } = anotherAccessTokenResult.right;
+      const anotherAccessTokenResult = await tokensService.execute({ account: anotherAccount });
+      assert(either.isRight(anotherAccessTokenResult));
+      const { accessToken } = anotherAccessTokenResult.right;
 
-    // the authenticated user is `anotherAccount`, but `professionalId` belongs to (first) `account`
-    // hence it should not get to create the PTS
-    const body = {
-      ...getValidParams(),
-      professionalId: professional.getId(),
-      accountId: anotherAccount.getId(),
-    };
+      // the authenticated user is `anotherAccount`, but `professionalId` belongs to (first) `account`
+      // hence it should not get to create the PTS
+      const body = {
+        ...getValidParams(),
+        professionalId: professional.getId(),
+        accountId: anotherAccount.getId(),
+      };
 
-    const response = await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${accessToken}` })
-      .send(body)
-      .expect(403);
+      const response = await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${accessToken}` })
+        .send(body)
+        .expect(403);
 
-    expect(response.body).toHaveProperty("message");
-  });
+      expect(response.body).toHaveProperty("message");
+    },
+  );
 
-  it("should return 403 when the professionalId does not exist at all", async () => {
-    // ensure the ID does not exist
-    const nonExistingProfessionalId = generateUUID();
-    prisma.professional.delete({ where: { id: nonExistingProfessionalId } });
+  it(
+    "should return 403 when the professionalId does not exist at all",
+    { tags: ["storeNewPts"] },
+    async () => {
+      // ensure the ID does not exist
+      const nonExistingProfessionalId = generateUUID();
+      prisma.professional.delete({ where: { id: nonExistingProfessionalId } });
 
-    const response = await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${professionalAccountToken}` })
-      .send({ ...getValidParams(), professionalId: nonExistingProfessionalId })
-      .expect(403);
+      const response = await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send({ ...getValidParams(), professionalId: nonExistingProfessionalId })
+        .expect(403);
 
-    expect(response.body).toHaveProperty("message");
-  });
+      expect(response.body).toHaveProperty("message");
+    },
+  );
 
-  it("should return 409 when the patient already has an active PTS", async () => {
-    // note that `getValidParams()` returns the same patient, professional and account
-    const params = getValidParams();
+  it(
+    "should return 409 when the patient already has an active PTS",
+    { tags: ["storeNewPts"] },
+    async () => {
+      // note that `getValidParams()` returns the same patient, professional and account
+      const params = getValidParams();
 
-    const pts = await ptsFactory.createAndPersist(prisma, params);
-    pts.acceptAndBeginPlanning();
+      const pts = await ptsFactory.createAndPersist(prisma, params);
+      pts.acceptAndBeginPlanning();
 
-    await prisma.projetoTerapeuticoSingular.update({
-      data: ptsMapper.intoPrisma(pts),
-      where: { id: pts.getId().toString() },
-    });
+      await prisma.projetoTerapeuticoSingular.update({
+        data: ptsMapper.intoPrisma(pts),
+        where: { id: pts.getId().toString() },
+      });
 
-    // second creation for the same patient should fail due to conflict
-    const conflictResponse = await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${professionalAccountToken}` })
-      .send(params)
-      .expect(409);
+      // second creation for the same patient should fail due to conflict
+      const conflictResponse = await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(params)
+        .expect(409);
 
-    expect(conflictResponse.body).toHaveProperty("message");
-  });
+      expect(conflictResponse.body).toHaveProperty("message");
+    },
+  );
 
-  it("should draft a PTS successfully", async () => {
+  it("should draft a PTS successfully", { tags: ["storeNewPts"] }, async () => {
     const newPatient = await patientsFactory.createAndPersist(prisma);
 
     const existingPtsForNewPatientPriorToCreation = await prisma.projetoTerapeuticoSingular.count({
@@ -189,68 +203,76 @@ describe("[e2e] PTS Controller (v1)", () => {
     expect(existingPtsForNewPatient, "it should have created a new PTS for the patient").toBe(1);
   });
 
-  it("should require every professional from the multidisciplinary team to exist", async () => {
-    const secondProfessionalNotPersisted = await professionalsFactory.create();
+  it(
+    "should require every professional from the multidisciplinary team to exist",
+    { tags: ["storeNewPts"] },
+    async () => {
+      const secondProfessionalNotPersisted = await professionalsFactory.create();
 
-    const body = {
-      ...getValidParams(),
-      multidisciplinaryTeamIds: [secondProfessionalNotPersisted.getId()],
-    };
+      const body = {
+        ...getValidParams(),
+        multidisciplinaryTeamIds: [secondProfessionalNotPersisted.getId()],
+      };
 
-    await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${professionalAccountToken}` })
-      .send(body)
-      .expect(400);
+      await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(400);
 
-    const persistedPts = await prisma.projetoTerapeuticoSingular.count({
-      where: { patientId: patient.getId().toString() },
-    });
+      const persistedPts = await prisma.projetoTerapeuticoSingular.count({
+        where: { patientId: patient.getId().toString() },
+      });
 
-    expect(persistedPts, "it should not have created the PTS").toBe(0);
-  });
+      expect(persistedPts, "it should not have created the PTS").toBe(0);
+    },
+  );
 
-  it("should draft a PTS with multidisciplinary team members successfully", async () => {
-    const newPatient = await patientsFactory.createAndPersist(prisma);
+  it(
+    "should draft a PTS with multidisciplinary team members successfully",
+    { tags: ["storeNewPts"] },
+    async () => {
+      const newPatient = await patientsFactory.createAndPersist(prisma);
 
-    const teamMember1 = await professionalsFactory.createAndPersist(prisma, {
-      accountId: account.getId(),
-    });
+      const teamMember1 = await professionalsFactory.createAndPersist(prisma, {
+        accountId: account.getId(),
+      });
 
-    const teamMember2 = await professionalsFactory.createAndPersist(prisma, {
-      accountId: account.getId(),
-    });
+      const teamMember2 = await professionalsFactory.createAndPersist(prisma, {
+        accountId: account.getId(),
+      });
 
-    const inputMembersIds = [teamMember1.getId(), teamMember2.getId()];
-    const body = {
-      ...getValidParams(),
-      patientId: newPatient.getId(),
-      multidisciplinaryTeamIds: inputMembersIds,
-    };
+      const inputMembersIds = [teamMember1.getId(), teamMember2.getId()];
+      const body = {
+        ...getValidParams(),
+        patientId: newPatient.getId(),
+        multidisciplinaryTeamIds: inputMembersIds,
+      };
 
-    await request(app.getHttpServer())
-      .post("/v1/pts/create")
-      .set({ authorization: `Bearer ${professionalAccountToken}` })
-      .send(body)
-      .expect(201);
+      await request(app.getHttpServer())
+        .post("/v1/pts/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(201);
 
-    const newPts = await prisma.projetoTerapeuticoSingular.findFirstOrThrow({
-      where: { patientId: newPatient.getId().toString() },
-      include: { multidisciplinaryTeam: { select: { professionalId: true } } },
-    });
+      const newPts = await prisma.projetoTerapeuticoSingular.findFirstOrThrow({
+        where: { patientId: newPatient.getId().toString() },
+        include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+      });
 
-    const membersInTheMultidisciplinaryTeamOfPts = newPts.multidisciplinaryTeam.map(
-      (team) => team.professionalId,
-    );
+      const membersInTheMultidisciplinaryTeamOfPts = newPts.multidisciplinaryTeam.map(
+        (team) => team.professionalId,
+      );
 
-    expect(
-      membersInTheMultidisciplinaryTeamOfPts,
-      "it should have put every input member in the initial multidisciplinary team",
-    ).toEqual(expect.arrayContaining(inputMembersIds));
+      expect(
+        membersInTheMultidisciplinaryTeamOfPts,
+        "it should have put every input member in the initial multidisciplinary team",
+      ).toEqual(expect.arrayContaining(inputMembersIds));
 
-    expect(
-      membersInTheMultidisciplinaryTeamOfPts.length,
-      "it should not have added more members than requested",
-    ).toBe(inputMembersIds.length);
-  });
+      expect(
+        membersInTheMultidisciplinaryTeamOfPts.length,
+        "it should not have added more members than requested",
+      ).toBe(inputMembersIds.length);
+    },
+  );
 });
