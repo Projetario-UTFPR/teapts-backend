@@ -69,16 +69,10 @@ export class CreateDraftPtsService {
   private ensureNoActivePts(patientId: UUID) {
     return pipe(
       () => this.ptsRepo.activePtsExistsByPatientId(patientId),
-      te.chainW(
-        te.fromPredicate(
-          (ptsAlreadyExists) => {
-            const canCreateNewPts = !ptsAlreadyExists;
-            return canCreateNewPts;
-          },
-          () => new PatientAlreadyHasActivePtsError(),
-        ),
-      ),
-      te.map(() => {}),
+      te.chainEitherKW((thereIsAnActivePts) => {
+        if (thereIsAnActivePts) return e.left(new PatientAlreadyHasActivePtsError());
+        return e.right(undefined);
+      }),
     );
   }
 }
