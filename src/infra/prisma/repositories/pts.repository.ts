@@ -23,7 +23,7 @@ export class PrismaPtsRepository extends PtsRepository {
           this.prisma.projetoTerapeuticoSingular.count({
             where: {
               patientId: patientId.toString(),
-              AND: { status: { in: ["Running", "Planning"] } },
+              status: { in: ["Running", "Planning"] },
             },
           }),
         (error) =>
