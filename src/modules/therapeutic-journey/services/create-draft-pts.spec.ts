@@ -69,6 +69,8 @@ describe("[Service] Create Draft PTS Service", async () => {
     ).toBe(0);
   });
 
+  it("should ensure the professional profile belongs to the user trying to create the PTS", async () => {});
+
   it("should allow to create a PTS with a initial multidisciplinary team defined", async () => {
     const { patient, professional, profesisonalAccount } = await getEntities();
 

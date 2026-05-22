@@ -9,6 +9,7 @@ import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeut
 import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/create-draft-pts.service";
 import { Body, Controller, ForbiddenException, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -39,6 +40,11 @@ export class PtsController {
   @ApiConflictResponse({
     type: BasicExceptionPresenter,
     description: "The patient to which the PTS would be created already have an active PTS ATM.",
+  })
+  @ApiBadRequestResponse({
+    type: BasicExceptionPresenter,
+    description:
+      "Some professional involved in the request is actually not registered in the platform.",
   })
   public storeNewPts(@Body() body: CreatePtsDto, @CurrentUser() { account }: AuthCollection) {
     return pipe(
