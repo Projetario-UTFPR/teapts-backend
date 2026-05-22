@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     globals: true,
     root: "./",
+    strictTags: false,
   },
   resolve: {
     tsconfigPaths: true,
