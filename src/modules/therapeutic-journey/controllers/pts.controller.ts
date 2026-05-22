@@ -1,5 +1,5 @@
+import { AuthCollection } from "@/infra/auth/auth-collection";
 import { CurrentUser } from "@/infra/auth/decorators/current-user";
-import { JwtPayload } from "@/infra/auth/jwt/payload";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
@@ -40,11 +40,11 @@ export class PtsController {
     type: BasicExceptionPresenter,
     description: "The patient to which the PTS would be created already have an active PTS ATM.",
   })
-  public storeNewPts(@Body() body: CreatePtsDto, @CurrentUser() { sub }: JwtPayload) {
+  public storeNewPts(@Body() body: CreatePtsDto, @CurrentUser() { account }: AuthCollection) {
     return pipe(
       () =>
         this.createDraftPts.execute({
-          accountId: sub,
+          accountId: account.getId(),
           professionalId: body.professionalId,
           patientId: body.patientId,
           socialSituation: body.socialSituation,
@@ -68,6 +68,6 @@ export class PtsController {
         return error;
       }),
       te.getOrElse(exceptionsFactory.fromError),
-    );
+    )();
   }
 }
