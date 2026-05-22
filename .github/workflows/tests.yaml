@@ -25,6 +25,12 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Necessary because unit tests use factories, which include persistance methods,
+      # that depend on mappers, that depend on Prisma generated files...
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - run: npm run test
 
   e2e_tests:

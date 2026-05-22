@@ -29,7 +29,9 @@ describe("[Integration] Prisma Accounts Repository", () => {
 
     accountRepo = app.get(AccountsRepository);
     sut = app.get(CreateAccountService);
+  });
 
+  beforeEach(async () => {
     const account = await accountsFactory.create(
       { email: knownEmail },
       { hasher: hasherAndComparator },

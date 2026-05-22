@@ -17,7 +17,7 @@ async function create(
     email = faker.internet.email(),
     name = faker.person.fullName(),
     passwordHash,
-    plainPassword = randomBytes(30).toString(),
+    plainPassword = randomBytes(64).toString("base64"),
   }: Params = {},
   { hasher = new MockHasherAndComparator() }: BaseOptions = {},
 ) {

@@ -1,0 +1,46 @@
+import { AggregateRoot } from "@/common/entities/aggregate-root";
+import { generateUUID, type UUID } from "@/common/uuid";
+
+type DocumentProps = {
+  id: UUID;
+  patientId: UUID;
+  title: string;
+  description?: string;
+  documentUrl: URL;
+  createdAt: Date;
+  lastUpdatedAt?: Date;
+};
+
+type CreateNewDocumentParams = {
+  title: string;
+  description?: string;
+  documentUrl: URL;
+  patientId: UUID;
+};
+
+/**
+ * A document from the patient of id `patientId`. Multiples `Document`s composes the patient's
+ * _Prontuário_ (medical record).
+ */
+export class Document extends AggregateRoot<DocumentProps> {
+  public static create(props: CreateNewDocumentParams) {
+    return new this({
+      ...props,
+      id: generateUUID(),
+      createdAt: new Date(),
+      lastUpdatedAt: undefined,
+    });
+  }
+
+  public static createUnchecked(props: DocumentProps) {
+    return new this(props);
+  }
+
+  public equals(other: Document): boolean {
+    return other instanceof this.constructor && this._props.id === other._props.id;
+  }
+
+  private touch() {
+    this._props.lastUpdatedAt = new Date();
+  }
+}

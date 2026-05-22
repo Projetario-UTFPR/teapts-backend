@@ -9,6 +9,11 @@ beforeAll(async () => {
   execSync("npx prisma migrate deploy");
 }, 60000);
 
+beforeEach(() => {
+  // This resets the database so that every single test run with a fresh database instnace
+  execSync("npx prisma migrate reset --force");
+}, 60000);
+
 afterAll(async () => {
   await container?.stop();
 }, 60000);
