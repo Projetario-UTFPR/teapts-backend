@@ -22,6 +22,8 @@ Espera-se que um _presenter_ seja uma classe extremamente simples:
 
 Uma classe apresentadora **deve** possuir um método estático `present`, que tome uma entidade
 de domínio como parâmetro e transforme-a em uma instância de si própria — isto é, apresente a entidade.
+Uma classe apresentadora _pode_ apresentar tuplas "cruas" (_raw_) de mecanismos de persistência ao invés
+de entidades de domínio, quando for sua especialidade.
 
 O método pode ser síncrono ou assíncrono, conforme houver necessidade.
 

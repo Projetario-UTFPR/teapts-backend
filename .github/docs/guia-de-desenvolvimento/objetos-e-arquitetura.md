@@ -69,12 +69,14 @@ Não criam nem modificam dados, mas leem de várias fontes.
 
 ### Query Handler
 
-Query handlers, assim como services, podem executar regras de negócio (por exemplo, para garantir que o requisitante
-tenha realmente acesso ao recurso requisitado), e, logo, também utilizam repositórios. Entretanto, em contraste
-aos services, query handlers lidam com dados fora do domínio: os [DTOs].
+Query handlers, assim como services, _podem_ executar regras de negócio (por exemplo, para garantir que o requisitante
+tenha realmente acesso ao recurso requisitado). Além disso, diferente dos serviços, utilizam drivers de conexão com
+os provedores de persistência (por exemplo, o banco de dados) diretamente, ao invés de utilizar repositórios ou
+outras interfaces abstratas.
 
-Essas unidades são responsáveis pela lógica necessária para obter um dado de leitura completo de uma ou mais
-entidades/agregações do domínio.
+Entretanto, em contraste aos services, query handlers lidam com dados fora do domínio: os [DTOs]. Em suma, eles são
+responsáveis pela lógica necessária para obter um dado de leitura completo de uma ou mais entidades/agregações do
+domínio.
 
 Um query handler **nunca** cria ou modifica um dado, apenas visualiza.
 
