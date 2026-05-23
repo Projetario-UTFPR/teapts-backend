@@ -10,6 +10,7 @@ import { AuthModule } from "@/infra/auth/auth.module";
 import appConfig from "@/configs/app.config";
 import keysetConfig from "@/configs/keyset.config";
 import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeutic-journey.module";
+import { ProfessionalsModule } from "@/modules/professional/professionals.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeu
     IdentityModule,
     AuthModule,
     TherapeuticJourneyModule,
+    ProfessionalsModule,
   ],
 })
 export class AppModule {}
