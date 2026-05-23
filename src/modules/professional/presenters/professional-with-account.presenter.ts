@@ -1,10 +1,12 @@
+import professionalsMapper from "@/infra/prisma/mappers/professionals.mapper";
 import { ApiProperty, ApiPropertyOptional, ApiSchema } from "@nestjs/swagger";
+import { Prisma } from "@prisma-gen/client";
 
 @ApiSchema({
   description:
     "A representation of a professional profile aggregated with data regarding the account to which it belongs.",
 })
-export abstract class ProfessionalWithAccountPresenter {
+export class ProfessionalWithAccountPresenter {
   @ApiProperty({ description: "The ID of this professional profile." })
   public readonly professionalId!: string;
 
@@ -36,5 +38,17 @@ export abstract class ProfessionalWithAccountPresenter {
 
   protected constructor(props: ProfessionalWithAccountPresenter) {
     Object.assign(this, props);
+  }
+
+  public static present(row: Prisma.ProfessionalModel & { account: Prisma.AccountModel }) {
+    return new this({
+      professionalId: row.id,
+      accountId: row.account.id,
+      name: row.account.name,
+      email: row.account.email,
+      specialism: professionalsMapper.specialismFromPrisma(row.specialism),
+      lastUpdatedAt: row.account.lastUpdatedAt ?? undefined,
+      createdAt: row.account.createdAt,
+    }) as ProfessionalWithAccountPresenter;
   }
 }
