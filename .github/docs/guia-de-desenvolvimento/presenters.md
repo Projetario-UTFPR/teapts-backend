@@ -22,6 +22,8 @@ Espera-se que um _presenter_ seja uma classe extremamente simples:
 
 Uma classe apresentadora **deve** possuir um método estático `present`, que tome uma entidade
 de domínio como parâmetro e transforme-a em uma instância de si própria — isto é, apresente a entidade.
+Uma classe apresentadora _pode_ apresentar tuplas "cruas" (_raw_) de mecanismos de persistência ao invés
+de entidades de domínio, quando for sua especialidade.
 
 O método pode ser síncrono ou assíncrono, conforme houver necessidade.
 
@@ -30,6 +32,20 @@ O método pode ser síncrono ou assíncrono, conforme houver necessidade.
 As classes apresentadoras **devem** ter todas as suas propriedades decoradas com `@ApiProperty(...)`.
 Descrições **devem** ser providenciadas para cada propriedade. Exemplos **deveriam** ser providenciados para
 cada propriedade.
+
+## Paginação
+
+Para apresentadores de dados paginados, recomenda-se o uso do gerador [`PaginatedDataPresenter`]. Este
+deve ser usado para gerar classes apresentadoras para listas de uma segunda classe — normalmente, outra
+classe apresentadora.
+
+Esse gerador inclui as propriedades básicas necessárias em todas as respostas paginadas, bem como
+documentações apropriadas do Swagger, evitando a necessidade de repeti-las para todo _query handler_
+paginado.
+
+Confira um [exemplo](#paginada).
+
+[`PaginatedDataPresenter`]: ../../../src/common/pagination/paginated-data.presenter.ts
 
 ## Exemplos
 
@@ -77,7 +93,7 @@ sem métodos, o compilador do Typescript não acusará erros se passarmos um obj
 uma instância, desde que o objeto implemente a classe como se fosse uma interface. Tomamos proveito
 deste mecanismo.
 
-### Composto
+### Composta
 
 ```ts
 export class ComposedPresenter {
@@ -103,3 +119,11 @@ export class ComposedPresenter {
 Neste exemplo, utilizamos um outro _presenter_ para compor a classe apresentadora `ComposedPresenter`.
 Além disso, apresentamos um método `present` que toma mais de 1 parâmetro, o que é totalmente permitido,
 desde que facilite a utilização do apresentador.
+
+### Paginada
+
+```ts
+export class PaginatedProfessionalsWithAccountsPresenter extends PaginatedDataPresenter(
+  ProfessionalWithAccountPresenter, // outra classe apresentadora é passada como parâmetro
+) {}
+```

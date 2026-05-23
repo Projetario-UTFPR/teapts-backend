@@ -1,0 +1,2 @@
+export const DEFAULT_PAGINATION_LIMIT_PER_PAGE = 24;
+export const MAXIMUM_LIMIT_PER_PAGE = 100;

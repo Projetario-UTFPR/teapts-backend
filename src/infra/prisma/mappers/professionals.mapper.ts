@@ -39,4 +39,4 @@ function fromPrisma(raw: Prisma.ProfessionalModel) {
   });
 }
 
-export default { fromPrisma, intoPrisma };
+export default { fromPrisma, intoPrisma, specialismFromPrisma, specialismIntoPrisma };
