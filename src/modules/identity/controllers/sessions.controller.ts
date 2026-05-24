@@ -1,6 +1,6 @@
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { Public } from "@/infra/auth/decorators/public-route";
-import { JWTokensPresenter } from "@/infra/auth/presenters/tokens.presenter";
+import { JWTokenPresenter } from "@/infra/auth/presenters/token.presenter";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
@@ -26,7 +26,7 @@ export class SessionsController {
   @Post("login")
   @ApiOkResponse({
     description: "The successful authentication response.",
-    type: JWTokensPresenter,
+    type: JWTokenPresenter,
   })
   @ApiUnprocessableEntityResponse({
     type: ValidationErrorBagPresenter,
@@ -45,7 +45,7 @@ export class SessionsController {
           plainPassword: loginDto.password,
         }),
       te.chainW((account) => () => this.tokensService.execute({ account })),
-      te.map(JWTokensPresenter.present),
+      te.map(JWTokenPresenter.present),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
