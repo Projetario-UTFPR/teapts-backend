@@ -25,8 +25,6 @@ export class ProfessionalsController {
     type: BasicExceptionPresenter,
   })
   public listProfessionals(@Query() { specialisms, limit, name, page }: ListProfessionalsDto) {
-    console.log({ specialisms, limit, name, page });
-
     return pipe(
       () =>
         this.listProfessionalsQH.execute({
