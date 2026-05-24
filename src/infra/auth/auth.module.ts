@@ -10,6 +10,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "@/infra/auth/jwt/guard";
+import { GetAuthCollectionQueryHandler } from "@/infra/auth/query-handlers/get-auth-collection.query";
 
 @Global()
 @Module({
@@ -29,7 +30,12 @@ import { JwtAuthGuard } from "@/infra/auth/jwt/guard";
       },
     }),
   ],
-  providers: [AssignTokenService, JwtStrategy, { provide: APP_GUARD, useClass: JwtAuthGuard }],
-  exports: [AssignTokenService],
+  providers: [
+    AssignTokenService,
+    JwtStrategy,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    GetAuthCollectionQueryHandler,
+  ],
+  exports: [AssignTokenService, GetAuthCollectionQueryHandler],
 })
 export class AuthModule {}

@@ -4,21 +4,16 @@ import { PassportStrategy } from "@nestjs/passport";
 import { type ConfigType } from "@nestjs/config";
 import keysetConfig from "@/configs/keyset.config";
 import { JwtPayload } from "@/infra/auth/jwt/payload";
-import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
 import { pipe } from "fp-ts/lib/function";
 import { taskEither as te } from "fp-ts";
-import { ProfessionalsRepository } from "@/modules/professional/professionals.repository";
-import { AuthCollection } from "@/infra/auth/auth-collection";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
-import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
-import { UnauthorizedError } from "@/common/errors/unauthorized.error";
+import { GetAuthCollectionQueryHandler } from "@/infra/auth/query-handlers/get-auth-collection.query";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject(keysetConfig.KEY) private readonly config: ConfigType<typeof keysetConfig>,
-    private readonly accountsRepository: AccountsRepository,
-    private readonly professionalsRepository: ProfessionalsRepository,
+    private readonly getAuthCollection: GetAuthCollectionQueryHandler,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -30,21 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload) {
     return pipe(
-      te.Do,
-      te.apS("account", () => this.accountsRepository.findAccountById(payload.sub)),
-      te.bindW(
-        "professionalProfiles",
-        ({ account }) =>
-          () =>
-            this.professionalsRepository.findManyByIds(account.getProfessionalIds()),
-      ),
-      te.map(
-        ({ account, professionalProfiles }) => new AuthCollection(account, professionalProfiles),
-      ),
-      te.mapLeft((error) => {
-        if (error instanceof IrrecoverableError) return error;
-        return new UnauthorizedError();
-      }),
+      () => this.getAuthCollection.execute({ accountId: payload.sub }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
