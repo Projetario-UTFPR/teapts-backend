@@ -54,6 +54,18 @@ export class InMemoryPtsRepository extends PtsRepository {
     return either.right(pts);
   }
 
+  public async getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular> {
+    const pts = this.items.find((item) => item.getId().toString() === ptsId.toString());
+
+    if (!pts) {
+      throw new Error(
+        `ProjetoTerapeuticoSingular com o ID ${ptsId.toString()} não foi encontrado.`,
+      );
+    }
+
+    return pts;
+  }
+
   public async updateMultidisciplinaryTeam(
     pts: ProjetoTerapeuticoSingular,
     multidisciplinaryTeam: UUID[],
