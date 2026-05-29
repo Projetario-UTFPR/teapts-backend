@@ -3,6 +3,7 @@ import { UUID } from "@/common/uuid";
 import { PrismaSchemaForeignKey } from "@/infra/prisma/foreign-keys";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
+import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
@@ -11,6 +12,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { taskEither as te } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
+import { mapTo } from "rxjs";
 
 @Injectable()
 export class PrismaPtsRepository extends PtsRepository {
@@ -103,6 +105,20 @@ export class PrismaPtsRepository extends PtsRepository {
       });
 
     const currentIds = currentMultidisciplinaryTeamProfessional.map((p) => p.professionalId);
+
+    const uniqueNewIdsStr = Array.from(new Set(multidisciplinaryTeam.map(String)));
+
+    const existingProfessionals = await this.prisma.professional.findMany({
+      where: {
+        id: { in: uniqueNewIdsStr },
+      },
+      select: { id: true },
+    });
+    const existingIdsStr = existingProfessionals.map((p) => p.id.toString());
+    const invalidIds = uniqueNewIdsStr.filter((id) => !existingIdsStr.includes(id));
+    if (invalidIds.length > 0) {
+      throw new ProfessionalProfileNotFoundError(invalidIds[0]);
+    }
 
     const newUUIDsToString = multidisciplinaryTeam.map(String);
     const currentUUIDsToString = currentIds.map(String);
