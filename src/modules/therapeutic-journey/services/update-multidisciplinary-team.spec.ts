@@ -1,4 +1,4 @@
-import { UpdateMultidisciplinaryTeam } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
+import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
 import { ProfessionalIsNotResponsible } from "@/modules/professional/errors/professional-is-not-responsible.error";
 import accountsFactory from "@test/factories/accounts.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
@@ -10,12 +10,12 @@ import { assert, describe, expect, it, beforeEach } from "vitest";
 describe("[Use Case] Update Multidisciplinary Team", async () => {
   let ptsRepository: InMemoryPtsRepository;
   let professionalsRepository: InMemoryProfessionalsRepository;
-  let sut: UpdateMultidisciplinaryTeam;
+  let sut: UpdateMultidisciplinaryTeamService;
 
   beforeEach(() => {
     professionalsRepository = new InMemoryProfessionalsRepository();
     ptsRepository = new InMemoryPtsRepository(professionalsRepository);
-    sut = new UpdateMultidisciplinaryTeam(ptsRepository, professionalsRepository);
+    sut = new UpdateMultidisciplinaryTeamService(ptsRepository);
   });
 
   const getEntities = async () => {
@@ -48,7 +48,7 @@ describe("[Use Case] Update Multidisciplinary Team", async () => {
     ];
 
     await sut.execute({
-      pts,
+      ptsId: pts.getId(),
       professionalId: responsibleProfessional.getId(),
       multidisciplinaryTeamIds,
     });
@@ -69,7 +69,7 @@ describe("[Use Case] Update Multidisciplinary Team", async () => {
     professionalsRepository.professionals.push(maliciousProfessional);
 
     const promise = sut.execute({
-      pts,
+      ptsId: pts.getId(),
       professionalId: maliciousProfessional.getId(),
       multidisciplinaryTeamIds: [],
     });
@@ -83,8 +83,9 @@ describe("[Use Case] Update Multidisciplinary Team", async () => {
     const newResponsibleProfessional = await professionalsFactory.create();
     professionalsRepository.professionals.push(newResponsibleProfessional);
 
+    // 👇 Ajustado para passar ptsId
     await sut.execute({
-      pts,
+      ptsId: pts.getId(),
       professionalId: responsibleProfessional.getId(),
       multidisciplinaryTeamIds: [responsibleProfessional.getId()],
       newResponsibleId: newResponsibleProfessional.getId(),
@@ -107,7 +108,7 @@ describe("[Use Case] Update Multidisciplinary Team", async () => {
     const multidisciplinaryTeamIds = [nonExistentProfessional.getId()];
 
     const promise = sut.execute({
-      pts,
+      ptsId: pts.getId(),
       professionalId: responsibleProfessional.getId(),
       multidisciplinaryTeamIds,
     });
@@ -124,7 +125,7 @@ describe("[Use Case] Update Multidisciplinary Team", async () => {
     const multidisciplinaryTeamIds = [anotherProfessional.getId()];
 
     const promise = sut.execute({
-      pts,
+      ptsId: pts.getId(),
       professionalId: responsibleProfessional.getId(),
       multidisciplinaryTeamIds,
       newResponsibleId: undefined,
