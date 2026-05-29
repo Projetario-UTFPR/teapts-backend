@@ -5,15 +5,26 @@ import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { CreatePtsDto } from "@/modules/therapeutic-journey/dtos/create-pts.dto";
+import { UpdateMultidisciplinaryTeamDTO } from "@/modules/therapeutic-journey/dtos/update-pts.dto";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/create-draft-pts.service";
-import { Body, Controller, ForbiddenException, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Put,
+} from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiOkResponse,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
@@ -21,7 +32,10 @@ import { pipe } from "fp-ts/lib/function";
 
 @Controller("v1/pts")
 export class PtsController {
-  public constructor(private readonly createDraftPts: CreateDraftPtsService) {}
+  public constructor(
+    private readonly createDraftPts: CreateDraftPtsService,
+    private readonly updateMultidisciplinaryTeamPts: UpdateMultidisciplinaryTeamService,
+  ) {}
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -75,5 +89,15 @@ export class PtsController {
       }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
+  }
+
+  @Put("update")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "PTS multidisciplinary team successfully updated.",
+  })
+  public async updatePTSMultidisciplinaryTeam(@Body() body: UpdateMultidisciplinaryTeamDTO) {
+    return await this.updateMultidisciplinaryTeamPts.execute(body);
   }
 }
