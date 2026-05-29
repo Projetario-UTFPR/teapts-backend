@@ -90,17 +90,21 @@ export class PrismaPtsRepository extends PtsRepository {
     )();
   }
 
-  public async updateMultidisciplinaryTeam(pts: ProjetoTerapeuticoSingular, multidisciplinaryTeam: UUID[]){
-    const ptsId = pts.getId().toString(); 
-    
-    const currentMultidisciplinaryTeamProfessional = await this.prisma.professionalParticipatingOnPTS.findMany({
-      where: { ProjetoTerapeuticoSingularId: ptsId },
-      select: { professionalId: true }
-    })
+  public async updateMultidisciplinaryTeam(
+    pts: ProjetoTerapeuticoSingular,
+    multidisciplinaryTeam: UUID[],
+  ) {
+    const ptsId = pts.getId().toString();
 
-    const currentIds = currentMultidisciplinaryTeamProfessional.map(p => p.professionalId);
+    const currentMultidisciplinaryTeamProfessional =
+      await this.prisma.professionalParticipatingOnPTS.findMany({
+        where: { ProjetoTerapeuticoSingularId: ptsId },
+        select: { professionalId: true },
+      });
 
-    const newUUIDsToString = multidisciplinaryTeam.map(String); 
+    const currentIds = currentMultidisciplinaryTeamProfessional.map((p) => p.professionalId);
+
+    const newUUIDsToString = multidisciplinaryTeam.map(String);
     const currentUUIDsToString = currentIds.map(String);
 
     const allIds = Array.from(new Set([...currentUUIDsToString, ...newUUIDsToString]));
@@ -108,34 +112,34 @@ export class PrismaPtsRepository extends PtsRepository {
       (accumulator, object) => {
         const id = object as UUID;
         const idStr = id.toString();
-        
-        if ( !currentUUIDsToString.includes(idStr) && newUUIDsToString.includes(idStr) ){
+
+        if (!currentUUIDsToString.includes(idStr) && newUUIDsToString.includes(idStr)) {
           accumulator.insert.push(id);
         }
-        if ( currentUUIDsToString.includes(idStr) && !newUUIDsToString.includes(idStr) ){
+        if (currentUUIDsToString.includes(idStr) && !newUUIDsToString.includes(idStr)) {
           accumulator.remove.push(id);
         }
 
         return accumulator;
       },
-      { remove: [] as UUID[], insert: [] as UUID[] }
+      { remove: [] as UUID[], insert: [] as UUID[] },
     );
 
     await this.prisma.$transaction([
-    this.prisma.professionalParticipatingOnPTS.deleteMany({
-      where: {
-        ProjetoTerapeuticoSingularId: ptsId,
-        professionalId: { in: remove.map(String) }
-      }
-    }),
+      this.prisma.professionalParticipatingOnPTS.deleteMany({
+        where: {
+          ProjetoTerapeuticoSingularId: ptsId,
+          professionalId: { in: remove.map(String) },
+        },
+      }),
 
-    this.prisma.professionalParticipatingOnPTS.createMany({
-      data: insert.map(id => ({
-        ProjetoTerapeuticoSingularId: ptsId,
-        professionalId: id.toString()
-      }))
-    })
-    ]); 
+      this.prisma.professionalParticipatingOnPTS.createMany({
+        data: insert.map((id) => ({
+          ProjetoTerapeuticoSingularId: ptsId,
+          professionalId: id.toString(),
+        })),
+      }),
+    ]);
   }
 
   public async setNewResponsible(pts: ProjetoTerapeuticoSingular, professionalId: UUID) {
@@ -145,23 +149,22 @@ export class PrismaPtsRepository extends PtsRepository {
     await this.prisma.$transaction([
       this.prisma.projetoTerapeuticoSingular.update({
         where: { id: ptsId },
-        data: { responsibleProfessionalId: profIdStr }
+        data: { responsibleProfessionalId: profIdStr },
       }),
 
       this.prisma.professionalParticipatingOnPTS.upsert({
         where: {
           professionalId_ProjetoTerapeuticoSingularId: {
             ProjetoTerapeuticoSingularId: ptsId,
-            professionalId: profIdStr
-          }
+            professionalId: profIdStr,
+          },
         },
         update: {}, // Não faz nada se já existir
         create: {
           ProjetoTerapeuticoSingularId: ptsId,
-          professionalId: profIdStr
-        }
-      })
+          professionalId: profIdStr,
+        },
+      }),
     ]);
   }
-  
 }
