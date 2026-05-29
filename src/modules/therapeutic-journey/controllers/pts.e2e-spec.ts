@@ -275,4 +275,77 @@ describe("[e2e] PTS Controller (v1)", () => {
       ).toBe(inputMembersIds.length);
     },
   );
+
+  it(
+    "should successfully update the multidisciplinary team when requested by the responsible professional",
+    { tags: ["updateMultidisciplinaryTeam"] },
+    async () => {
+      const pts = await ptsFactory.createAndPersist(prisma, {
+        responsibleProfessionalId: professional.getId(),
+        patientId: patient.getId(),
+      });
+
+      const newProfessional = await professionalsFactory.createAndPersist(prisma, {
+        accountId: account.getId(),
+      });
+
+      const multidisciplinaryTeamIds = [professional.getId(), newProfessional.getId()];
+
+      const body = {
+        ptsId: pts.getId(),
+        professionalId: professional.getId(),
+        multidisciplinaryTeamIds,
+      };
+
+      await request(app.getHttpServer())
+        .put("/v1/pts/update")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(200);
+
+      const savedRelations = await prisma.professionalParticipatingOnPTS.findMany({
+        where: { ProjetoTerapeuticoSingularId: pts.getId().toString() },
+      });
+
+      expect(savedRelations.length).toBe(2);
+      const savedIds = savedRelations.map((r) => r.professionalId);
+      expect(savedIds).toEqual(expect.arrayContaining(multidisciplinaryTeamIds.map(String)));
+    },
+  );
+
+  it(
+    "should successfully set a new responsible for the PTS when newResponsibleId is explicitly provided",
+    { tags: ["updateMultidisciplinaryTeam"] },
+    async () => {
+      const pts = await ptsFactory.createAndPersist(prisma, {
+        responsibleProfessionalId: professional.getId(),
+        patientId: patient.getId(),
+      });
+
+      const newResponsibleProfessional = await professionalsFactory.createAndPersist(prisma, {
+        accountId: account.getId(),
+      });
+
+      const body = {
+        ptsId: pts.getId(),
+        professionalId: professional.getId(),
+        multidisciplinaryTeamIds: [professional.getId()],
+        newResponsibleId: newResponsibleProfessional.getId(),
+      };
+
+      await request(app.getHttpServer())
+        .put("/v1/pts/update")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(200);
+
+      const updatedPts = await prisma.projetoTerapeuticoSingular.findUniqueOrThrow({
+        where: { id: pts.getId().toString() },
+      });
+
+      expect(updatedPts.responsibleProfessionalId).toBe(
+        newResponsibleProfessional.getId().toString(),
+      );
+    },
+  );
 });
