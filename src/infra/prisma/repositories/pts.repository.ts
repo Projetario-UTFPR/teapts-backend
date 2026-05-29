@@ -12,7 +12,6 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { taskEither as te } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
-import { mapTo } from "rxjs";
 
 @Injectable()
 export class PrismaPtsRepository extends PtsRepository {
