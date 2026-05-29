@@ -21,4 +21,11 @@ export abstract class PtsRepository {
   public abstract createNewPts(
     pts: ProjetoTerapeuticoSingular,
   ): Promise<Either<IrrecoverableError | ProfessionalIsNotRegistered, ProjetoTerapeuticoSingular>>;
+
+  public abstract updateMultidisciplinaryTeam(
+    pts: ProjetoTerapeuticoSingular,
+    multidisciplinaryTeam: UUID[],
+  );
+
+  public abstract setNewResponsible(pts: ProjetoTerapeuticoSingular, professionalId: UUID);
 }

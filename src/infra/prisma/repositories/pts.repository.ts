@@ -137,5 +137,31 @@ export class PrismaPtsRepository extends PtsRepository {
     })
     ]); 
   }
+
+  public async setNewResponsible(pts: ProjetoTerapeuticoSingular, professionalId: UUID) {
+    const ptsId = pts.getId().toString();
+    const profIdStr = professionalId.toString();
+
+    await this.prisma.$transaction([
+      this.prisma.projetoTerapeuticoSingular.update({
+        where: { id: ptsId },
+        data: { responsibleProfessionalId: profIdStr }
+      }),
+
+      this.prisma.professionalParticipatingOnPTS.upsert({
+        where: {
+          professionalId_ProjetoTerapeuticoSingularId: {
+            ProjetoTerapeuticoSingularId: ptsId,
+            professionalId: profIdStr
+          }
+        },
+        update: {}, // Não faz nada se já existir
+        create: {
+          ProjetoTerapeuticoSingularId: ptsId,
+          professionalId: profIdStr
+        }
+      })
+    ]);
+  }
   
 }
