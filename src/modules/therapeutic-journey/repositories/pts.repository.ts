@@ -22,6 +22,8 @@ export abstract class PtsRepository {
     pts: ProjetoTerapeuticoSingular,
   ): Promise<Either<IrrecoverableError | ProfessionalIsNotRegistered, ProjetoTerapeuticoSingular>>;
 
+  public abstract getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular>;
+
   public abstract updateMultidisciplinaryTeam(
     pts: ProjetoTerapeuticoSingular,
     multidisciplinaryTeam: UUID[],

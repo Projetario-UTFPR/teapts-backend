@@ -91,6 +91,25 @@ export class PrismaPtsRepository extends PtsRepository {
     )();
   }
 
+  public async getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular> {
+    const ptsIdStr = ptsId.toString();
+
+    const ptsData = await this.prisma.projetoTerapeuticoSingular.findUnique({
+      where: {
+        id: ptsIdStr,
+      },
+      include: {
+        multidisciplinaryTeam: {
+          select: {
+            professionalId: true,
+          },
+        },
+      },
+    });
+
+    return ptsMapper.fromPrisma(ptsData as any);
+  }
+
   public async updateMultidisciplinaryTeam(
     pts: ProjetoTerapeuticoSingular,
     multidisciplinaryTeam: UUID[],
