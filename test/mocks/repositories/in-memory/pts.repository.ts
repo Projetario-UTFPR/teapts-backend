@@ -2,6 +2,7 @@ import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { InMemoryProfessionalsRepository } from "@test/mocks/repositories/in-memory/professionals.repository";
 import { either } from "fp-ts";
@@ -13,6 +14,15 @@ export class InMemoryPtsRepository extends PtsRepository {
     public items: ProjetoTerapeuticoSingular[] = [],
   ) {
     super();
+  }
+
+  public async findActivePtsByPatientId(
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
+    const patientsPts = this.items.filter((pts) => pts.belongsToPatient(patientId));
+    const activePts = patientsPts.find((pts) => pts.isActive());
+    if (!activePts) return either.left(new PtsNotFoundError());
+    return either.right(activePts);
   }
 
   public async activePtsExistsByPatientId(
