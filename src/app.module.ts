@@ -11,14 +11,21 @@ import appConfig from "@/configs/app.config";
 import keysetConfig from "@/configs/keyset.config";
 import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeutic-journey.module";
 import { ProfessionalsModule } from "@/modules/professional/professionals.module";
+import { S3Module } from "@/infra/s3/s3.module";
+import blobStorageConfig from "@/configs/blob-storage.config";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [datastoreConfig, appConfig, keysetConfig] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [datastoreConfig, appConfig, keysetConfig, blobStorageConfig],
+      expandVariables: true,
+    }),
     Argon2Module,
     ExceptionsModule,
     ValidationProviderModule,
     PrismaModule,
+    S3Module,
     IdentityModule,
     AuthModule,
     TherapeuticJourneyModule,
