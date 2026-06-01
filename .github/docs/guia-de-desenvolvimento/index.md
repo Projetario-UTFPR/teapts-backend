@@ -40,7 +40,7 @@ respectivos nomes.
     <img src="../assets/setup-rustfs-1.png" alt="Figura 1" style="max-height:500px;" />
     <figcaption>Figura 1: tela inicial do RustFS</figcaption>
 </figure>
-<br/>
+<br/><br/>
 
 Navegue até a aba "Access Keys" e clique em "Add Access Key" no canto superior direito da tela (Figura 2).
 Adicione um nome à chave (preencha o campo "Name") e clique em "Create" (Figura 3). Copie o valor "Access
@@ -51,19 +51,19 @@ respectivamente. (Vide Figura 4.)
     <img src="../assets/setup-rustfs-2.png" alt="Figura 1" style="max-height:500px;" />
     <figcaption>Figura 2: tela de gerenciamento de tokens de acesso</figcaption>
 </figure>
-<br/>
+<br/><br/>
 
 <figure>
     <img src="../assets/setup-rustfs-3.png" alt="Figura 1" style="max-height:500px;" />
     <figcaption>Figura 3: formulário para criar uma nova chave de acesso</figcaption>
 </figure>
-<br/>
+<br/><br/>
 
 <figure>
     <img src="../assets/setup-rustfs-4.png" alt="Figura 1" style="max-height:500px;" />
     <figcaption>Figura 4: chave de acesso criada</figcaption>
 </figure>
-<br/>
+<br/><br/>
 
 Veja mais detalhes no [repositório do RustFS](https://github.com/rustfs/rustfs).
 
