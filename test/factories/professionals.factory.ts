@@ -1,15 +1,18 @@
-import { generateUUID } from "@/common/uuid";
 import professionalMapper from "@/infra/prisma/mappers/professionals.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { faker } from "@faker-js/faker";
+import accountsFactory from "@test/factories/accounts.factory";
 import { resolveAccount } from "@test/factories/utils";
 import { taskEither } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
-type Params = Partial<Professional.Props>;
+type Params = Omit<Partial<Professional.Props>, "accountId"> & { account?: Account };
 
-async function create({ accountId = generateUUID(), specialism }: Params = {}) {
+async function create({ account, specialism }: Params = {}) {
+  account ??= await accountsFactory.create();
+
   const index = faker.number.int({
     min: 0,
     max: Object.values(Professional.Specialism).length - 1,
@@ -17,13 +20,15 @@ async function create({ accountId = generateUUID(), specialism }: Params = {}) {
 
   specialism ??= Object.values(Professional.Specialism)[index];
 
-  return Professional.create({ accountId, specialism });
+  const professional = Professional.create({ accountId: account.getId(), specialism });
+  account.pushProfessionalProfile(professional);
+  return professional;
 }
 
 async function createAndPersist(prismaService: PrismaService, params?: Params) {
-  const account = await resolveAccount(prismaService, params?.accountId);
+  const account = await resolveAccount(prismaService, params?.account);
   return await pipe(
-    taskEither.fromTask(() => create({ ...params, accountId: account.getId() })),
+    taskEither.fromTask(() => create({ ...params, account })),
     taskEither.map(professionalMapper.intoPrisma),
     taskEither.chain((data) =>
       taskEither.fromTask(() => prismaService.professional.create({ data })),
