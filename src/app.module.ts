@@ -13,6 +13,7 @@ import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeu
 import { ProfessionalsModule } from "@/modules/professional/professionals.module";
 import { S3Module } from "@/infra/s3/s3.module";
 import blobStorageConfig from "@/configs/blob-storage.config";
+import { PatientModule } from "@/modules/patient/patient.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import blobStorageConfig from "@/configs/blob-storage.config";
     AuthModule,
     TherapeuticJourneyModule,
     ProfessionalsModule,
+    PatientModule,
   ],
 })
 export class AppModule {}
