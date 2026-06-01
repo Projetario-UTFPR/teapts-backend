@@ -102,6 +102,16 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.patientId === patientId;
   }
 
+  public canBeModifiedByProfessional(professional: Professional | UUID) {
+    const professionalId =
+      professional instanceof Professional ? professional.getId() : professional;
+
+    return (
+      this._props.responsibleProfessionalId === professionalId ||
+      this._props.multidisciplinaryTeamIds.includes(professionalId)
+    );
+  }
+
   public isDraft() {
     return this._props.timeline.status === PtsTimeline.Status.Draft;
   }
