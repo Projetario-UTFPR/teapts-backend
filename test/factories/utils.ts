@@ -9,6 +9,7 @@ import professionalsFactory from "@test/factories/professionals.factory";
 import professionalsMapper from "@/infra/prisma/mappers/professionals.mapper";
 import patientsFactory from "@test/factories/patients.factory";
 import patientsMapper from "@/infra/prisma/mappers/patients.mapper";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 
 /**
  * Decides whether to create a new `Account` instance for the callee
@@ -19,11 +20,11 @@ import patientsMapper from "@/infra/prisma/mappers/patients.mapper";
  * @throws a {@link PrismaClientKnownRequestError `PrismaClientKnownRequestError`} when there
  * is no persisted account with ID `accountId`.
  */
-export async function resolveAccount(prismaService: PrismaService, accountId?: UUID) {
-  if (!accountId) return await accountsFactory.createAndPersist(prismaService);
+export async function resolveAccount(prismaService: PrismaService, account?: Account) {
+  if (!account) return await accountsFactory.createAndPersist(prismaService);
 
   const accountRow = await prismaService.account.findFirstOrThrow({
-    where: { id: accountId.toString() },
+    where: { id: account.getId().toString() },
     include: { professionalProfiles: true },
   });
 

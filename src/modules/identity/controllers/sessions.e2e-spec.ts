@@ -46,11 +46,11 @@ describe("[e2e] Sessions Controller (v1)", () => {
 
     professionalProfilesOfAccount = [
       await professionalsFactory.createAndPersist(prisma, {
-        accountId: account.getId(),
+        account: account,
         specialism: Professional.Specialism.Doctor,
       }),
       await professionalsFactory.createAndPersist(prisma, {
-        accountId: account.getId(),
+        account: account,
         specialism: Professional.Specialism.Physiotherapist,
       }),
     ];

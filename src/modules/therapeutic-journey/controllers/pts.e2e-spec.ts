@@ -48,9 +48,7 @@ describe("[e2e] PTS Controller (v1)", () => {
       { hasher },
     );
 
-    professional = await professionalsFactory.createAndPersist(prisma, {
-      accountId: account.getId(),
-    });
+    professional = await professionalsFactory.createAndPersist(prisma, { account: account });
 
     patient = await patientsFactory.createAndPersist(prisma);
 
@@ -234,13 +232,8 @@ describe("[e2e] PTS Controller (v1)", () => {
     async () => {
       const newPatient = await patientsFactory.createAndPersist(prisma);
 
-      const teamMember1 = await professionalsFactory.createAndPersist(prisma, {
-        accountId: account.getId(),
-      });
-
-      const teamMember2 = await professionalsFactory.createAndPersist(prisma, {
-        accountId: account.getId(),
-      });
+      const teamMember1 = await professionalsFactory.createAndPersist(prisma, { account: account });
+      const teamMember2 = await professionalsFactory.createAndPersist(prisma, { account: account });
 
       const inputMembersIds = [teamMember1.getId(), teamMember2.getId()];
       const body = {

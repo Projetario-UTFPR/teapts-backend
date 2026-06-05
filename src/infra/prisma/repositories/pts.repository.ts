@@ -5,6 +5,7 @@ import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { Injectable } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
@@ -16,6 +17,34 @@ import { pipe } from "fp-ts/lib/function";
 export class PrismaPtsRepository extends PtsRepository {
   public constructor(private readonly prisma: PrismaService) {
     super();
+  }
+
+  public findActivePtsByPatientId(
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
+    return pipe(
+      te.tryCatch(
+        () =>
+          this.prisma.projetoTerapeuticoSingular.findFirstOrThrow({
+            where: {
+              patientId: patientId.toString(),
+              status: { in: ["Running", "Planning"] },
+            },
+            include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+          }),
+        (error) => {
+          if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
+            return new PtsNotFoundError();
+          }
+
+          return new IrrecoverableError({
+            message: `Error occurred in ${PrismaPtsRepository.name} when trying to count active PTS from patient of ID '${patientId}'.`,
+            cause: error as Error,
+          });
+        },
+      ),
+      te.map(ptsMapper.fromPrisma),
+    )();
   }
 
   public activePtsExistsByPatientId(patientId: UUID): Promise<Either<IrrecoverableError, boolean>> {
