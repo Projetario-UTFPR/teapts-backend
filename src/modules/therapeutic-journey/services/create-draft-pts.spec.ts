@@ -29,9 +29,7 @@ describe("[Service] Create Draft PTS Service", async () => {
     const profesisonalAccount = await accountsFactory.create();
 
     const patient = await patientsFactory.create({ accountId: patientAccount.getId() });
-    const professional = await professionalsFactory.create({
-      accountId: profesisonalAccount.getId(),
-    });
+    const professional = await professionalsFactory.create({ account: profesisonalAccount });
 
     accountsRepository.accounts.push(patientAccount, profesisonalAccount);
     professionalsRepository.professionals.push(professional);

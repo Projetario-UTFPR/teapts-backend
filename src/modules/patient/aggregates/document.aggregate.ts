@@ -6,7 +6,7 @@ type DocumentProps = {
   patientId: UUID;
   title: string;
   description?: string;
-  documentUrl: URL;
+  documentFileKey: string;
   createdAt: Date;
   lastUpdatedAt?: Date;
 };
@@ -14,7 +14,7 @@ type DocumentProps = {
 type CreateNewDocumentParams = {
   title: string;
   description?: string;
-  documentUrl: URL;
+  documentFileKey: string;
   patientId: UUID;
 };
 

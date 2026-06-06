@@ -10,6 +10,35 @@ services:
       - ${DB_PORT}:5432
     volumes:
       - tea_pts_db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app
+
+  blob:
+    container_name: teapts_backend_blob_storage
+    image: rustfs/rustfs:latest
+    user: "10001:10001"
+    ports:
+      - "${BLOB_STORAGE_PORT}:9000"
+      - "9001:9001"
+    volumes:
+      - tea_pts_blob_storage:/data
+    environment:
+      - RUSTFS_ACCESS_KEY=${BLOB_STORAGE_ACCESS_KEY}
+      - RUSTFS_SECRET_KEY=${BLOB_STORAGE_SECRET_KEY}
+      - RUSTFS_CONSOLE_ENABLE=${BLOB_STORAGE_CONSOLE_ENABLE}
+      - RUSTFS_SERVER_DOMAINS=${BLOB_STORAGE_SERVER_DOMAINS}
+      - RUSTFS_ADDRESS=:${BLOB_STORAGE_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: /data
     networks:
       - app
 
@@ -26,7 +55,8 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app
     healthcheck:
@@ -39,6 +69,7 @@ services:
 
 volumes:
   tea_pts_db:
+  tea_pts_blob_storage:
 
 networks:
   app:
