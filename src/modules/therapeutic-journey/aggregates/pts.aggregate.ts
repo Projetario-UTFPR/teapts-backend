@@ -1,5 +1,6 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
 import { generateUUID, type UUID } from "@/common/uuid";
+import { WatchedList } from "@/core/watched-list";
 import { Patient } from "@/modules/patient/entities/patient.entity";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
@@ -19,7 +20,7 @@ type PtsProps = {
   /**
    * The identifiers of every professional (profile) involved with this PTS.
    */
-  multidisciplinaryTeamIds: UUID[];
+  multidisciplinaryTeam: WatchedList<UUID>;
   /**
    * A text containing info about the patient (identified by `patientId`) regarding their social
    * situation. E.g., who they live with, whether they have support network (and who they are),
@@ -50,13 +51,15 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
       (professionalId) => professionalId !== responsibleProfessionalId,
     );
 
+    const multidisciplinaryTeam = new WatchedList<UUID>(multidisciplinaryTeamIds);
+
     return new this({
       id: generateUUID(),
       patientId,
       socialSituation,
       responsibleProfessionalId,
       timeline: PtsTimeline.create(),
-      multidisciplinaryTeamIds,
+      multidisciplinaryTeam,
     });
   }
 
@@ -70,12 +73,32 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return new this(props);
   }
 
+  public changeResponsibleProfessional(newResponsibleId: UUID) {
+    this._props.responsibleProfessionalId = newResponsibleId;
+  }
+
+  public updateMultidisciplinaryTeam(newMultidisciplinaryTeamIds: UUID[]) {
+    newMultidisciplinaryTeamIds = newMultidisciplinaryTeamIds.filter(
+      (professionalId) => professionalId !== this._props.responsibleProfessionalId,
+    );
+
+    this._props.multidisciplinaryTeam.update(newMultidisciplinaryTeamIds);
+  }
+
+  public getMultidisciplinaryTeam(): WatchedList<UUID> {
+    return this._props.multidisciplinaryTeam;
+  }
+
   public getId() {
     return this._props.id;
   }
 
   public getSocialSituation() {
     return this._props.socialSituation;
+  }
+
+  public getTimeline(): PtsTimeline {
+    return this._props.timeline;
   }
 
   public acceptAndBeginPlanning() {
@@ -108,7 +131,7 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
 
     return (
       this._props.responsibleProfessionalId === professionalId ||
-      this._props.multidisciplinaryTeamIds.includes(professionalId)
+      this._props.multidisciplinaryTeam.getCurrent().includes(professionalId)
     );
   }
 
@@ -124,12 +147,12 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
 
     if (
       this._props.responsibleProfessionalId === professionalId ||
-      this._props.multidisciplinaryTeamIds.includes(professionalId)
+      this._props.multidisciplinaryTeam.getCurrent().includes(professionalId)
     ) {
       return;
     }
 
-    this._props.multidisciplinaryTeamIds.push(professionalId);
+    this._props.multidisciplinaryTeam.getCurrent().push(professionalId);
   }
 
   public isDraft() {
