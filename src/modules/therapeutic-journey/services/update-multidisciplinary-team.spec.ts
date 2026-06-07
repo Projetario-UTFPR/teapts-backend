@@ -1,136 +1,367 @@
+import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
+import { generateUUID } from "@/common/uuid";
+import { Professional } from "@/modules/professional/entities/professional.aggregate";
+import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
+import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
+import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
+import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
+import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
+import { SubstituteResponsibleIsNotRegistered } from "@/modules/therapeutic-journey/errors/substitute-responsible-is-not-registered.error";
 import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
-import { ProfessionalIsNotResponsible } from "@/modules/professional/errors/professional-is-not-responsible.error";
-import accountsFactory from "@test/factories/accounts.factory";
-import professionalsFactory from "@test/factories/professionals.factory";
-import ptsFactory from "@test/factories/pts.factory";
-import { InMemoryProfessionalsRepository } from "@test/mocks/repositories/in-memory/professionals.repository";
-import { InMemoryPtsRepository } from "@test/mocks/repositories/in-memory/pts.repository";
-import { assert, describe, expect, it, beforeEach } from "vitest";
+import { left, right } from "fp-ts/lib/Either";
 
-describe("[Use Case] Update Multidisciplinary Team", async () => {
-  let ptsRepository: InMemoryPtsRepository;
-  let professionalsRepository: InMemoryProfessionalsRepository;
+describe("UpdateMultidisciplinaryTeamService", () => {
+  let mockPtsRepository: any;
+  let mockProfessionalsRepository: any;
   let sut: UpdateMultidisciplinaryTeamService;
 
   beforeEach(() => {
-    professionalsRepository = new InMemoryProfessionalsRepository();
-    ptsRepository = new InMemoryPtsRepository(professionalsRepository);
-    sut = new UpdateMultidisciplinaryTeamService(ptsRepository);
+    mockPtsRepository = {
+      getById: vi.fn(),
+      save: vi.fn(),
+    };
+    mockProfessionalsRepository = {
+      findById: vi.fn(),
+    };
+    sut = new UpdateMultidisciplinaryTeamService(mockPtsRepository, mockProfessionalsRepository);
   });
 
-  const getEntities = async () => {
-    const responsibleAccount = await accountsFactory.create();
-    const responsibleProfessional = await professionalsFactory.create({
-      accountId: responsibleAccount.getId(),
-    });
+  it("should return PTSNotFound when PTS wasn't found", async () => {
+    mockPtsRepository.getById.mockResolvedValue(null);
 
-    const pts = await ptsFactory.create({
-      responsibleProfessionalId: responsibleProfessional.getId(),
-    });
+    const ptsId = generateUUID();
+    const professionalId = generateUUID();
+    const multidisciplinaryTeamIds = [generateUUID()];
+    const accountId = generateUUID();
 
-    professionalsRepository.professionals.push(responsibleProfessional);
-    ptsRepository.items.push(pts);
-
-    return { responsibleAccount, responsibleProfessional, pts };
-  };
-
-  it("should successfully update the multidisciplinary team when requested by the responsible professional", async () => {
-    const { responsibleProfessional, pts } = await getEntities();
-
-    const newProfessionals = await Promise.all(
-      Array.from({ length: 3 }).map(() => professionalsFactory.create()),
-    );
-    professionalsRepository.professionals.push(...newProfessionals);
-
-    const multidisciplinaryTeamIds = [
-      responsibleProfessional.getId(),
-      ...newProfessionals.map((p) => p.getId()),
-    ];
-
-    await sut.execute({
-      ptsId: pts.getId(),
-      professionalId: responsibleProfessional.getId(),
+    const result = await sut.execute({
+      ptsId,
       multidisciplinaryTeamIds,
+      professionalId,
+      accountId,
     });
 
-    const savedRelations = ptsRepository.professionalParticipatingOnPTS.filter(
-      (relation) => relation.projetoTerapeuticoSingularId === pts.getId().toString(),
-    );
+    expect(result._tag).toBe("Left");
 
-    expect(savedRelations.length).toBe(4);
-    const savedIds = savedRelations.map((r) => r.professionalId);
-    expect(savedIds).toEqual(expect.arrayContaining(multidisciplinaryTeamIds.map(String)));
+    const error = (result as any).left;
+    expect(error).toBeInstanceOf(PtsNotFoundError);
+
+    expect(mockPtsRepository.save).not.toHaveBeenCalled();
   });
 
-  it("should block the action and throw an error if the professional trying to execute the update is not the current responsible for the PTS", async () => {
-    const { pts } = await getEntities();
+  it("should return ProfessionalIsNotResponsible when not the responsible is trying to update the multidisciplinary team", async () => {
+    const accountId = generateUUID();
 
-    const maliciousProfessional = await professionalsFactory.create();
-    professionalsRepository.professionals.push(maliciousProfessional);
-
-    const promise = sut.execute({
-      ptsId: pts.getId(),
-      professionalId: maliciousProfessional.getId(),
-      multidisciplinaryTeamIds: [],
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: generateUUID(),
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
     });
 
-    await expect(promise).rejects.toBeInstanceOf(ProfessionalIsNotResponsible);
-  });
-
-  it("should successfully set a new responsible for the PTS when newResponsibleId is explicitly provided", async () => {
-    const { responsibleProfessional, pts } = await getEntities();
-
-    const newResponsibleProfessional = await professionalsFactory.create();
-    professionalsRepository.professionals.push(newResponsibleProfessional);
-
-    // 👇 Ajustado para passar ptsId
-    await sut.execute({
-      ptsId: pts.getId(),
-      professionalId: responsibleProfessional.getId(),
-      multidisciplinaryTeamIds: [responsibleProfessional.getId()],
-      newResponsibleId: newResponsibleProfessional.getId(),
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
     });
 
-    const updatedPts = ptsRepository.items.find(
-      (item) => item.getId().toString() === pts.getId().toString(),
-    );
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
 
-    assert(updatedPts, "PTS should exist in repository");
-    expect(updatedPts.toSnapshot().responsibleProfessionalId).toBe(
-      newResponsibleProfessional.getId(),
-    );
-  });
+    mockProfessionalsRepository.findById.mockResolvedValue(right(professionalFake));
 
-  it("should throw an error and protect database integrity if any of the provided multidisciplinary team ids do not exist", async () => {
-    const { responsibleProfessional, pts } = await getEntities();
+    const ptsId = ptsFake.getId();
+    const professionalId = generateUUID();
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID()];
 
-    const nonExistentProfessional = await professionalsFactory.create();
-    const multidisciplinaryTeamIds = [nonExistentProfessional.getId()];
-
-    const promise = sut.execute({
-      ptsId: pts.getId(),
-      professionalId: responsibleProfessional.getId(),
+    const result = await sut.execute({
+      ptsId,
       multidisciplinaryTeamIds,
+      professionalId,
+      accountId,
     });
 
-    await expect(promise).rejects.toThrowError();
+    expect(result._tag).toBe("Left");
+
+    const error = (result as any).left;
+    expect(error).toBeInstanceOf(ProfessionalIsNotResponsible);
+
+    expect(mockPtsRepository.save).not.toHaveBeenCalled();
   });
 
-  it("should throw a specific business exception if the current responsible removes himself from the team without passing a new replacement responsible", async () => {
-    const { responsibleProfessional, pts } = await getEntities();
+  it("should return ProfessionalProfileNotFoundError when professional id does not identify any professional", async () => {
+    const responsibleId = generateUUID();
 
-    const anotherProfessional = await professionalsFactory.create();
-    professionalsRepository.professionals.push(anotherProfessional);
-
-    const multidisciplinaryTeamIds = [anotherProfessional.getId()];
-
-    const promise = sut.execute({
-      ptsId: pts.getId(),
-      professionalId: responsibleProfessional.getId(),
-      multidisciplinaryTeamIds,
-      newResponsibleId: undefined,
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
     });
 
-    await expect(promise).rejects.toThrowError();
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+
+    mockProfessionalsRepository.findById.mockResolvedValue(
+      left(new ProfessionalProfileNotFoundError(responsibleId)),
+    );
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID()];
+    const accountId = generateUUID();
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Left");
+
+    const error = (result as any).left;
+    expect(error).toBeInstanceOf(ProfessionalProfileNotFoundError);
+
+    expect(mockPtsRepository.save).not.toHaveBeenCalled();
+  });
+
+  it("should return ProfessionalCannotRemoveItselfWithoutSubstitute when responsible tries to remove itself and does not provide a substitute", async () => {
+    const accountId = generateUUID();
+    const responsibleId = generateUUID();
+
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
+    });
+
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
+    });
+
+    mockProfessionalsRepository.findById.mockResolvedValue(right(professionalFake));
+
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID()];
+    const newResponsibleId = undefined;
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      newResponsibleId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Left");
+
+    const error = (result as any).left;
+    expect(error).toBeInstanceOf(ProfessionalCannotRemoveItselfWithoutSubstitute);
+  });
+
+  it("should return SubstituteResponsibleIsNotRegistered when responsible tries to remove itself and provides invalid substitute ID", async () => {
+    const accountId = generateUUID();
+    const responsibleId = generateUUID();
+
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
+    });
+
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
+    });
+
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID()];
+    const newResponsibleId = generateUUID();
+
+    mockProfessionalsRepository.findById.mockImplementation(async (id: string) => {
+      if (id === responsibleId) {
+        return right(professionalFake);
+      }
+      if (id === newResponsibleId) {
+        return left(SubstituteResponsibleIsNotRegistered);
+      }
+    });
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      newResponsibleId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Left");
+
+    const error = (result as any).left;
+    expect(error).toBeInstanceOf(SubstituteResponsibleIsNotRegistered);
+  });
+
+  it("should return IrrecoverableError when transaction fails", async () => {
+    const accountId = generateUUID();
+    const responsibleId = generateUUID();
+
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
+    });
+
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
+    });
+
+    mockProfessionalsRepository.findById.mockResolvedValue(right(professionalFake));
+
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+    mockPtsRepository.save.mockResolvedValue(left(IrrecoverableError));
+
+    const updateSpy = vi.spyOn(ptsFake, "updateMultidisciplinaryTeam");
+    const isResponsabilitySpy = vi.spyOn(ptsFake, "isResponsabilityOfProfessional");
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID(), responsibleId];
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Left");
+
+    const error = (result as any).left;
+    expect(error).toBe(IrrecoverableError);
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(updateSpy).toHaveBeenCalledWith(multidisciplinaryTeamIds);
+
+    expect(isResponsabilitySpy).toHaveBeenCalledTimes(1);
+    expect(isResponsabilitySpy).toHaveBeenCalledWith(professionalId);
+
+    expect(mockPtsRepository.save).toHaveBeenCalledWith(ptsFake);
+  });
+
+  it("should update an pts multidisciplinary team", async () => {
+    const accountId = generateUUID();
+    const responsibleId = generateUUID();
+
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
+    });
+
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
+    });
+
+    mockProfessionalsRepository.findById.mockResolvedValue(right(professionalFake));
+
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+    mockPtsRepository.save.mockResolvedValue(right(true));
+
+    const updateSpy = vi.spyOn(ptsFake, "updateMultidisciplinaryTeam");
+    const isResponsabilitySpy = vi.spyOn(ptsFake, "isResponsabilityOfProfessional");
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID(), responsibleId];
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Right");
+
+    const error = (result as any).right;
+    expect(error).toBe(true);
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(updateSpy).toHaveBeenCalledWith(multidisciplinaryTeamIds);
+
+    expect(isResponsabilitySpy).toHaveBeenCalledTimes(1);
+    expect(isResponsabilitySpy).toHaveBeenCalledWith(professionalId);
+
+    expect(mockPtsRepository.save).toHaveBeenCalledWith(ptsFake);
+  });
+
+  it("should update an pts multidisciplinary team with new responsible", async () => {
+    const accountId = generateUUID();
+    const responsibleId = generateUUID();
+
+    const ptsFake = ProjetoTerapeuticoSingular.create({
+      patientId: generateUUID(),
+      responsibleProfessionalId: responsibleId,
+      socialSituation: "Cenário de teste",
+      multidisciplinaryTeamIds: [generateUUID()],
+    });
+
+    const professionalFake = Professional.create({
+      accountId,
+      specialism: Professional.Specialism.Doctor,
+    });
+
+    mockProfessionalsRepository.findById.mockResolvedValue(right(professionalFake));
+
+    mockPtsRepository.getById.mockResolvedValue(ptsFake);
+    mockPtsRepository.save.mockResolvedValue(right(true));
+
+    const updateSpy = vi.spyOn(ptsFake, "updateMultidisciplinaryTeam");
+    const isResponsabilitySpy = vi.spyOn(ptsFake, "isResponsabilityOfProfessional");
+    const changeResponsibleSpy = vi.spyOn(ptsFake, "changeResponsibleProfessional");
+
+    const ptsId = ptsFake.getId();
+    const professionalId = responsibleId;
+    const newResponsibleId = generateUUID();
+    const multidisciplinaryTeamIds = [generateUUID(), generateUUID()];
+
+    const result = await sut.execute({
+      ptsId,
+      multidisciplinaryTeamIds,
+      professionalId,
+      newResponsibleId,
+      accountId,
+    });
+
+    expect(result._tag).toBe("Right");
+
+    const error = (result as any).right;
+    expect(error).toBe(true);
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(updateSpy).toHaveBeenCalledWith(multidisciplinaryTeamIds);
+
+    expect(isResponsabilitySpy).toHaveBeenCalledTimes(1);
+    expect(isResponsabilitySpy).toHaveBeenCalledWith(professionalId);
+
+    expect(changeResponsibleSpy).toHaveBeenCalledTimes(1);
+    expect(changeResponsibleSpy).toHaveBeenCalledWith(newResponsibleId);
+
+    expect(mockProfessionalsRepository.findById).toHaveBeenCalledTimes(2);
+    expect(mockProfessionalsRepository.findById).toHaveBeenCalledWith(professionalId);
+    expect(mockProfessionalsRepository.findById).toHaveBeenCalledWith(newResponsibleId);
+
+    expect(mockPtsRepository.save).toHaveBeenCalledWith(ptsFake);
   });
 });
