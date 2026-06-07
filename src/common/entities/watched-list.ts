@@ -12,8 +12,8 @@ export class WatchedList<T extends Equals | string | number> {
   private removed: T[] = [];
 
   constructor(initValues: T[]) {
-    this.initial = initValues;
-    this.current = initValues;
+    this.initial = [...initValues];
+    this.current = [...initValues];
   }
 
   /**
@@ -62,11 +62,7 @@ export class WatchedList<T extends Equals | string | number> {
       (existingItem) => !newValues.some((incomingItem) => this.compare(incomingItem, existingItem)),
     );
 
-    // current is derived from the initial, inserted and removed lists
-    this.current = this.initial.filter(
-      (item) => !this.removed.some((removed) => this.compare(removed, item)),
-    );
-    this.current.push(...this.inserted);
+    this.current = newValues;
   }
 
   getCurrent(): T[] {
