@@ -1,6 +1,7 @@
 import { Equals } from "@/common/interfaces/equals";
+import { type UUID } from "@/common/uuid";
 
-export class WatchedList<T extends Equals | string | number> {
+export class WatchedList<T extends Equals | string | number | UUID> {
   /**
    * The list must always compare its states against the initial values.
    * It might be updated more than once, and making the further comparisons
@@ -27,6 +28,11 @@ export class WatchedList<T extends Equals | string | number> {
 
     if (typeof a === "object") {
       if (!(b instanceof a.constructor)) return false;
+
+      // it's UUID
+      if (a instanceof Uint8Array) {
+        return a.toString() === b.toString();
+      }
 
       return a.equals(b);
     }
