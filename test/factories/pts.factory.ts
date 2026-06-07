@@ -1,5 +1,5 @@
 import { generateUUID, UUID } from "@/common/uuid";
-import { WatchedList } from "@/core/watched-list";
+import { WatchedList } from "@/common/entities/watched-list";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";

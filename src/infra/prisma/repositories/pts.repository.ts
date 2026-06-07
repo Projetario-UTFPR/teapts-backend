@@ -1,6 +1,6 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
-import { WatchedList } from "@/core/watched-list";
+import { WatchedList } from "@/common/entities/watched-list";
 import { PrismaSchemaForeignKey } from "@/infra/prisma/foreign-keys";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
@@ -10,7 +10,6 @@ import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-f
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { Injectable } from "@nestjs/common";
-import { PtsStatus } from "@prisma-gen/enums";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { taskEither as te } from "fp-ts";
 import { Either, left, right } from "fp-ts/lib/Either";

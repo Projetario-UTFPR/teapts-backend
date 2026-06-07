@@ -1,5 +1,5 @@
 import { UUID } from "@/common/uuid";
-import { WatchedList } from "@/core/watched-list";
+import { WatchedList } from "@/common/entities/watched-list";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { $Enums, Prisma } from "@prisma-gen/browser";
