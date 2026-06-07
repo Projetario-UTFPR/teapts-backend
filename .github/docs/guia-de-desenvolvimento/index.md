@@ -25,8 +25,7 @@ compatíveis entre si. Desse modo, não é exigido que o RustFS seja o verdadeir
 
 #### Configurando
 
-Após levantar o contâiner do RustFS, acesse o dashboard em http://localhost:9001. O login é aquele definido
-no arquivo de variáveis de ambiente. (Se você ainda não levantou o contâiner ou não preparou as variáveis de
+Após levantar o contâiner do RustFS, acesse o dashboard em http://localhost:9001. O login e a senha default é rustfs. (Se você ainda não levantou o contâiner ou não preparou as variáveis de
 ambiente, refira-se ao documento [Configuração do Ambiente de Desenvolvimento].)
 
 Acessando o painel, clique no botão "Create Bucket" e crie dois _buckets_ (não é necessário nenhuma
