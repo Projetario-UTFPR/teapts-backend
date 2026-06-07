@@ -1,3 +1,4 @@
+import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { AuthCollection } from "@/infra/auth/auth-collection";
 import { CurrentUser } from "@/infra/auth/decorators/current-user";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
@@ -5,7 +6,7 @@ import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { CreatePtsDto } from "@/modules/therapeutic-journey/dtos/create-pts.dto";
-import { UpdateMultidisciplinaryTeamDTO } from "@/modules/therapeutic-journey/dtos/update-pts.dto";
+import { UpdateMultidisciplinaryTeamDTO } from "@/modules/therapeutic-journey/dtos/update-multidisciplinary-team.dto";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/create-draft-pts.service";
 import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
@@ -15,6 +16,7 @@ import {
   ForbiddenException,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   Put,
 } from "@nestjs/common";
@@ -24,6 +26,8 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
@@ -34,7 +38,7 @@ import { pipe } from "fp-ts/lib/function";
 export class PtsController {
   public constructor(
     private readonly createDraftPts: CreateDraftPtsService,
-    private readonly updateMultidisciplinaryTeamPts: UpdateMultidisciplinaryTeamService,
+    private readonly updateMultidisciplinaryTeam: UpdateMultidisciplinaryTeamService,
   ) {}
 
   @Post("create")
@@ -91,13 +95,81 @@ export class PtsController {
     )();
   }
 
-  @Put("update")
+  @Put("update/multidisciplinary-team")
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({
-    description: "PTS multidisciplinary team successfully updated.",
+    description: "Equipe multidisciplinar atualizada com sucesso",
+    schema: {
+      type: "object",
+      properties: {
+        message: {
+          type: "string",
+          example: "Equipe multidisciplinar atualizada com sucesso",
+        },
+      },
+    },
   })
-  public async updatePTSMultidisciplinaryTeam(@Body() body: UpdateMultidisciplinaryTeamDTO) {
-    return await this.updateMultidisciplinaryTeamPts.execute(body);
+  @ApiNotFoundResponse({
+    type: BasicExceptionPresenter,
+    description: "PTS wasn't found.",
+  })
+  @ApiForbiddenResponse({
+    type: BasicExceptionPresenter,
+    description: "Professional is not the PTS responsible.",
+  })
+  @ApiBadRequestResponse({
+    description: "Erros de validação ou de regras de negócio (Domínio).",
+    content: {
+      "application/json": {
+        examples: {
+          professionalNotRegistered: {
+            summary: "Profissional não registrado",
+            value: BasicExceptionPresenter.present({
+              message: "Este profissional não está apropriadamente registrado na plataforma.",
+            }),
+          },
+          substituteNotRegistered: {
+            summary: "Substituto não registrado",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Ao menos um dos profissionais da equipe não está registrado na plataforma apropriadamente.",
+            }),
+          },
+          missingSubstitute: {
+            summary: "Remoção sem substituto",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Responsável precisa prover ID de substituto quando busca revogar sua responsabilidade.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiInternalServerErrorResponse({
+    type: BasicExceptionPresenter,
+    description: "Erro interno no servidor.",
+  })
+  public saveNewMultidisciplinaryTeam(
+    @Body() body: UpdateMultidisciplinaryTeamDTO,
+    @CurrentUser() { account }: AuthCollection,
+  ) {
+    return pipe(
+      () => this.updateMultidisciplinaryTeam.execute({ accountId: account.getId(), ...body }),
+      te.map(() => ({ message: "Equipe multidisciplinar atualizada com sucesso" })),
+      te.mapLeft((error) => {
+        if (error instanceof IrrecoverableError) {
+          throw new InternalServerErrorException(
+            BasicExceptionPresenter.present({
+              message: "Ocorreu um erro interno ao processar a atualização da equipe.",
+            }),
+            { cause: error },
+          );
+        }
+        return error;
+      }),
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
   }
 }
