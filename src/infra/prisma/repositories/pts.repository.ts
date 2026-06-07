@@ -1,17 +1,19 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
+import { WatchedList } from "@/core/watched-list";
 import { PrismaSchemaForeignKey } from "@/infra/prisma/foreign-keys";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
-import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
+import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { Injectable } from "@nestjs/common";
+import { PtsStatus } from "@prisma-gen/enums";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { taskEither as te } from "fp-ts";
-import { Either } from "fp-ts/lib/Either";
+import { Either, left, right } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 
 @Injectable()
@@ -120,114 +122,63 @@ export class PrismaPtsRepository extends PtsRepository {
     )();
   }
 
-  public async getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular> {
-    const ptsIdStr = ptsId.toString();
+  public async getById(id: UUID): Promise<ProjetoTerapeuticoSingular | null> {
+    const idString = id.toString();
 
-    const ptsData = await this.prisma.projetoTerapeuticoSingular.findUnique({
+    const data = await this.prisma.projetoTerapeuticoSingular.findUnique({
       where: {
-        id: ptsIdStr,
+        id: idString,
       },
       include: {
-        multidisciplinaryTeam: {
-          select: {
-            professionalId: true,
-          },
-        },
+        multidisciplinaryTeam: true,
       },
     });
 
-    return ptsMapper.fromPrisma(ptsData as any);
-  }
-
-  public async updateMultidisciplinaryTeam(
-    pts: ProjetoTerapeuticoSingular,
-    multidisciplinaryTeam: UUID[],
-  ) {
-    const ptsId = pts.getId().toString();
-
-    const currentMultidisciplinaryTeamProfessional =
-      await this.prisma.professionalParticipatingOnPTS.findMany({
-        where: { ProjetoTerapeuticoSingularId: ptsId },
-        select: { professionalId: true },
-      });
-
-    const currentIds = currentMultidisciplinaryTeamProfessional.map((p) => p.professionalId);
-
-    const uniqueNewIdsStr = Array.from(new Set(multidisciplinaryTeam.map(String)));
-
-    const existingProfessionals = await this.prisma.professional.findMany({
-      where: {
-        id: { in: uniqueNewIdsStr },
-      },
-      select: { id: true },
-    });
-    const existingIdsStr = existingProfessionals.map((p) => p.id.toString());
-    const invalidIds = uniqueNewIdsStr.filter((id) => !existingIdsStr.includes(id));
-    if (invalidIds.length > 0) {
-      throw new ProfessionalProfileNotFoundError(invalidIds[0]);
+    if (!data) {
+      return null;
     }
 
-    const newUUIDsToString = multidisciplinaryTeam.map(String);
-    const currentUUIDsToString = currentIds.map(String);
-
-    const allIds = Array.from(new Set([...currentUUIDsToString, ...newUUIDsToString]));
-    const { remove, insert } = allIds.reduce(
-      (accumulator, object) => {
-        const id = object as UUID;
-        const idStr = id.toString();
-
-        if (!currentUUIDsToString.includes(idStr) && newUUIDsToString.includes(idStr)) {
-          accumulator.insert.push(id);
-        }
-        if (currentUUIDsToString.includes(idStr) && !newUUIDsToString.includes(idStr)) {
-          accumulator.remove.push(id);
-        }
-
-        return accumulator;
-      },
-      { remove: [] as UUID[], insert: [] as UUID[] },
+    const professionalIds = data.multidisciplinaryTeam.map(
+      (professional) => professional.professionalId,
     );
 
-    await this.prisma.$transaction([
-      this.prisma.professionalParticipatingOnPTS.deleteMany({
-        where: {
-          ProjetoTerapeuticoSingularId: ptsId,
-          professionalId: { in: remove.map(String) },
-        },
-      }),
+    const multidisciplinaryTeam = new WatchedList<UUID>(professionalIds);
 
-      this.prisma.professionalParticipatingOnPTS.createMany({
-        data: insert.map((id) => ({
-          ProjetoTerapeuticoSingularId: ptsId,
-          professionalId: id.toString(),
-        })),
-      }),
-    ]);
+    const timeline = PtsTimeline.createUnchecked({
+      status: data.status as PtsTimeline.Status,
+      createdAt: data.createdAt,
+      acceptedAt: data.acceptedAt ?? undefined,
+      rejectedAt: data.rejectedAt ?? undefined,
+      beganAt: data.beganAt ?? undefined,
+      concludedAt: data.concludedAt ?? undefined,
+      cancelledAt: data.cancelledAt ?? undefined,
+    });
+
+    return ProjetoTerapeuticoSingular.createUnchecked({
+      id: data.id,
+      patientId: data.patientId,
+      responsibleProfessionalId: data.responsibleProfessionalId,
+      socialSituation: data.socialSituation,
+      timeline,
+      multidisciplinaryTeam,
+    });
   }
 
-  public async setNewResponsible(pts: ProjetoTerapeuticoSingular, professionalId: UUID) {
-    const ptsId = pts.getId().toString();
-    const profIdStr = professionalId.toString();
+  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, true>> {
+    try {
+      await this.prisma.projetoTerapeuticoSingular.update({
+        where: { id: pts.getId().toString() },
+        data: ptsMapper.intoPrisma(pts, "update"),
+      });
 
-    await this.prisma.$transaction([
-      this.prisma.projetoTerapeuticoSingular.update({
-        where: { id: ptsId },
-        data: { responsibleProfessionalId: profIdStr },
-      }),
-
-      this.prisma.professionalParticipatingOnPTS.upsert({
-        where: {
-          professionalId_ProjetoTerapeuticoSingularId: {
-            ProjetoTerapeuticoSingularId: ptsId,
-            professionalId: profIdStr,
-          },
-        },
-        update: {}, // Não faz nada se já existir
-        create: {
-          ProjetoTerapeuticoSingularId: ptsId,
-          professionalId: profIdStr,
-        },
-      }),
-    ]);
+      return right(true);
+    } catch (error) {
+      return left(
+        new IrrecoverableError({
+          cause: error as Error,
+          message: `Error occurred in ${PrismaPtsRepository.name} when saving the PTS '${pts.getId().toString()}'.`,
+        }),
+      );
+    }
   }
 }

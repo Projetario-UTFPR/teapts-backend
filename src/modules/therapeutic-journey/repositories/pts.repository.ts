@@ -2,7 +2,6 @@ import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { type UUID } from "@/common/uuid";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
-import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { Either } from "fp-ts/lib/Either";
 
 export abstract class PtsRepository {
@@ -16,15 +15,6 @@ export abstract class PtsRepository {
   ): Promise<Either<IrrecoverableError, boolean>>;
 
   /**
-   * Finds the active PTS of patient identified by `patientId`.
-   *
-   * @note an 'active' PTS is a PTS that has either `Running` or `Planning` state.
-   */
-  public abstract findActivePtsByPatientId(
-    patientId: UUID,
-  ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>>;
-
-  /**
    * Saves the newly created `pts`. Shall not create it successfully if any of the professionals
    * involved (the responsible or any from the multidisciplinary team) does not exist within the platform.
    */
@@ -32,12 +22,7 @@ export abstract class PtsRepository {
     pts: ProjetoTerapeuticoSingular,
   ): Promise<Either<IrrecoverableError | ProfessionalIsNotRegistered, ProjetoTerapeuticoSingular>>;
 
-  public abstract getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular>;
+  public abstract getById(id: UUID): Promise<ProjetoTerapeuticoSingular | null>;
 
-  public abstract updateMultidisciplinaryTeam(
-    pts: ProjetoTerapeuticoSingular,
-    multidisciplinaryTeam: UUID[],
-  );
-
-  public abstract setNewResponsible(pts: ProjetoTerapeuticoSingular, professionalId: UUID);
+  public abstract save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, true>>;
 }
