@@ -8,6 +8,7 @@ import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.re
 import { InMemoryProfessionalsRepository } from "@test/mocks/repositories/in-memory/professionals.repository";
 import { either } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
+
 interface ProfessionalParticipatingOnPTS {
   projetoTerapeuticoSingularId: string;
   professionalId: string;
@@ -44,16 +45,20 @@ export class InMemoryPtsRepository extends PtsRepository {
     const snapshot = pts.toSnapshot();
 
     const responsibleProfessional = this.professionalsRepo.professionals.some(
-      (professional) => professional.getId() === snapshot.responsibleProfessionalId,
+      (professional) => professional.getId().toString() === snapshot.responsibleProfessionalId,
     );
 
     if (!responsibleProfessional) {
       return either.left(new ProfessionalIsNotRegistered("responsible"));
     }
 
-    const everyProfessionalFromMultidisciplinaryTeamExists =
-      snapshot.multidisciplinaryTeamIds.every((id) =>
-        this.professionalsRepo.professionals.some((professional) => professional.getId() === id),
+    const everyProfessionalFromMultidisciplinaryTeamExists = pts
+      .getMultidisciplinaryTeam()
+      .getCurrent()
+      .every((uuid) =>
+        this.professionalsRepo.professionals.some(
+          (professional) => professional.getId().toString() === uuid.toString(),
+        ),
       );
 
     if (!everyProfessionalFromMultidisciplinaryTeamExists) {
@@ -61,109 +66,64 @@ export class InMemoryPtsRepository extends PtsRepository {
     }
 
     this.items.push(pts);
+
+    const ptsId = pts.getId().toString();
+    pts
+      .getMultidisciplinaryTeam()
+      .getCurrent()
+      .forEach((uuid) => {
+        this.professionalParticipatingOnPTS.push({
+          projetoTerapeuticoSingularId: ptsId,
+          professionalId: uuid.toString(),
+        });
+      });
+
     return either.right(pts);
   }
 
-  public async getPtsById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular> {
-    const pts = this.items.find((item) => item.getId().toString() === ptsId.toString());
+  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, true>> {
+    const ptsId = pts.getId().toString();
+    const currentTeamUuids = pts.getMultidisciplinaryTeam().getCurrent();
 
-    if (!pts) {
-      throw new Error(
-        `ProjetoTerapeuticoSingular com o ID ${ptsId.toString()} não foi encontrado.`,
+    const missingProfessionalUuid = currentTeamUuids.find(
+      (uuid) =>
+        !this.professionalsRepo.professionals.some((p) => p.getId().toString() === uuid.toString()),
+    );
+
+    if (missingProfessionalUuid) {
+      const missingIdStr = missingProfessionalUuid.toString();
+
+      return either.left(
+        new IrrecoverableError({
+          message: `O profissional com ID ${missingIdStr} não foi encontrado na equipe multidisciplinar.`,
+          cause: new ProfessionalProfileNotFoundError(missingIdStr),
+        }),
       );
     }
 
-    return pts;
-  }
-
-  public async updateMultidisciplinaryTeam(
-    pts: ProjetoTerapeuticoSingular,
-    multidisciplinaryTeam: UUID[],
-  ) {
-    const ptsId = pts.getId().toString();
-    const newIdsStr = multidisciplinaryTeam.map(String);
-
-    const everyProfessionalExists = newIdsStr.every((idStr) =>
-      this.professionalsRepo.professionals.some((p) => p.getId().toString() === idStr),
-    );
-
-    if (!everyProfessionalExists) {
-      return new ProfessionalProfileNotFoundError(everyProfessionalExists[0]);
+    const existingPtsIndex = this.items.findIndex((item) => item.getId().toString() === ptsId);
+    if (existingPtsIndex !== -1) {
+      this.items[existingPtsIndex] = pts;
+    } else {
+      this.items.push(pts);
     }
 
     this.professionalParticipatingOnPTS = this.professionalParticipatingOnPTS.filter(
       (relation) => relation.projetoTerapeuticoSingularId !== ptsId,
     );
 
-    newIdsStr.forEach((idStr) => {
+    currentTeamUuids.forEach((uuid) => {
       this.professionalParticipatingOnPTS.push({
         projetoTerapeuticoSingularId: ptsId,
-        professionalId: idStr,
+        professionalId: uuid.toString(),
       });
     });
 
-    if (typeof (pts as any).updateTeamState === "function") {
-      (pts as any).updateTeamState(multidisciplinaryTeam);
-    }
+    return either.right(true);
   }
 
-  public async setNewResponsible(
-    pts: ProjetoTerapeuticoSingular,
-    professionalId: UUID,
-  ): Promise<void> {
-    const ptsId = pts.getId().toString();
-    const newResponsibleIdStr = professionalId.toString();
-
-    const professionalExists = this.professionalsRepo.professionals.some(
-      (p) => p.getId().toString() === newResponsibleIdStr,
-    );
-
-    if (!professionalExists) {
-      throw new Error("The professional provided for responsible does not exist.");
-    }
-
-    const existingPtsIndex = this.items.findIndex((item) => item.getId().toString() === ptsId);
-
-    if (existingPtsIndex !== -1) {
-      const target = this.items[existingPtsIndex] as any;
-
-      if (typeof target.changeResponsible === "function") {
-        target.changeResponsible(professionalId);
-      } else if (typeof target.setResponsible === "function") {
-        target.setResponsible(professionalId);
-      } else {
-        const keys = ["_responsibleProfessionalId", "responsibleProfessionalId", "props"];
-        let updated = false;
-
-        for (const key of keys) {
-          if (key in target) {
-            if (key === "props" && typeof target.props === "object") {
-              target.props.responsibleProfessionalId = professionalId;
-              updated = true;
-            } else {
-              target[key] = professionalId;
-              updated = true;
-            }
-          }
-        }
-
-        if (!updated && typeof target.toSnapshot === "function") {
-          const originalSnapshot = target.toSnapshot.bind(target);
-          target.toSnapshot = () => ({
-            ...originalSnapshot(),
-            responsibleProfessionalId: newResponsibleIdStr,
-          });
-        }
-      }
-
-      const ptsTarget = pts as any;
-      if (typeof ptsTarget.toSnapshot === "function") {
-        const originalSnapshot = ptsTarget.toSnapshot.bind(ptsTarget);
-        ptsTarget.toSnapshot = () => ({
-          ...originalSnapshot(),
-          responsibleProfessionalId: newResponsibleIdStr,
-        });
-      }
-    }
+  public async getById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular | null> {
+    const pts = this.items.find((item) => item.getId().toString() === ptsId.toString());
+    return pts || null;
   }
 }
