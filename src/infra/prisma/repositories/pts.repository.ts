@@ -84,36 +84,17 @@ export class PrismaPtsRepository extends PtsRepository {
             include: { multidisciplinaryTeam: { select: { professionalId: true } } },
           }),
         (error) => {
-          const isUnexistingProfessionalError =
-            error instanceof PrismaClientKnownRequestError && error.code === "P2003";
-
-          if (!isUnexistingProfessionalError) {
+          if (!isForeignKeyError(error)) {
             return new IrrecoverableError({
               message: `Error occurred in ${PrismaPtsRepository.name} when creating the PTS '${JSON.stringify(payload)}'.`,
               cause: error as Error,
             });
           }
 
-          const exceprtContainingConstraint: string =
-            error?.meta?.["driverAdapterError"]?.["cause"]?.constraint?.index ?? error.message;
+          const foreignKey = getForeignKeyViolation(error);
 
-          const responsibleProfessionalDoesNotExist =
-            isUnexistingProfessionalError &&
-            exceprtContainingConstraint.includes(
-              PrismaSchemaForeignKey.PtsResponsibleProfessionalId,
-            );
-
-          if (responsibleProfessionalDoesNotExist)
-            return new ProfessionalIsNotRegistered("responsible");
-
-          const someProfessionalFromMultidisciplinaryTeamDoesNotExist =
-            isUnexistingProfessionalError &&
-            exceprtContainingConstraint.includes(
-              PrismaSchemaForeignKey.ProfessionalMembershipOnPtsProfessionalId,
-            );
-
-          if (someProfessionalFromMultidisciplinaryTeamDoesNotExist)
-            return new ProfessionalIsNotRegistered("team");
+          if (foreignKey === "team") return new ProfessionalIsNotRegistered("team");
+          if (foreignKey === "other") return new ProfessionalIsNotRegistered("responsible");
 
           return new IrrecoverableError({
             message: `Failed to catch foreign key violation error in ${PrismaPtsRepository.name} when creating the PTS '${JSON.stringify(payload)}'.`,
@@ -153,11 +134,11 @@ export class PrismaPtsRepository extends PtsRepository {
     }
   }
 
-  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, void>> {
-    try {
-      const basePayload = ptsMapper.intoPrisma(pts);
-      const teamPayload = ptsMapper.mapMultidisciplinaryTeam(pts.getMultidisciplinaryTeam());
+  public async save(pts: ProjetoTerapeuticoSingular) {
+    const basePayload = ptsMapper.intoPrisma(pts);
+    const teamPayload = ptsMapper.mapMultidisciplinaryTeam(pts.getMultidisciplinaryTeam());
 
+    try {
       await this.prisma.projetoTerapeuticoSingular.update({
         where: { id: pts.getId().toString() },
         data: {
@@ -168,12 +149,50 @@ export class PrismaPtsRepository extends PtsRepository {
 
       return right(undefined);
     } catch (error) {
+      if (!isForeignKeyError(error)) {
+        return left(
+          new IrrecoverableError({
+            cause: error as Error,
+            message: `Error occurred in ${PrismaPtsRepository.name} when saving the PTS '${pts.getId().toString()}'.`,
+          }),
+        );
+      }
+
+      const violation = getForeignKeyViolation(error);
+
+      if (violation === "team") return left(new ProfessionalIsNotRegistered("team"));
+      if (violation === "other") return left(new ProfessionalIsNotRegistered("responsible"));
+
       return left(
         new IrrecoverableError({
+          message: `Failed to catch foreign key violation error in ${PrismaPtsRepository.name} when saving the PTS '${JSON.stringify(basePayload)}'.`,
           cause: error as Error,
-          message: `Error occurred in ${PrismaPtsRepository.name} when saving the PTS '${pts.getId().toString()}'.`,
         }),
       );
     }
   }
+}
+
+function isForeignKeyError(error: unknown): error is PrismaClientKnownRequestError {
+  return error instanceof PrismaClientKnownRequestError && error.code === "P2003";
+}
+
+function getForeignKeyViolation(error: PrismaClientKnownRequestError) {
+  const exceprtContainingConstraint: string =
+    error?.meta?.["driverAdapterError"]?.["cause"]?.constraint?.index ?? error.message;
+
+  const responsibleProfessionalDoesNotExist = exceprtContainingConstraint.includes(
+    PrismaSchemaForeignKey.PtsResponsibleProfessionalId,
+  );
+
+  if (responsibleProfessionalDoesNotExist) return "responsible";
+
+  const someProfessionalFromMultidisciplinaryTeamDoesNotExist =
+    exceprtContainingConstraint.includes(
+      PrismaSchemaForeignKey.ProfessionalMembershipOnPtsProfessionalId,
+    );
+
+  if (someProfessionalFromMultidisciplinaryTeamDoesNotExist) return "team";
+
+  return "other";
 }

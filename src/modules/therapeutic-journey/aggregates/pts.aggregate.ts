@@ -73,9 +73,11 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return new this(props);
   }
 
+  // TODO: add watched list methods to add and remove unique elements
   public changeResponsibleProfessional(newResponsibleId: UUID, multidisciplinaryTeamIds: UUID[]) {
     multidisciplinaryTeamIds.push(this._props.responsibleProfessionalId);
     this._props.responsibleProfessionalId = newResponsibleId;
+    // remove responsible professional id from multidisciplinary team by smth like watchedlist.remove(<id>)
   }
 
   public updateMultidisciplinaryTeam(newMultidisciplinaryTeamIds: UUID[]) {

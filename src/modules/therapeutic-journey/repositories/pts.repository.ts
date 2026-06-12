@@ -36,5 +36,7 @@ export abstract class PtsRepository {
     id: UUID,
   ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>>;
 
-  public abstract save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, void>>;
+  public abstract save(
+    pts: ProjetoTerapeuticoSingular,
+  ): Promise<Either<IrrecoverableError | ProfessionalIsNotRegistered, void>>;
 }

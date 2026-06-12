@@ -1,6 +1,5 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
-import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
@@ -81,7 +80,7 @@ export class InMemoryPtsRepository extends PtsRepository {
     return either.right(pts);
   }
 
-  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, void>> {
+  public async save(pts: ProjetoTerapeuticoSingular) {
     const ptsId = pts.getId().toString();
     const currentTeamUuids = pts.getMultidisciplinaryTeam().getCurrent();
 
@@ -90,16 +89,7 @@ export class InMemoryPtsRepository extends PtsRepository {
         !this.professionalsRepo.professionals.some((p) => p.getId().toString() === uuid.toString()),
     );
 
-    if (missingProfessionalUuid) {
-      const missingIdStr = missingProfessionalUuid.toString();
-
-      return either.left(
-        new IrrecoverableError({
-          message: `O profissional com ID ${missingIdStr} não foi encontrado na equipe multidisciplinar.`,
-          cause: new ProfessionalProfileNotFoundError(missingIdStr),
-        }),
-      );
-    }
+    if (missingProfessionalUuid) return either.left(new ProfessionalIsNotRegistered("team"));
 
     const existingPtsIndex = this.items.findIndex((item) => item.getId().toString() === ptsId);
     if (existingPtsIndex !== -1) {
