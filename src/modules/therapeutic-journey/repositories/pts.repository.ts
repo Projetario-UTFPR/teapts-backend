@@ -14,6 +14,15 @@ export abstract class PtsRepository {
   public abstract activePtsExistsByPatientId(
     patientId: UUID,
   ): Promise<Either<IrrecoverableError, boolean>>;
+  
+  /**
+   * Finds the active PTS of patient identified by `patientId`.
+   *
+   * @note an 'active' PTS is a PTS that has either `Running` or `Planning` state.
+   */
+  public abstract findActivePtsByPatientId(
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>>;
 
   /**
    * Saves the newly created `pts`. Shall not create it successfully if any of the professionals
