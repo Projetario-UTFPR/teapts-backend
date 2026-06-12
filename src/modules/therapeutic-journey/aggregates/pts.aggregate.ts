@@ -73,7 +73,8 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return new this(props);
   }
 
-  public changeResponsibleProfessional(newResponsibleId: UUID) {
+  public changeResponsibleProfessional(newResponsibleId: UUID, multidisciplinaryTeamIds: UUID[]) {
+    multidisciplinaryTeamIds.push(this._props.responsibleProfessionalId);
     this._props.responsibleProfessionalId = newResponsibleId;
   }
 
