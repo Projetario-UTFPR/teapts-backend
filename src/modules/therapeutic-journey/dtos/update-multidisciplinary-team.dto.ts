@@ -58,7 +58,8 @@ export class UpdateMultidisciplinaryTeamDTO
 
   @Expose()
   @ApiProperty({
-    description: "The complete list of identifiers representing the new multidisciplinary team.",
+    description:
+      "The complete list of identifiers representing the new multidisciplinary team. (Includes the responsible professional.)",
     type: "array",
     format: "uuid",
     items: {
