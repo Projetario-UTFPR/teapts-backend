@@ -5,7 +5,6 @@ import { ProfessionalsRepository } from "@/modules/professional/professionals.re
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { Either, isLeft, left } from "fp-ts/lib/Either";
 import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
-import { SubstituteResponsibleIsNotRegistered } from "@/modules/therapeutic-journey/errors/substitute-responsible-is-not-registered.error";
 import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
 import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
@@ -24,11 +23,10 @@ type UpdateMultidisciplinaryTeamResult = Either<
   | PtsNotFoundError
   | ProfessionalIsNotRegistered
   | ProfessionalDoesNotBelongToUserAccountError
-  | SubstituteResponsibleIsNotRegistered
   | ProfessionalCannotRemoveItselfWithoutSubstitute
   | ProfessionalProfileNotFoundError
   | IrrecoverableError,
-  true
+  void
 >;
 
 @Injectable()
@@ -45,12 +43,14 @@ export class UpdateMultidisciplinaryTeamService {
     multidisciplinaryTeamIds,
     accountId,
   }: Params): Promise<UpdateMultidisciplinaryTeamResult> {
-    const pts = await this.ptsRepo.getById(ptsId);
+    const ptsResult = await this.ptsRepo.getById(ptsId);
     const professional = await this.professionalsRepo.findById(professionalId);
 
-    if (!pts) {
-      return left(new PtsNotFoundError());
+    if (isLeft(ptsResult)) {
+      return left(ptsResult.left);
     }
+
+    const pts = ptsResult.right;
 
     if (isLeft(professional)) {
       return left(professional.left);
@@ -72,10 +72,16 @@ export class UpdateMultidisciplinaryTeamService {
 
       const newResponsible = await this.professionalsRepo.findById(newResponsibleId);
       if (isLeft(newResponsible)) {
-        return left(new SubstituteResponsibleIsNotRegistered());
+        const error = newResponsible.left;
+
+        if (error instanceof ProfessionalProfileNotFoundError) {
+          return left(new ProfessionalIsNotRegistered("responsible"));
+        }
+
+        return left(error);
       }
 
-      pts.changeResponsibleProfessional(newResponsibleId);
+      pts.changeResponsibleProfessional(newResponsibleId, multidisciplinaryTeamIds);
     }
 
     pts.updateMultidisciplinaryTeam(multidisciplinaryTeamIds);
