@@ -1,6 +1,6 @@
 import { generateUUID } from "@/common/uuid";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
-import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
+import { ProfessionalCannotRemoveItselfWithoutSubstituteError } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
@@ -132,7 +132,7 @@ describe("UpdateMultidisciplinaryTeamService", () => {
     expect(result._tag).toBe("Left");
 
     assert(result._tag === "Left");
-    expect(result.left).toBeInstanceOf(ProfessionalCannotRemoveItselfWithoutSubstitute);
+    expect(result.left).toBeInstanceOf(ProfessionalCannotRemoveItselfWithoutSubstituteError);
   });
 
   it("should return ProfessionalIsNotRegistered when responsible tries to remove itself and provides invalid substitute ID", async () => {

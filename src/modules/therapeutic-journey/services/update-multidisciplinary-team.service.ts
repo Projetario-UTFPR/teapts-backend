@@ -6,7 +6,7 @@ import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-f
 import { Either, isLeft, left } from "fp-ts/lib/Either";
 import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
-import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
+import { ProfessionalCannotRemoveItselfWithoutSubstituteError } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
@@ -23,7 +23,7 @@ type UpdateMultidisciplinaryTeamResult = Either<
   | PtsNotFoundError
   | ProfessionalIsNotRegisteredError
   | ProfessionalDoesNotBelongToUserAccountError
-  | ProfessionalCannotRemoveItselfWithoutSubstitute
+  | ProfessionalCannotRemoveItselfWithoutSubstituteError
   | ProfessionalProfileNotFoundError
   | IrrecoverableError,
   void
@@ -67,7 +67,7 @@ export class UpdateMultidisciplinaryTeamService {
     const isResponsibleRemovingItself = !multidisciplinaryTeamIds.includes(professionalId);
     if (isResponsibleRemovingItself) {
       if (!newResponsibleId) {
-        return left(new ProfessionalCannotRemoveItselfWithoutSubstitute());
+        return left(new ProfessionalCannotRemoveItselfWithoutSubstituteError());
       }
 
       const newResponsible = await this.professionalsRepo.findById(newResponsibleId);
