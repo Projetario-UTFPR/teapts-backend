@@ -81,7 +81,7 @@ export class InMemoryPtsRepository extends PtsRepository {
     return either.right(pts);
   }
 
-  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, true>> {
+  public async save(pts: ProjetoTerapeuticoSingular): Promise<Either<IrrecoverableError, void>> {
     const ptsId = pts.getId().toString();
     const currentTeamUuids = pts.getMultidisciplinaryTeam().getCurrent();
 
@@ -119,11 +119,18 @@ export class InMemoryPtsRepository extends PtsRepository {
       });
     });
 
-    return either.right(true);
+    return either.right(undefined);
   }
 
-  public async getById(ptsId: UUID): Promise<ProjetoTerapeuticoSingular | null> {
+  public async getById(
+    ptsId: UUID,
+  ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
     const pts = this.items.find((item) => item.getId().toString() === ptsId.toString());
-    return pts || null;
+
+    if (!pts) {
+      return either.left(new PtsNotFoundError());
+    }
+
+    return either.right(pts);
   }
 }
