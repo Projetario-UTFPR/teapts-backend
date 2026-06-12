@@ -13,6 +13,7 @@ import { DocumentFilesStorage } from "@/modules/patient/storage/document-files.s
       useFactory: (blobVars: ConfigType<typeof blobStorageConfig>) =>
         new S3Client({
           endpoint: blobVars.BLOB_STORAGE_URL,
+          region: blobVars.BLOB_STORAGE_REGION,
           credentials: {
             accessKeyId: blobVars.BLOB_STORAGE_ACCESS_KEY,
             secretAccessKey: blobVars.BLOB_STORAGE_SECRET_KEY,
