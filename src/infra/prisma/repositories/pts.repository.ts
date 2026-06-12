@@ -4,7 +4,7 @@ import { PrismaSchemaForeignKey } from "@/infra/prisma/foreign-keys";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
-import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { Injectable } from "@nestjs/common";
@@ -93,8 +93,8 @@ export class PrismaPtsRepository extends PtsRepository {
 
           const foreignKey = getForeignKeyViolation(error);
 
-          if (foreignKey === "team") return new ProfessionalIsNotRegistered("team");
-          if (foreignKey === "other") return new ProfessionalIsNotRegistered("responsible");
+          if (foreignKey === "team") return new ProfessionalIsNotRegisteredError("team");
+          if (foreignKey === "other") return new ProfessionalIsNotRegisteredError("responsible");
 
           return new IrrecoverableError({
             message: `Failed to catch foreign key violation error in ${PrismaPtsRepository.name} when creating the PTS '${JSON.stringify(payload)}'.`,
@@ -160,8 +160,8 @@ export class PrismaPtsRepository extends PtsRepository {
 
       const violation = getForeignKeyViolation(error);
 
-      if (violation === "team") return left(new ProfessionalIsNotRegistered("team"));
-      if (violation === "other") return left(new ProfessionalIsNotRegistered("responsible"));
+      if (violation === "team") return left(new ProfessionalIsNotRegisteredError("team"));
+      if (violation === "other") return left(new ProfessionalIsNotRegisteredError("responsible"));
 
       return left(
         new IrrecoverableError({

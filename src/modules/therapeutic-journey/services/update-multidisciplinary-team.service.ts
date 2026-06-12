@@ -4,7 +4,7 @@ import type { UUID } from "@/common/uuid";
 import { ProfessionalsRepository } from "@/modules/professional/professionals.repository";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { Either, isLeft, left } from "fp-ts/lib/Either";
-import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
 import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
@@ -21,7 +21,7 @@ type Params = {
 
 type UpdateMultidisciplinaryTeamResult = Either<
   | PtsNotFoundError
-  | ProfessionalIsNotRegistered
+  | ProfessionalIsNotRegisteredError
   | ProfessionalDoesNotBelongToUserAccountError
   | ProfessionalCannotRemoveItselfWithoutSubstitute
   | ProfessionalProfileNotFoundError
@@ -75,7 +75,7 @@ export class UpdateMultidisciplinaryTeamService {
         const error = newResponsible.left;
 
         if (error instanceof ProfessionalProfileNotFoundError) {
-          return left(new ProfessionalIsNotRegistered("responsible"));
+          return left(new ProfessionalIsNotRegisteredError("responsible"));
         }
 
         return left(error);

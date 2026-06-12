@@ -1,7 +1,7 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
-import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { InMemoryProfessionalsRepository } from "@test/mocks/repositories/in-memory/professionals.repository";
@@ -48,7 +48,7 @@ export class InMemoryPtsRepository extends PtsRepository {
     );
 
     if (!responsibleProfessional) {
-      return either.left(new ProfessionalIsNotRegistered("responsible"));
+      return either.left(new ProfessionalIsNotRegisteredError("responsible"));
     }
 
     const everyProfessionalFromMultidisciplinaryTeamExists = pts
@@ -61,7 +61,7 @@ export class InMemoryPtsRepository extends PtsRepository {
       );
 
     if (!everyProfessionalFromMultidisciplinaryTeamExists) {
-      return either.left(new ProfessionalIsNotRegistered("team"));
+      return either.left(new ProfessionalIsNotRegisteredError("team"));
     }
 
     this.items.push(pts);
@@ -89,7 +89,7 @@ export class InMemoryPtsRepository extends PtsRepository {
         !this.professionalsRepo.professionals.some((p) => p.getId().toString() === uuid.toString()),
     );
 
-    if (missingProfessionalUuid) return either.left(new ProfessionalIsNotRegistered("team"));
+    if (missingProfessionalUuid) return either.left(new ProfessionalIsNotRegisteredError("team"));
 
     const existingPtsIndex = this.items.findIndex((item) => item.getId().toString() === ptsId);
     if (existingPtsIndex !== -1) {

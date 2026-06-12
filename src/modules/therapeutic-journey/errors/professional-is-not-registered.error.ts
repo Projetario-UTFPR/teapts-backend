@@ -1,6 +1,6 @@
 import { BadRequestError } from "@/common/errors/bad-request.error";
 
-export class ProfessionalIsNotRegistered extends BadRequestError {
+export class ProfessionalIsNotRegisteredError extends BadRequestError {
   public constructor(public readonly level: "responsible" | "team") {
     super({
       message:

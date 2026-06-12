@@ -1,9 +1,8 @@
-import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { generateUUID } from "@/common/uuid";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { ProfessionalCannotRemoveItselfWithoutSubstitute } from "@/modules/therapeutic-journey/errors/professional-cannot-remove-itself-without-substitute.error";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
-import { ProfessionalIsNotRegistered } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { ProfessionalIsNotResponsible } from "@/modules/therapeutic-journey/errors/professional-is-not-responsible.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
@@ -152,7 +151,7 @@ describe("UpdateMultidisciplinaryTeamService", () => {
     expect(result._tag).toBe("Left");
 
     assert(result._tag === "Left");
-    expect(result.left).toBeInstanceOf(ProfessionalIsNotRegistered);
+    expect(result.left).toBeInstanceOf(ProfessionalIsNotRegisteredError);
   });
 
   it("should return IrrecoverableError when saving fails due to a missing professional in the multidisciplinary team IDs payload", async () => {
@@ -170,7 +169,7 @@ describe("UpdateMultidisciplinaryTeamService", () => {
     expect(result._tag).toBe("Left");
 
     assert(result._tag === "Left");
-    expect(result.left).toBeInstanceOf(IrrecoverableError);
+    expect(result.left).toBeInstanceOf(ProfessionalIsNotRegisteredError);
   });
 
   it("should successfully update an pts multidisciplinary team", async () => {
