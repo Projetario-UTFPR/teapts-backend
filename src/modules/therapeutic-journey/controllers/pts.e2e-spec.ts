@@ -415,7 +415,7 @@ describe("[e2e] PTS Controller (v1)", () => {
           .put("/v1/pts/update/multidisciplinary-team")
           .set({ authorization: `Bearer ${professionalAccountToken}` })
           .send(body)
-          .expect(200);
+          .expect(204);
 
         const updatedPts = await prisma.projetoTerapeuticoSingular.findUniqueOrThrow({
           where: { id: pts.getId().toString() },
