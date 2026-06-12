@@ -27,8 +27,8 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
@@ -96,19 +96,10 @@ export class PtsController {
   }
 
   @Put("update/multidisciplinary-team")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
-  @ApiOkResponse({
-    description: "Equipe multidisciplinar atualizada com sucesso",
-    schema: {
-      type: "object",
-      properties: {
-        message: {
-          type: "string",
-          example: "Equipe multidisciplinar atualizada com sucesso",
-        },
-      },
-    },
+  @ApiNoContentResponse({
+    description: "Multidisciplinary team successfully updated. No content returned.",
   })
   @ApiNotFoundResponse({
     type: BasicExceptionPresenter,
@@ -119,7 +110,7 @@ export class PtsController {
     description: "Professional is not the PTS responsible.",
   })
   @ApiBadRequestResponse({
-    description: "Erros de validação ou de regras de negócio (Domínio).",
+    description: "Validation/bussiness rules errors",
     content: {
       "application/json": {
         examples: {
@@ -149,7 +140,7 @@ export class PtsController {
   })
   @ApiInternalServerErrorResponse({
     type: BasicExceptionPresenter,
-    description: "Erro interno no servidor.",
+    description: "Internal Server Error.",
   })
   public saveNewMultidisciplinaryTeam(
     @Body() body: UpdateMultidisciplinaryTeamDTO,
@@ -157,7 +148,7 @@ export class PtsController {
   ) {
     return pipe(
       () => this.updateMultidisciplinaryTeam.execute({ accountId: account.getId(), ...body }),
-      te.map(() => ({ message: "Equipe multidisciplinar atualizada com sucesso" })),
+      te.map(() => undefined),
       te.mapLeft((error) => {
         if (error instanceof IrrecoverableError) {
           throw new InternalServerErrorException(
