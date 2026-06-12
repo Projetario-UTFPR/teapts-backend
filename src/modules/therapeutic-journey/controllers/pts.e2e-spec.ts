@@ -268,4 +268,201 @@ describe("[e2e] PTS Controller (v1)", () => {
       ).toBe(inputMembersIds.length);
     },
   );
+
+  describe("PUT /v1/pts/update/multidisciplinary-team", () => {
+    test(
+      "update multidisciplinary team route requires authentication",
+      { tags: ["updatePtsTeam"] },
+      async () => {
+        await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .send({
+            ptsId: generateUUID().toString(),
+            professionalId: professional.getId().toString(),
+            multidisciplinaryTeamIds: [],
+          })
+          .expect(401);
+      },
+    );
+
+    it.each([
+      [{ ptsId: undefined }, "ptsId"] as const,
+      [{ professionalId: undefined }, "professionalId"] as const,
+      [{ multidisciplinaryTeamIds: undefined }, "multidisciplinaryTeamIds"] as const,
+    ])(
+      "should return 422 when `$1` is missing",
+      { tags: ["updatePtsTeam"] },
+      async (override, missingProperty) => {
+        const body = {
+          ptsId: generateUUID().toString(),
+          professionalId: professional.getId().toString(),
+          multidisciplinaryTeamIds: [],
+          ...override,
+        };
+
+        const response = await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(422);
+
+        assertIsValidationErrorsBag(response);
+        expect(response.body.errors).toHaveProperty(missingProperty);
+      },
+    );
+
+    it("should return 404 when the PTS does not exist", { tags: ["updatePtsTeam"] }, async () => {
+      const body = {
+        ptsId: generateUUID().toString(),
+        professionalId: professional.getId().toString(),
+        multidisciplinaryTeamIds: [],
+      };
+
+      const response = await request(app.getHttpServer())
+        .put("/v1/pts/update/multidisciplinary-team")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(404);
+
+      expect(response.body).toHaveProperty("message");
+    });
+
+    it(
+      "should return 403 when the professional is not the responsible for the PTS",
+      { tags: ["updatePtsTeam"] },
+      async () => {
+        const realResponsible = await professionalsFactory.createAndPersist(prisma, { account });
+
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          responsibleProfessionalId: realResponsible.getId(),
+          multidisciplinaryTeamIds: [],
+        });
+
+        const body = {
+          ptsId: pts.getId().toString(),
+          professionalId: professional.getId().toString(),
+          multidisciplinaryTeamIds: [],
+        };
+
+        const response = await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(403);
+
+        expect(response.body).toHaveProperty("message");
+      },
+    );
+
+    it(
+      "should return 400 when a new team member is not a registered professional",
+      { tags: ["updatePtsTeam"] },
+      async () => {
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          responsibleProfessionalId: professional.getId(),
+          multidisciplinaryTeamIds: [],
+        });
+
+        const nonExistingProfessionalId = generateUUID().toString();
+
+        const body = {
+          ptsId: pts.getId().toString(),
+          professionalId: professional.getId().toString(),
+          multidisciplinaryTeamIds: [nonExistingProfessionalId],
+        };
+
+        await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(400);
+      },
+    );
+
+    it(
+      "should update the multidisciplinary team applying WatchedList behavior (add new, remove omitted, keep untouched)",
+      { tags: ["updatePtsTeam"] },
+      async () => {
+        const responsible = professional;
+        const memberToKeep = await professionalsFactory.createAndPersist(prisma, { account });
+        const memberToRemove = await professionalsFactory.createAndPersist(prisma, { account });
+
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          responsibleProfessionalId: responsible.getId(),
+          multidisciplinaryTeamIds: [
+            responsible.getId(),
+            memberToKeep.getId(),
+            memberToRemove.getId(),
+          ],
+        });
+
+        const newMemberToAdd = await professionalsFactory.createAndPersist(prisma, { account });
+
+        const body = {
+          ptsId: pts.getId().toString(),
+          professionalId: responsible.getId().toString(),
+          multidisciplinaryTeamIds: [
+            responsible.getId().toString(),
+            memberToKeep.getId().toString(),
+            newMemberToAdd.getId().toString(),
+          ],
+        };
+
+        await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(204);
+
+        const updatedPts = await prisma.projetoTerapeuticoSingular.findUniqueOrThrow({
+          where: { id: pts.getId().toString() },
+          include: { multidisciplinaryTeam: true },
+        });
+
+        const teamMemberIdsInDb = updatedPts.multidisciplinaryTeam.map(
+          (member) => member.professionalId,
+        );
+
+        expect(teamMemberIdsInDb).toHaveLength(2);
+
+        expect(teamMemberIdsInDb).toContain(memberToKeep.getId().toString());
+
+        expect(teamMemberIdsInDb).toContain(newMemberToAdd.getId().toString());
+
+        expect(teamMemberIdsInDb).not.toContain(memberToRemove.getId().toString());
+      },
+    );
+
+    it(
+      "should return 400 when the responsible tries to remove themselves without providing a substitute",
+      { tags: ["updatePtsTeam"] },
+      async () => {
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          responsibleProfessionalId: professional.getId(),
+          multidisciplinaryTeamIds: [professional.getId()],
+        });
+
+        const body = {
+          ptsId: pts.getId().toString(),
+          professionalId: professional.getId().toString(),
+          multidisciplinaryTeamIds: [generateUUID().toString()],
+        };
+
+        const response = await request(app.getHttpServer())
+          .put("/v1/pts/update/multidisciplinary-team")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(400);
+
+        expect(response.body).toHaveProperty("message");
+        expect(response.body.message).toMatch(
+          `Responsável precisa prover ID de substituto quando busca revogar sua responsabilidade.`,
+        );
+      },
+    );
+  });
 });

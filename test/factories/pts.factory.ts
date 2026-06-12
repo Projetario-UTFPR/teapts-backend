@@ -1,4 +1,5 @@
-import { generateUUID } from "@/common/uuid";
+import { generateUUID, UUID } from "@/common/uuid";
+import { WatchedList } from "@/common/entities/watched-list";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
@@ -20,7 +21,9 @@ function createTimeline({
   return PtsTimeline.createUnchecked({ ...props, createdAt, status });
 }
 
-type CreateParams = Partial<ProjetoTerapeuticoSingular.Props>;
+type CreateParams = Omit<Partial<ProjetoTerapeuticoSingular.Props>, "multidisciplinaryTeam"> & {
+  multidisciplinaryTeamIds?: UUID[];
+};
 
 async function create({
   id = generateUUID(),
@@ -33,12 +36,14 @@ async function create({
   responsibleProfessionalId ??= (await professionalsFactory.create()).getId();
   patientId ??= (await patientsFactory.create()).getId();
 
+  const multidisciplinaryTeam = new WatchedList<UUID>(multidisciplinaryTeamIds);
+
   return ProjetoTerapeuticoSingular.createUnchecked({
     patientId,
     responsibleProfessionalId,
     socialSituation,
     id,
-    multidisciplinaryTeamIds,
+    multidisciplinaryTeam,
     timeline,
   });
 }

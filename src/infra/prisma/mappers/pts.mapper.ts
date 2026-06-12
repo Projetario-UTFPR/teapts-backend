@@ -1,3 +1,5 @@
+import { UUID } from "@/common/uuid";
+import { WatchedList } from "@/common/entities/watched-list";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { $Enums, Prisma } from "@prisma-gen/browser";
@@ -36,27 +38,47 @@ function statusFromPrisma(PtsStatus: $Enums.PtsStatus) {
   }
 }
 
-function intoPrisma(
-  pts: ProjetoTerapeuticoSingular,
-): Prisma.ProjetoTerapeuticoSingularCreateArgs["data"] {
-  const snapshot = pts.toSnapshot();
-  const multidisciplinaryTeam = snapshot.multidisciplinaryTeamIds.map((id) => ({
-    professionalId: id.toString(),
-  }));
+function mapMultidisciplinaryTeam(multidisciplinaryTeam: WatchedList<UUID>) {
+  const removedIds = multidisciplinaryTeam.getRemoved().map((id) => id.toString());
+  const insertedIds = multidisciplinaryTeam.getInserted().map((id) => id.toString()); // Typo "mzap" corrigido
+  const currentIds = multidisciplinaryTeam.getCurrent().map((id) => id.toString());
 
   return {
+    createPayload: {
+      createMany: {
+        data: currentIds.map((id) => ({ professionalId: id })),
+      },
+    },
+    updatePayload: {
+      ...(removedIds.length > 0 && {
+        deleteMany: {
+          professionalId: { in: removedIds },
+        },
+      }),
+      ...(insertedIds.length > 0 && {
+        createMany: {
+          data: insertedIds.map((id) => ({ professionalId: id })),
+        },
+      }),
+    },
+  };
+}
+
+function intoPrisma(pts: ProjetoTerapeuticoSingular) {
+  const snapshot = pts.toSnapshot();
+
+  return {
+    id: snapshot.id.toString(),
     socialSituation: snapshot.socialSituation,
     status: statusIntoPrisma(snapshot.timeline.status),
-    acceptedAt: snapshot.timeline.acceptedAt,
-    beganAt: snapshot.timeline.beganAt,
-    cancelledAt: snapshot.timeline.cancelledAt,
-    concludedAt: snapshot.timeline.concludedAt,
+    acceptedAt: snapshot.timeline.acceptedAt ?? null,
+    beganAt: snapshot.timeline.beganAt ?? null,
+    cancelledAt: snapshot.timeline.cancelledAt ?? null,
+    concludedAt: snapshot.timeline.concludedAt ?? null,
     createdAt: snapshot.timeline.createdAt,
-    rejectedAt: snapshot.timeline.rejectedAt,
-    id: snapshot.id.toString(),
+    rejectedAt: snapshot.timeline.rejectedAt ?? null,
     patientId: snapshot.patientId.toString(),
     responsibleProfessionalId: snapshot.responsibleProfessionalId.toString(),
-    multidisciplinaryTeam: { createMany: { data: multidisciplinaryTeam } },
   };
 }
 
@@ -67,11 +89,13 @@ function fromPrisma(
     }[];
   },
 ): ProjetoTerapeuticoSingular {
+  const teamIds = raw.multidisciplinaryTeam.map((member) => member.professionalId as UUID);
+
+  const multidisciplinaryTeam = new WatchedList<UUID>(teamIds);
+
   return ProjetoTerapeuticoSingular.createUnchecked({
     id: raw.id,
-    multidisciplinaryTeamIds: raw.multidisciplinaryTeam.map(
-      (professional) => professional.professionalId,
-    ),
+    multidisciplinaryTeam,
     patientId: raw.patientId,
     responsibleProfessionalId: raw.responsibleProfessionalId,
     socialSituation: raw.socialSituation,
@@ -87,4 +111,4 @@ function fromPrisma(
   });
 }
 
-export default { fromPrisma, intoPrisma };
+export default { fromPrisma, intoPrisma, mapMultidisciplinaryTeam };
