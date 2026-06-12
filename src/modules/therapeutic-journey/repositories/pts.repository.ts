@@ -14,7 +14,7 @@ export abstract class PtsRepository {
   public abstract activePtsExistsByPatientId(
     patientId: UUID,
   ): Promise<Either<IrrecoverableError, boolean>>;
-  
+
   /**
    * Finds the active PTS of patient identified by `patientId`.
    *
