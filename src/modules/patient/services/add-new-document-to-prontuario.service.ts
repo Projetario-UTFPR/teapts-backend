@@ -44,12 +44,7 @@ export class AddNewDocumentToProntuarioService {
           professionalId: assigneeProfessionalId,
         }),
       te.chainW(() =>
-        this.trySaveDocumentOrElseRemoveFileDescriptor(
-          documentFileKey,
-          patientId,
-          documentTitle,
-          documentDescription,
-        ),
+        this.saveDocument(documentFileKey, patientId, documentTitle, documentDescription),
       ),
       te.chainW(
         () => () => this.documentsFilesStorage.activateDocumentFile({ fileKey: documentFileKey }),
@@ -57,7 +52,7 @@ export class AddNewDocumentToProntuarioService {
     )();
   }
 
-  private trySaveDocumentOrElseRemoveFileDescriptor(
+  private saveDocument(
     fileKey: string,
     patientId: UUID,
     title: string,
@@ -70,9 +65,6 @@ export class AddNewDocumentToProntuarioService {
       description,
     });
 
-    return pipe(
-      () => this.documentsRepository.createDocument(document),
-      te.orLeft((_irrecoverableError) => () => this.documentsFilesStorage.delete({ fileKey })),
-    );
+    return () => this.documentsRepository.createDocument(document);
   }
 }
