@@ -1,4 +1,3 @@
-import { AppModule } from "@/app.module";
 import { generateUUID } from "@/common/uuid";
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
@@ -29,6 +28,8 @@ describe("[e2e] PTS Controller (v1)", () => {
   let professionalAccountToken: string;
 
   beforeAll(async () => {
+    const { AppModule } = await import("@/app.module.js");
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

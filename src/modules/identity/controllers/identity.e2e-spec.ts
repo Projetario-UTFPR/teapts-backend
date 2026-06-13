@@ -1,4 +1,3 @@
-import { AppModule } from "@/app.module";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { SignUpDto } from "@/modules/identity/dtos/signUp.dto";
@@ -21,6 +20,8 @@ describe("[e2e] Identity Controller (v1)", () => {
   const plainPassword = "12345678";
 
   beforeAll(async () => {
+    const { AppModule } = await import("@/app.module.js");
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

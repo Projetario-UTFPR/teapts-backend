@@ -1,4 +1,3 @@
-import { AppModule } from "@/app.module";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
@@ -29,6 +28,8 @@ describe("[e2e] Sessions Controller (v1)", () => {
   let professionalProfilesOfAccount: Professional[] = [];
 
   beforeAll(async () => {
+    const { AppModule } = await import("@/app.module.js");
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
       controllers: [TestController],
