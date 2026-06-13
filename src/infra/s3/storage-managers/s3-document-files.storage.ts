@@ -14,6 +14,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
+  NoSuchKey,
   PutObjectCommand,
   PutObjectTaggingCommand,
   S3Client,
@@ -23,6 +24,7 @@ import type { ConfigType } from "@nestjs/config";
 import { taskEither as te } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
+import { DocumentFileCannotBeActivatedError } from "@/modules/patient/errors/document-file-cannot-be-activated.error";
 
 @Injectable()
 export class S3DocumentFilesStorage extends DocumentFilesStorage {
@@ -82,9 +84,7 @@ export class S3DocumentFilesStorage extends DocumentFilesStorage {
     )();
   }
 
-  public activateDocumentFile({
-    fileKey,
-  }: ActivateDocumentFileParams): Promise<Either<IrrecoverableError, void>> {
+  public activateDocumentFile({ fileKey }: ActivateDocumentFileParams) {
     const command = new PutObjectTaggingCommand({
       Bucket: this.storageConfig.DOCUMENTS_BUCKET,
       Key: fileKey,
@@ -96,11 +96,16 @@ export class S3DocumentFilesStorage extends DocumentFilesStorage {
     return pipe(
       te.tryCatch(
         () => this.s3.send(command),
-        (error) =>
-          new IrrecoverableError({
+        (error) => {
+          if (error instanceof NoSuchKey) {
+            return new DocumentFileCannotBeActivatedError(fileKey);
+          }
+
+          return new IrrecoverableError({
             message: `Error occurred in ${S3DocumentFilesStorage.name} when activating the file of key "${fileKey}".`,
             cause: error as Error,
-          }),
+          });
+        },
       ),
       te.map((_output) => {}),
     )();

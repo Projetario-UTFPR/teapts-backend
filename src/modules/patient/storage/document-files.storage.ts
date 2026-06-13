@@ -1,4 +1,5 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
+import { DocumentFileCannotBeActivatedError } from "@/modules/patient/errors/document-file-cannot-be-activated.error";
 import type { Either } from "fp-ts/lib/Either";
 
 type WithFileKey<T = {}> = {
@@ -49,7 +50,7 @@ export abstract class DocumentFilesStorage {
    */
   public abstract activateDocumentFile(
     params: ActivateDocumentFileParams,
-  ): Promise<Either<IrrecoverableError, void>>;
+  ): Promise<Either<IrrecoverableError | DocumentFileCannotBeActivatedError, void>>;
 
   /**
    * Signs a temporary URL for uploading a file to the underling BLOB storage.
