@@ -4,6 +4,7 @@ import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { InitiateDocumentUploadDto } from "@/modules/patient/dtos/initiate-document-upload.dto";
+import { UploadDocumentDto } from "@/modules/patient/dtos/upload-document.dto";
 import { PatientNotFoundError } from "@/modules/patient/errors/patient-not-found-error";
 import { DocumentUploadInitiationPresenter } from "@/modules/patient/presenters/document-upload-initiation.presenter";
 import { AddNewDocumentToProntuarioService } from "@/modules/patient/services/add-new-document-to-prontuario.service";
@@ -21,6 +22,7 @@ import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiParam,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
@@ -103,5 +105,67 @@ export class ProntuarioController {
     )();
   }
 
-  public async persistDocument() {}
+  @ApiNoContentResponse({
+    description: "The document has been successfully created and persisted.",
+  })
+  @ApiBadRequestResponse({
+    description: "Tried to modify the prontuário of a unexisting patient.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "The request body is invalid.",
+    type: ValidationErrorBagPresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "Professional is not authorized.",
+    content: {
+      "application/json": {
+        examples: {
+          professionalNotAuthorized: {
+            summary: "Unauthorized professional",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Esse profissional não tem acesso ao PTS (e, logo, ao prontuário) do paciente.",
+            }),
+          },
+          professionalProfileDoesntBelongToActualUser: {
+            summary: "Professional profile belonging to others",
+            value: BasicExceptionPresenter.present({
+              message:
+                "O perfil profissional escolhido não pertence à conta do usuário autenticado.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiParam({
+    name: "patientId",
+    description: "The ID of the patient whose prontuário is being modified.",
+    type: "string",
+    format: "uuid",
+  })
+  @Post("document/upload")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async persistDocument(
+    @CurrentUser() user: AuthCollection,
+    @Param("patientId") patientId: string,
+    @Body() body: UploadDocumentDto,
+  ) {
+    return pipe(
+      () =>
+        this.addNewDocument.execute({
+          account: user.account,
+          patientId,
+          ...body,
+        }),
+      te.getOrElse((error) => {
+        if (error instanceof PatientNotFoundError) {
+          throw new BadRequestException(BasicExceptionPresenter.present(error), { cause: error });
+        }
+
+        return exceptionsFactory.fromError(error);
+      }),
+    )();
+  }
 }
