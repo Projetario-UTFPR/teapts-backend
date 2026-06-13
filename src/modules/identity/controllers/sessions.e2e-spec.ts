@@ -3,9 +3,9 @@ import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { Controller, Get, type INestApplication } from "@nestjs/common";
-import { Test, type TestingModule } from "@nestjs/testing";
 import accountsFactory from "@test/factories/accounts.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
+import { getTestingApp } from "@test/get-testing-app";
 import supertest from "supertest";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -28,17 +28,12 @@ describe("[e2e] Sessions Controller (v1)", () => {
   let professionalProfilesOfAccount: Professional[] = [];
 
   beforeAll(async () => {
-    const { AppModule } = await import("@/app.module.js");
+    app = await getTestingApp({ extraControllers: [TestController] });
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-      controllers: [TestController],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
     prisma = app.get(PrismaService);
     hasher = app.get(Hasher);
+
+    await app.init();
   });
 
   beforeEach(async () => {

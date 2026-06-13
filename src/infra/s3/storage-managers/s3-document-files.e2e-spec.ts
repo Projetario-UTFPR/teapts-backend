@@ -1,11 +1,11 @@
 import { DocumentFilesStorage } from "@/modules/patient/storage/document-files.storage";
 import { type INestApplication } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
 import { either as e } from "fp-ts";
 import type { App } from "supertest/types";
 import { GetObjectCommand, GetObjectTaggingCommand, NoSuchKey, S3Client } from "@aws-sdk/client-s3";
 import type { ConfigType } from "@nestjs/config";
 import blobStorageConfig from "@/configs/blob-storage.config";
+import { getTestingApp } from "@test/get-testing-app";
 
 /**
  * Not a dutty of `DocumentFilesStorage` to determine the type of document that can
@@ -21,18 +21,13 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
   let blobVars: ConfigType<typeof blobStorageConfig>;
 
   beforeAll(async () => {
-    const { AppModule } = await import("@/app.module.js");
-
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await getTestingApp();
 
     storage = app.get(DocumentFilesStorage);
     s3 = app.get(S3Client);
     blobVars = app.get(blobStorageConfig.KEY);
+
+    await app.init();
   });
 
   it("should provide a valid signed URL for uploading the file to a given bucket", async () => {

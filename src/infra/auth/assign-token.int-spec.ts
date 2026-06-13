@@ -1,14 +1,13 @@
-import { AppModule } from "@/app.module";
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import * as jose from "jose";
 import type { INestApplication } from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
 import accountsFactory from "@test/factories/accounts.factory";
 import { either } from "fp-ts";
 import { App } from "supertest/types";
 import keysetConfig from "@/configs/keyset.config";
 import { ConfigType } from "@nestjs/config";
 import appConfig from "@/configs/app.config";
+import { getTestingApp } from "@test/get-testing-app";
 
 describe("[Integration] Assign JWT Service", () => {
   let sut: AssignTokenService;
@@ -16,13 +15,8 @@ describe("[Integration] Assign JWT Service", () => {
   let publicKey: jose.CryptoKey;
 
   beforeAll(async () => {
-    let app: INestApplication<App>;
+    let app: INestApplication<App> = await getTestingApp();
 
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
     await app.init();
 
     sut = app.get(AssignTokenService);

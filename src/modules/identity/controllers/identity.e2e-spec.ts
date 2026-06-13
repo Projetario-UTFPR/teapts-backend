@@ -3,8 +3,8 @@ import { Hasher } from "@/modules/crypto/hasher";
 import { SignUpDto } from "@/modules/identity/dtos/signUp.dto";
 import { faker } from "@faker-js/faker";
 import { type INestApplication } from "@nestjs/common";
-import { Test, type TestingModule } from "@nestjs/testing";
 import accountsFactory from "@test/factories/accounts.factory";
+import { getTestingApp } from "@test/get-testing-app";
 import supertest from "supertest";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -20,13 +20,7 @@ describe("[e2e] Identity Controller (v1)", () => {
   const plainPassword = "12345678";
 
   beforeAll(async () => {
-    const { AppModule } = await import("@/app.module.js");
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
+    app = await getTestingApp();
 
     prisma = app.get(PrismaService);
     hasher = app.get(Hasher);

@@ -7,11 +7,11 @@ import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Patient } from "@/modules/patient/entities/patient.entity";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { type INestApplication } from "@nestjs/common";
-import { Test, type TestingModule } from "@nestjs/testing";
 import accountsFactory from "@test/factories/accounts.factory";
 import patientsFactory from "@test/factories/patients.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
 import ptsFactory from "@test/factories/pts.factory";
+import { getTestingApp } from "@test/get-testing-app";
 import { either as e, either } from "fp-ts";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -28,18 +28,13 @@ describe("[e2e] PTS Controller (v1)", () => {
   let professionalAccountToken: string;
 
   beforeAll(async () => {
-    const { AppModule } = await import("@/app.module.js");
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    app = await getTestingApp();
 
     prisma = app.get(PrismaService);
     hasher = app.get(Hasher);
     tokensService = app.get(AssignTokenService);
+
+    await app.init();
   });
 
   beforeEach(async () => {
