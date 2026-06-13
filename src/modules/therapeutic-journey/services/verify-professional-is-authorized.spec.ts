@@ -40,13 +40,18 @@ describe("[Service] Verify Professional Is Authorized", async () => {
       accountsRepository.accounts.push(professionalAccount);
       ptsRepository.items.push(pts);
 
-      const result = await sut.execute({
-        patientId: patient.getId(),
-        accountId: professionalAccount.getId(),
-        professionalId: professional.getId(),
-      });
+      for (const payload of [
+        { accountId: professionalAccount.getId() },
+        { account: professionalAccount },
+      ]) {
+        const result = await sut.execute({
+          patientId: patient.getId(),
+          professionalId: professional.getId(),
+          ...payload,
+        });
 
-      expect(e.isRight(result)).toBe(true);
+        expect(e.isRight(result)).toBe(true);
+      }
     },
   );
 
@@ -64,14 +69,19 @@ describe("[Service] Verify Professional Is Authorized", async () => {
     accountsRepository.accounts.push(differentAccount, professionalActualAccount);
     ptsRepository.items.push(pts);
 
-    const result = await sut.execute({
-      patientId: patient.getId(),
-      accountId: differentAccount.getId(),
-      professionalId: professional.getId(),
-    });
+    for (const payload of [
+      { accountId: differentAccount.getId() },
+      { account: differentAccount },
+    ]) {
+      const result = await sut.execute({
+        patientId: patient.getId(),
+        professionalId: professional.getId(),
+        ...payload,
+      });
 
-    expect(e.isRight(result)).toBe(false);
-    expect(result["left"]).toBeInstanceOf(ProfessionalDoesNotBelongToUserAccountError);
+      expect(e.isRight(result)).toBe(false);
+      expect(result["left"]).toBeInstanceOf(ProfessionalDoesNotBelongToUserAccountError);
+    }
   });
 
   it(
@@ -263,14 +273,19 @@ describe("[Service] Verify Professional Is Authorized", async () => {
       accountsRepository.accounts.push(differentAccount, professionalActualAccount);
       ptsRepository.items.push(pts);
 
-      const result = await sut.execute({
-        patientId: patient.getId(),
-        accountId: differentAccount.getId(),
-        professionalId: professionalProfile1.getId(),
-      });
+      for (const payload of [
+        { accountId: differentAccount.getId() },
+        { account: differentAccount },
+      ]) {
+        const result = await sut.execute({
+          patientId: patient.getId(),
+          professionalId: professionalProfile1.getId(),
+          ...payload,
+        });
 
-      expect(e.isRight(result)).toBe(false);
-      expect(result["left"]).toBeInstanceOf(ProfessionalDoesNotBelongToUserAccountError);
+        expect(e.isRight(result)).toBe(false);
+        expect(result["left"]).toBeInstanceOf(ProfessionalDoesNotBelongToUserAccountError);
+      }
     },
   );
 
@@ -351,5 +366,33 @@ describe("[Service] Verify Professional Is Authorized", async () => {
 
     expect(e.isRight(result)).toBe(false);
     expect(result["left"]).toBeInstanceOf(ProfessionalNotAuthorizedToAccessPts);
+  });
+
+  it("should use given account instead of searching with repository when both account and accountId are provided", async () => {
+    const patient = await patientsFactory.create();
+    const account = await accountsFactory.create();
+    const professional = await professionalsFactory.create({ account });
+    const pts = await ptsFactory.create({
+      multidisciplinaryTeamIds: [professional.getId()],
+      patientId: patient.getId(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+    });
+
+    // notice that we're not persisting the professional's account in the repository...
+    // it ain't checking whether it exists or not at all, it's just gonna blindly trust it
+    ptsRepository.items.push(pts);
+    accountsRepository.accounts.push(account);
+
+    const accountsRepoSpy = vi.spyOn(accountsRepository, "findAccountById");
+
+    const result = await sut.execute({
+      patientId: patient.getId(),
+      professionalId: professional.getId(),
+      account,
+      accountId: account.getId(),
+    });
+
+    expect(e.isRight(result)).toBe(true);
+    expect(accountsRepoSpy).not.toHaveBeenCalled();
   });
 });
