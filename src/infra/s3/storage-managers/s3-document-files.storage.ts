@@ -114,6 +114,7 @@ export class S3DocumentFilesStorage extends DocumentFilesStorage {
   public getSignedUploadUrl({
     fileName,
     fileType,
+    fileSize,
   }: GetSignedUploadUrlParams): Promise<Either<IrrecoverableError, GetSignedUploadUrlResult>> {
     const fileKey = generateUniqueFileName(fileName);
     const command = new PutObjectCommand({
@@ -121,6 +122,7 @@ export class S3DocumentFilesStorage extends DocumentFilesStorage {
       Key: fileKey,
       ContentType: fileType,
       ContentDisposition: "inline",
+      ContentLength: fileSize,
     });
 
     return pipe(

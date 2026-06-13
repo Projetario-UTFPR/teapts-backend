@@ -33,10 +33,13 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
   it("should provide a valid signed URL for uploading the file to a given bucket", async () => {
     const fileName = "patient-document.txt";
     const fileType = "text/plain";
+    const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
+    const file = new File([fileBlob], fileName);
 
     const result = await storage.getSignedUploadUrl({
       fileName,
       fileType,
+      fileSize: fileBlob.size,
     });
 
     assert(e.isRight(result), "the test expected no error at all");
@@ -45,9 +48,6 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
 
     expect(() => new URL(signedUrl.bucketUrl), "it should produce a correct URL").not.toThrow();
     expect(signedUrl.fileKey).toBeTypeOf("string");
-
-    const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
-    const file = new File([fileBlob], fileName);
 
     const response = await fetch(signedUrl.bucketUrl, {
       method: "PUT",
@@ -80,18 +80,18 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
     async () => {
       const fileName = "patient-document.txt";
       const fileType = "text/plain";
+      const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
+      const file = new File([fileBlob], fileName);
 
       const result = await storage.getSignedUploadUrl({
         fileName,
         fileType,
+        fileSize: fileBlob.size,
       });
 
       assert(e.isRight(result), "the test expected no error at all");
 
       const signedUrl = result.right;
-
-      const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
-      const file = new File([fileBlob], fileName);
 
       const response = await fetch(signedUrl.bucketUrl, {
         method: "PUT",

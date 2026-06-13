@@ -90,6 +90,7 @@ export class ProntuarioController {
           accountId: user.account.getId(),
           documentFileName: body.fileName,
           documentFileType: body.fileType,
+          documentFileSize: body.fileSize,
         }),
       te.map(DocumentUploadInitiationPresenter.present),
       te.getOrElse((error) => {

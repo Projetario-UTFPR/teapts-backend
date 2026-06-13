@@ -21,6 +21,7 @@ export type ActivateDocumentFileParams = WithFileKey;
 export type GetSignedUploadUrlParams = {
   fileName: string;
   fileType: string;
+  fileSize: number;
 };
 
 export type GetSignedUploadUrlResult = WithFileKey<{
