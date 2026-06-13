@@ -18,6 +18,7 @@ import { DocumentFilesStorage } from "@/modules/patient/storage/document-files.s
             accessKeyId: blobVars.BLOB_STORAGE_ACCESS_KEY,
             secretAccessKey: blobVars.BLOB_STORAGE_SECRET_KEY,
           },
+          forcePathStyle: true,
         }),
       inject: [blobStorageConfig.KEY],
     },
