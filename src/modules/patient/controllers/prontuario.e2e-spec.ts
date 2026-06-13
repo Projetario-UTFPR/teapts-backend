@@ -19,7 +19,8 @@ import { resolve } from "node:path";
 import supertest from "supertest";
 import { type App } from "supertest/types";
 
-const ENDPOINT = (patientId: UUID) => `/v1/patient/${patientId.toString()}/prontuario/document`;
+const initiateUploadEndpoint = (patientId: UUID) =>
+  `/v1/patient/${patientId.toString()}/prontuario/document/upload/initiate`;
 
 describe("[e2e] Prontuario Controller (v1)", async () => {
   const documentFileName = "Documento Sigiloso do Paciente.pdf" as const;
@@ -89,7 +90,7 @@ describe("[e2e] Prontuario Controller (v1)", async () => {
       await generateActivePts();
 
       const response = await supertest(app.getHttpServer())
-        .post(ENDPOINT(patient.getId()))
+        .post(initiateUploadEndpoint(patient.getId()))
         .set("authorization", `Bearer ${professionalAccountToken}`)
         .send({
           fileName: documentFile.name,
@@ -115,7 +116,7 @@ describe("[e2e] Prontuario Controller (v1)", async () => {
       // not creating active PTS here
 
       const response = await supertest(app.getHttpServer())
-        .post(ENDPOINT(patient.getId()))
+        .post(initiateUploadEndpoint(patient.getId()))
         .set("authorization", `Bearer ${professionalAccountToken}`)
         .send({
           fileName: documentFile.name,
@@ -129,11 +130,13 @@ describe("[e2e] Prontuario Controller (v1)", async () => {
 
   it("should be a guarded route", async () => {
     // not sending auth token
-    const response = await supertest(app.getHttpServer()).post(ENDPOINT(patient.getId())).send({
-      fileName: documentFile.name,
-      fileType: documentFile.type,
-      fileSize: documentFile.size,
-    });
+    const response = await supertest(app.getHttpServer())
+      .post(initiateUploadEndpoint(patient.getId()))
+      .send({
+        fileName: documentFile.name,
+        fileType: documentFile.type,
+        fileSize: documentFile.size,
+      });
 
     expect(response.status).toBe(401);
   });

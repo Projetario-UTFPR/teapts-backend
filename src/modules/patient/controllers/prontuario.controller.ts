@@ -34,8 +34,6 @@ export class ProntuarioController {
     private readonly addNewDocument: AddNewDocumentToProntuarioService,
   ) {}
 
-  @Post("document")
-  @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({
     description: "URL for uploading the document successfully issued.",
     type: DocumentUploadInitiationPresenter,
@@ -77,6 +75,8 @@ export class ProntuarioController {
     type: "string",
     format: "uuid",
   })
+  @Post("document/upload/initiate")
+  @HttpCode(HttpStatus.CREATED)
   public initiateDocumentUpload(
     @CurrentUser() user: AuthCollection,
     @Body() body: InitiateDocumentUploadDto,
