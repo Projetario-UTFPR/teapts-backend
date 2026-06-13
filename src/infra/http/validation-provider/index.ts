@@ -9,10 +9,15 @@ const HANDLER_KEY = "__handler_core_validation_error_config";
 export type ValidationConfig = {
   /**
    * When present, this status will be forced into the response.
+   * @default HttpStatus.UNPROCESSABLE_ENTITY
    */
   status?: HttpStatus;
 };
 
+/**
+ * Extra configuration for how the DTO will be validated.
+ * May be omitted when no custom configuration is set.
+ */
 export const ConfigValidation = (config: ValidationConfig) => {
   return SetMetadata(METADATA_KEY, config);
 };
