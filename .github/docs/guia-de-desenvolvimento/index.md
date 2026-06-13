@@ -26,7 +26,8 @@ compatíveis entre si. Desse modo, não é exigido que o RustFS seja o verdadeir
 #### Configurando
 
 Após levantar o contâiner do RustFS, acesse o dashboard em http://localhost:9001. O login é aquele definido
-no arquivo de variáveis de ambiente. (Se você ainda não levantou o contâiner ou não preparou as variáveis de
+no arquivo de variáveis de ambiente: a conta é dada pela variável `BLOB_STORAGE_ACCESS_KEY`, a chave pela
+variável `BLOB_STORAGE_SECRET_KEY`. (Se você ainda não levantou o contâiner ou não preparou as variáveis de
 ambiente, refira-se ao documento [Configuração do Ambiente de Desenvolvimento].)
 
 Acessando o painel, clique no botão "Create Bucket" e crie dois _buckets_ (não é necessário nenhuma
@@ -39,29 +40,6 @@ respectivos nomes.
 <figure>
     <img src="../assets/setup-rustfs-1.png" alt="Figura 1" style="max-height:500px;" />
     <figcaption>Figura 1: tela inicial do RustFS</figcaption>
-</figure>
-<br/><br/>
-
-Navegue até a aba "Access Keys" e clique em "Add Access Key" no canto superior direito da tela (Figura 2).
-Adicione um nome à chave (preencha o campo "Name") e clique em "Create" (Figura 3). Copie o valor "Access
-Key" e "Secret Key" para as variáveis de ambiente `BLOB_STORAGE_ACCESS_KEY` e `BLOB_STORAGE_SECRET_KEY`,
-respectivamente. (Vide Figura 4.)
-
-<figure>
-    <img src="../assets/setup-rustfs-2.png" alt="Figura 1" style="max-height:500px;" />
-    <figcaption>Figura 2: tela de gerenciamento de tokens de acesso</figcaption>
-</figure>
-<br/><br/>
-
-<figure>
-    <img src="../assets/setup-rustfs-3.png" alt="Figura 1" style="max-height:500px;" />
-    <figcaption>Figura 3: formulário para criar uma nova chave de acesso</figcaption>
-</figure>
-<br/><br/>
-
-<figure>
-    <img src="../assets/setup-rustfs-4.png" alt="Figura 1" style="max-height:500px;" />
-    <figcaption>Figura 4: chave de acesso criada</figcaption>
 </figure>
 <br/><br/>
 
