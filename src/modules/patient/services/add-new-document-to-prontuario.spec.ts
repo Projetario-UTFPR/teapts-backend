@@ -79,7 +79,7 @@ describe("[Service] Add New Documento to Prontuario", async () => {
 
   it(
     "should only allow members of the multidisciplinary " +
-      "team to add/activate new documents to a patient's prontuario",
+      "team to add/activate new documents to a patient's prontuário",
     async () => {
       const spy = vi.spyOn(VerifyProfessionalIsAuthorizedService.prototype, "execute");
       const { patient, document } = await getValidEntities();
