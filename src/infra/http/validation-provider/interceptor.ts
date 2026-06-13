@@ -23,6 +23,7 @@ export class ValidationInterceptor implements NestInterceptor {
     return next.handle();
   }
 
+  // oxlint-disable-next-line typescript/no-explicit-any
   private getMergedValidatorConfigurations(targets: any[]) {
     return this.reflector.getAllAndMerge<ValidationConfig>(validation.metadataKey, targets);
   }

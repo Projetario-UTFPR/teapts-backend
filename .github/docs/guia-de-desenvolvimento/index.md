@@ -27,8 +27,9 @@ compatíveis entre si. Desse modo, não é exigido que o RustFS seja o verdadeir
 
 Após levantar o contâiner do RustFS, acesse o dashboard em http://localhost:9001. O login é aquele definido
 no arquivo de variáveis de ambiente: a conta é dada pela variável `BLOB_STORAGE_ACCESS_KEY`, a chave pela
-variável `BLOB_STORAGE_SECRET_KEY`. (Se você ainda não levantou o contâiner ou não preparou as variáveis de
-ambiente, refira-se ao documento [Configuração do Ambiente de Desenvolvimento].)
+variável `BLOB_STORAGE_SECRET_KEY`. (Por padrão, "rustfs" para ambos usuário e chave. Se você ainda não levantou
+o contâiner ou não preparou as variáveis de ambiente,
+refira-se ao documento [Configuração do Ambiente de Desenvolvimento].)
 
 Acessando o painel, clique no botão "Create Bucket" e crie dois _buckets_ (não é necessário nenhuma
 configuração sofisticada em desenvolvimento, basta colocar um nome e criar): um para os documentos dos

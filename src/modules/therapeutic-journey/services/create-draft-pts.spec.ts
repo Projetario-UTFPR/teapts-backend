@@ -62,7 +62,7 @@ describe("[Service] Create Draft PTS Service", async () => {
     ).toBe(true);
 
     expect(
-      pts.toSnapshot().multidisciplinaryTeamIds.length,
+      pts.getMultidisciplinaryTeam().getCurrent().length,
       "it should contain an empty multidisciplinary team when no initial team has been provided",
     ).toBe(0);
   });
@@ -90,7 +90,7 @@ describe("[Service] Create Draft PTS Service", async () => {
     assert(either.isRight(result));
 
     const pts = result.right;
-    expect(pts.toSnapshot().multidisciplinaryTeamIds).toEqual(
+    expect(pts.getMultidisciplinaryTeam().getCurrent()).toEqual(
       expect.arrayContaining(multidisciplinaryTeamIds),
     );
   });
@@ -121,7 +121,7 @@ describe("[Service] Create Draft PTS Service", async () => {
 
     const pts = result.right;
 
-    expect(pts.toSnapshot().multidisciplinaryTeamIds).not.toEqual(
+    expect(pts.getMultidisciplinaryTeam().getCurrent()).not.toEqual(
       expect.arrayContaining([professional.getId()]),
     );
   });

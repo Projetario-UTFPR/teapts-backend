@@ -10,7 +10,7 @@ describe("serializeValidationErrors", () => {
       "some.arg": [new InvalidArgumentError({ errorMessage: "error 1", field: "some.arg" })],
     };
 
-    const result = serializeValidationErrorsBag(errorsMap) as any;
+    const result = serializeValidationErrorsBag(errorsMap) as unknown;
 
     expect(result).toMatchObject({
       some: {
@@ -27,7 +27,7 @@ describe("serializeValidationErrors", () => {
       "a.b.c.d": [new InvalidArgumentError({ errorMessage: "deep", field: "a.b.c.d" })],
     };
 
-    const result = serializeValidationErrorsBag(errorsMap) as any;
+    const result = serializeValidationErrorsBag(errorsMap) as { a: { b: { c: { d: unknown[] } } } };
     expect(result.a.b.c.d[0]).toBe("deep");
   });
 });
