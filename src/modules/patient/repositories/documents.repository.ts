@@ -1,5 +1,6 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { Document } from "@/modules/patient/aggregates/document.aggregate";
+import { PatientNotFoundError } from "@/modules/patient/errors/patient-not-found-error";
 // oxlint-disable-next-line no-unused-vars We need to import it so that we can link to it in the docstrings
 import { type DocumentFilesStorage } from "@/modules/patient/storage/document-files.storage";
 import { type Either } from "fp-ts/lib/Either";
@@ -10,5 +11,7 @@ import { type Either } from "fp-ts/lib/Either";
  * instead.
  */
 export abstract class DocumentsRepository {
-  public abstract createDocument(document: Document): Promise<Either<IrrecoverableError, Document>>;
+  public abstract createDocument(
+    document: Document,
+  ): Promise<Either<IrrecoverableError | PatientNotFoundError, Document>>;
 }
