@@ -7,6 +7,8 @@ import { CreateBucketCommand, S3Client } from "@aws-sdk/client-s3";
 let postgresqlContainer: StartedTestContainer;
 let rustfsContainer: StartedTestContainer;
 
+// we can't let something like _context beucase vitest throws errors
+// oxlint-disable-next-line no-empty-pattern
 beforeAll(async ({}, suite) => {
   postgresqlContainer = await getPostgreSQLContainer();
   execSync("npx prisma migrate deploy");
