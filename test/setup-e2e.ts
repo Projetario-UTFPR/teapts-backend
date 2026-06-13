@@ -11,7 +11,7 @@ let rustfsContainer: StartedTestContainer;
 // oxlint-disable-next-line no-empty-pattern
 beforeAll(async ({}, suite) => {
   postgresqlContainer = await getPostgreSQLContainer();
-  execSync("npx prisma migrate deploy");
+  execSync("npx prisma migrate deploy > /dev/null 2>&1");
 
   rustfsContainer = await getRustfsContainer(suite.id);
 
@@ -31,7 +31,7 @@ beforeAll(async ({}, suite) => {
 
 beforeEach(() => {
   // This resets the database so that every single test run with a fresh database instnace
-  execSync("npx prisma migrate reset --force");
+  execSync("npx prisma migrate reset --force > /dev/null 2>&1");
 }, 60000);
 
 afterAll(async () => {
