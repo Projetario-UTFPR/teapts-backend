@@ -31,5 +31,6 @@ export async function getRustfsContainer(testId: string) {
     return rustfsContainer;
   } catch (error) {
     console.error("Failed to start RustFS container:", error);
+    throw error;
   }
 }
