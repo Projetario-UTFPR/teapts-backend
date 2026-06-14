@@ -1,6 +1,4 @@
-import { AppModule } from "@/app.module";
 import type { INestApplication } from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
 import accountsFactory from "@test/factories/accounts.factory";
 import { either } from "fp-ts";
 import { App } from "supertest/types";
@@ -9,6 +7,7 @@ import { AccountsRepository } from "@/modules/identity/repositories/accounts.rep
 import { MockHasherAndComparator } from "@test/mocks/crypto/mock-hasher-and-comparator";
 import { AccountWithEmailAlreadyExistError } from "@/modules/identity/errors/account-with-email-already-exist.error";
 import { faker } from "@faker-js/faker";
+import { getTestingApp } from "@test/get-testing-app";
 
 describe("[Integration] Prisma Accounts Repository", () => {
   let hasherAndComparator = new MockHasherAndComparator();
@@ -18,17 +17,12 @@ describe("[Integration] Prisma Accounts Repository", () => {
   const knownEmail = "existingandknown@email.com";
 
   beforeAll(async () => {
-    let app: INestApplication<App>;
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    let app: INestApplication<App> = await getTestingApp();
 
     accountRepo = app.get(AccountsRepository);
     sut = app.get(CreateAccountService);
+
+    await app.init();
   });
 
   beforeEach(async () => {

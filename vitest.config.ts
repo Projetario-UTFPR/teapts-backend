@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import { configDotenv } from "dotenv";
 import { expand } from "dotenv-expand";
 
-expand(configDotenv());
+expand(configDotenv({ override: false, path: [".env.test"] }));
 
 export default defineConfig({
   test: {

@@ -104,12 +104,12 @@ model ProjetoTerapeuticoSingular {
 }
 
 model Document {
-  id            String    @id @default(uuid())
-  title         String
-  description   String?   @db.VarChar(4096)
-  documentUrl   String    @map("document_url") @db.VarChar(16384)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  lastUpdatedAt DateTime? @map("last_updated_at")
+  id              String    @id @default(uuid())
+  title           String
+  description     String?   @db.VarChar(4096)
+  documentFileKey String    @unique @map("document_file_key") @db.VarChar(4096)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  lastUpdatedAt   DateTime? @map("last_updated_at")
 
   patient          Patient @relation(fields: [patientAccountId], references: [accountId])
   patientAccountId String  @map("patient_account_id")

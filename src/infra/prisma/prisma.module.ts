@@ -6,6 +6,8 @@ import { ProfessionalsRepository } from "@/modules/professional/professionals.re
 import { PrismaProfessionalsRepository } from "@/infra/prisma/repositories/professionals.repository";
 import { PtsRepository } from "@/modules/therapeutic-journey/repositories/pts.repository";
 import { PrismaPtsRepository } from "@/infra/prisma/repositories/pts.repository";
+import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
+import { PrismaDocumentsRepository } from "@/infra/prisma/repositories/documents.repository";
 
 @Global()
 @Module({
@@ -14,7 +16,14 @@ import { PrismaPtsRepository } from "@/infra/prisma/repositories/pts.repository"
     { provide: AccountsRepository, useClass: PrismaAccountsRepository },
     { provide: ProfessionalsRepository, useClass: PrismaProfessionalsRepository },
     { provide: PtsRepository, useClass: PrismaPtsRepository },
+    { provide: DocumentsRepository, useClass: PrismaDocumentsRepository },
   ],
-  exports: [PrismaService, AccountsRepository, ProfessionalsRepository, PtsRepository],
+  exports: [
+    PrismaService,
+    AccountsRepository,
+    ProfessionalsRepository,
+    PtsRepository,
+    DocumentsRepository,
+  ],
 })
 export class PrismaModule {}

@@ -41,7 +41,7 @@ export class ProfessionalWithAccountPresenter {
   }
 
   public static present(row: Prisma.ProfessionalModel & { account: Prisma.AccountModel }) {
-    return new this({
+    return new ProfessionalWithAccountPresenter({
       professionalId: row.id,
       accountId: row.account.id,
       name: row.account.name,
@@ -49,6 +49,6 @@ export class ProfessionalWithAccountPresenter {
       specialism: professionalsMapper.specialismFromPrisma(row.specialism),
       lastUpdatedAt: row.account.lastUpdatedAt ?? undefined,
       createdAt: row.account.createdAt,
-    }) as ProfessionalWithAccountPresenter;
+    });
   }
 }

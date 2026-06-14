@@ -1,6 +1,7 @@
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { Public } from "@/infra/auth/decorators/public-route";
-import { JWTokensPresenter } from "@/infra/auth/presenters/tokens.presenter";
+import { JWTokenPresenter } from "@/infra/auth/presenters/token.presenter";
+import { GetAuthCollectionQueryHandler } from "@/infra/auth/query-handlers/get-auth-collection.query";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
@@ -20,13 +21,14 @@ export class SessionsController {
   public constructor(
     private readonly authenticateAccountService: AuthenticateAccountService,
     private readonly tokensService: AssignTokenService,
+    private readonly getAuthCollection: GetAuthCollectionQueryHandler,
   ) {}
 
   @Public()
   @Post("login")
   @ApiOkResponse({
     description: "The successful authentication response.",
-    type: JWTokensPresenter,
+    type: JWTokenPresenter,
   })
   @ApiUnprocessableEntityResponse({
     type: ValidationErrorBagPresenter,
@@ -39,13 +41,26 @@ export class SessionsController {
   @HttpCode(HttpStatus.OK)
   public login(@Body() loginDto: LoginDto) {
     return pipe(
-      () =>
+      te.Do,
+      te.apS("account", () =>
         this.authenticateAccountService.execute({
           email: loginDto.email,
           plainPassword: loginDto.password,
         }),
-      te.chainW((account) => () => this.tokensService.execute({ account })),
-      te.map(JWTokensPresenter.present),
+      ),
+      te.bindW(
+        "tokens",
+        ({ account }) =>
+          () =>
+            this.tokensService.execute({ account }),
+      ),
+      te.bindW(
+        "authCollection",
+        ({ account }) =>
+          () =>
+            this.getAuthCollection.execute({ accountId: account.getId() }),
+      ),
+      te.map(({ authCollection, tokens }) => JWTokenPresenter.present(tokens, authCollection)),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
