@@ -79,7 +79,7 @@ describe("[Service] Add New Documento to Prontuario", async () => {
 
   it(
     "should only allow members of the multidisciplinary " +
-      "team to add/activate new documents to a patient's prontuario",
+      "team to add/activate new documents to a patient's prontuário",
     async () => {
       const spy = vi.spyOn(VerifyProfessionalIsAuthorizedService.prototype, "execute");
       const { patient, document } = await getValidEntities();
@@ -94,6 +94,7 @@ describe("[Service] Add New Documento to Prontuario", async () => {
         documentFileKey: document.fileKey,
         documentTitle: "Test Document",
         patientId: patient.getId(),
+        account: nonMemberProfessionalAccount,
       });
 
       expect(either.isRight(result)).toBe(false);
@@ -108,13 +109,14 @@ describe("[Service] Add New Documento to Prontuario", async () => {
 
   it("should activate a previously document and register it when successful", async () => {
     const spy = vi.spyOn(VerifyProfessionalIsAuthorizedService.prototype, "execute");
-    const { professional, patient, document } = await getValidEntities();
+    const { professional, patient, document, professionalAccount } = await getValidEntities();
 
     const result = await sut.execute({
       assigneeProfessionalId: professional.getId(),
       documentFileKey: document.fileKey,
       documentTitle: "Test Document",
       patientId: patient.getId(),
+      account: professionalAccount,
     });
 
     expect(either.isRight(result)).toBe(true);
@@ -130,7 +132,7 @@ describe("[Service] Add New Documento to Prontuario", async () => {
 
   it("should not allow any professional if the PTS hasn't been accepted yet", async () => {
     const spy = vi.spyOn(VerifyProfessionalIsAuthorizedService.prototype, "execute");
-    const { patient, professional, document } = await getValidEntities();
+    const { patient, professional, document, professionalAccount } = await getValidEntities();
     const pts = await ptsFactory.create({
       patientId: patient.getId(),
       responsibleProfessionalId: professional.getId(),
@@ -146,6 +148,7 @@ describe("[Service] Add New Documento to Prontuario", async () => {
       documentFileKey: document.fileKey,
       documentTitle: "Test Document",
       patientId: patient.getId(),
+      account: professionalAccount,
     });
 
     expect(either.isLeft(result)).toBe(true);

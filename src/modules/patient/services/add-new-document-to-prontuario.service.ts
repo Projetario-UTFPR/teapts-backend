@@ -1,4 +1,5 @@
 import { type UUID } from "@/common/uuid";
+import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Document } from "@/modules/patient/aggregates/document.aggregate";
 import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
 import { DocumentFilesStorage } from "@/modules/patient/storage/document-files.storage";
@@ -9,6 +10,7 @@ import { pipe } from "fp-ts/lib/function";
 
 type Params = {
   patientId: UUID;
+  account: Account;
   assigneeProfessionalId: UUID;
   documentFileKey: string;
   documentTitle: string;
@@ -36,20 +38,17 @@ export class AddNewDocumentToProntuarioService {
     documentTitle,
     documentDescription,
     documentFileKey,
+    account,
   }: Params) {
     return pipe(
       () =>
         this.verifyProfessionalIsAuthorized.execute({
           patientId,
+          account,
           professionalId: assigneeProfessionalId,
         }),
       te.chainW(() =>
-        this.trySaveDocumentOrElseRemoveFileDescriptor(
-          documentFileKey,
-          patientId,
-          documentTitle,
-          documentDescription,
-        ),
+        this.saveDocument(documentFileKey, patientId, documentTitle, documentDescription),
       ),
       te.chainW(
         () => () => this.documentsFilesStorage.activateDocumentFile({ fileKey: documentFileKey }),
@@ -57,7 +56,7 @@ export class AddNewDocumentToProntuarioService {
     )();
   }
 
-  private trySaveDocumentOrElseRemoveFileDescriptor(
+  private saveDocument(
     fileKey: string,
     patientId: UUID,
     title: string,
@@ -70,9 +69,6 @@ export class AddNewDocumentToProntuarioService {
       description,
     });
 
-    return pipe(
-      () => this.documentsRepository.createDocument(document),
-      te.orLeft((_irrecoverableError) => () => this.documentsFilesStorage.delete({ fileKey })),
-    );
+    return () => this.documentsRepository.createDocument(document);
   }
 }

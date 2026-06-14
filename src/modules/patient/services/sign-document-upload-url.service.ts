@@ -11,6 +11,7 @@ type Params = {
   accountId: UUID;
   documentFileType: MIMEType;
   documentFileName: string;
+  documentFileSize: number;
 };
 
 /**
@@ -26,7 +27,13 @@ export class SignDocumentUploadUrlService {
     private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
   ) {}
 
-  public async execute({ documentFileType, documentFileName, accountId, patientId }: Params) {
+  public async execute({
+    documentFileType,
+    documentFileName,
+    documentFileSize,
+    accountId,
+    patientId,
+  }: Params) {
     return pipe(
       () => this.verifyProfessionalIsAuthorized.execute({ patientId, accountId }),
       te.chainW(
@@ -34,6 +41,7 @@ export class SignDocumentUploadUrlService {
           this.documentsFilesStorage.getSignedUploadUrl({
             fileName: documentFileName,
             fileType: documentFileType.toString(),
+            fileSize: documentFileSize,
           }),
       ),
     )();

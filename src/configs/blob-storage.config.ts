@@ -7,6 +7,7 @@ const schema = z.object({
   BLOB_STORAGE_URL: z.url(),
   DOCUMENTS_BUCKET: z.string(),
   PROFILE_PICTURES_BUCKET: z.string(),
+  BLOB_STORAGE_REGION: z.string(),
 });
 
 export default registerAs("blobStorage", () => {
