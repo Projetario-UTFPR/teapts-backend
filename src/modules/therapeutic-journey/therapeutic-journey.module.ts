@@ -4,6 +4,7 @@ import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/cr
 import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
 import { VerifyProfessionalIsAuthorizedService } from "@/modules/therapeutic-journey/services/verify-professional-is-authorized.service";
 import { Module } from "@nestjs/common";
+import { CreateActivityService } from "./services/create-activity.service";
 
 @Module({
   controllers: [PtsController],
@@ -12,7 +13,8 @@ import { Module } from "@nestjs/common";
     VerifyProfessionalIsAuthorizedService,
     UpdateMultidisciplinaryTeamService,
     ShowActivePtsQueryHandler,
+    CreateActivityService,
   ],
   exports: [VerifyProfessionalIsAuthorizedService],
 })
-export class TherapeuticJourneyModule {}
+export class TherapeuticJourneyModule { }
