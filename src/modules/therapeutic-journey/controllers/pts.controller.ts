@@ -34,6 +34,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
+  ApiTags,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
@@ -41,6 +42,7 @@ import { pipe } from "fp-ts/lib/function";
 import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/presenters/pts-with-professional-and-patient.presenter";
 
 @Controller("v1/pts")
+@ApiTags("Projeto Terapêutico Singular (PTS)")
 export class PtsController {
   public constructor(
     private readonly createDraftPts: CreateDraftPtsService,
