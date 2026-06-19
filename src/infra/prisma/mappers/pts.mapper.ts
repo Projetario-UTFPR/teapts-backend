@@ -111,4 +111,4 @@ function fromPrisma(
   });
 }
 
-export default { fromPrisma, intoPrisma, mapMultidisciplinaryTeam };
+export default { fromPrisma, intoPrisma, mapMultidisciplinaryTeam, statusFromPrisma };
