@@ -28,6 +28,7 @@ type PtsProps = {
    */
   socialSituation: string;
   timeline: PtsTimeline;
+  activitiesIds: UUID[],
 };
 
 type CreateNewPtsParams = {
@@ -60,6 +61,7 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
       responsibleProfessionalId,
       timeline: PtsTimeline.create(),
       multidisciplinaryTeam,
+      activitiesIds: [],
     });
   }
 
