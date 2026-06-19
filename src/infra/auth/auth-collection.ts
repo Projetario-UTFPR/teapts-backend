@@ -3,6 +3,7 @@ import { Professional } from "@/modules/professional/entities/professional.aggre
 
 // oxlint-disable-next-line no-unused-vars needed for docstrings
 import type { CurrentUser } from "@/infra/auth/decorators/current-user";
+import { Patient } from "@/modules/patient/entities/patient.entity";
 
 /**
  * Contains the authenticated user's account and professional profiles.
@@ -12,5 +13,6 @@ export class AuthCollection {
   public constructor(
     public readonly account: Account,
     public readonly professionalProfiles: Professional[],
+    public readonly patientProfile: Patient | undefined,
   ) {}
 }
