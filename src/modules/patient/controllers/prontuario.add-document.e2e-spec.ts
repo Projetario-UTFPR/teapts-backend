@@ -21,7 +21,7 @@ import { resolve } from "node:path";
 import supertest from "supertest";
 import { type App } from "supertest/types";
 
-describe("[e2e] Prontuario Controller (v1)", async () => {
+describe("[e2e] Prontuario Controller :: Upload and Activate Documents (v1)", async () => {
   const documentFileName = "Documento Sigiloso do Paciente.pdf" as const;
   const documentFileBytes = new Blob([
     await readFile(resolve(process.cwd(), "test/fixtures", documentFileName)),
