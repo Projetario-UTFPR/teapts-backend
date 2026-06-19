@@ -110,7 +110,7 @@ describe("[e2e] Prontuario Controller (v1)", async () => {
 
     it(
       "should require professional to be membership of the patient's " +
-        "PTS in order to upload documents to its prontuário",
+      "PTS in order to upload documents to its prontuário",
       async () => {
         // not creating active PTS here
 

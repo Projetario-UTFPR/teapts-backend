@@ -1,7 +1,7 @@
 import { Equals } from "@/common/interfaces/equals";
 
 export abstract class AggregateRoot<TProps extends object> implements Equals {
-  protected constructor(protected readonly _props: TProps) {}
+  protected constructor(protected readonly _props: TProps) { }
 
   public abstract equals(other: AggregateRoot<TProps>);
 
