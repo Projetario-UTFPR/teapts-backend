@@ -20,11 +20,12 @@ import { Account } from "@/modules/identity/entities/account.aggregate";
  * @throws a {@link PrismaClientKnownRequestError `PrismaClientKnownRequestError`} when there
  * is no persisted account with ID `accountId`.
  */
-export async function resolveAccount(prismaService: PrismaService, account?: Account) {
+export async function resolveAccount(prismaService: PrismaService, account?: Account | UUID) {
   if (!account) return await accountsFactory.createAndPersist(prismaService);
 
+  const accountId = account instanceof Account ? account.getId().toString() : account;
   const accountRow = await prismaService.account.findFirstOrThrow({
-    where: { id: account.getId().toString() },
+    where: { id: accountId.toString() },
     include: { professionalProfiles: true },
   });
 

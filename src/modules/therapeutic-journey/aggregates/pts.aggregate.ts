@@ -182,6 +182,9 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.timeline.status === PtsTimeline.Status.Concluded;
   }
 
+  /**
+   * A PTS is considered active when it's either under planning or is running already.
+   */
   public isActive() {
     const activeStatuses = [PtsTimeline.Status.Planning, PtsTimeline.Status.Running];
     return activeStatuses.includes(this._props.timeline.status);

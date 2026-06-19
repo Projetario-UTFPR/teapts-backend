@@ -37,6 +37,8 @@ type Params = {
  * When none is provided, it's guaranteed that the verification will fail with an
  * {@link ProfessionalNotAuthorizedToAccessPts `ProfessionalNotAuthorizedToAccessPts`} error.
  *
+ * When PTS is not active, no professional is authorized to access it any longer.
+ *
  * Read the parameters descriptions for more details.
  *
  * @note **This service does not ensure user identity**. It only checks that given professional
