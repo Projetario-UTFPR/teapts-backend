@@ -30,7 +30,7 @@ export class CreateDraftPtsService {
     private readonly ptsRepo: PtsRepository,
     private readonly accountsRepo: AccountsRepository,
     private readonly professionalsRepo: ProfessionalsRepository,
-  ) {}
+  ) { }
 
   public execute({
     professionalId,
@@ -47,16 +47,14 @@ export class CreateDraftPtsService {
         this.ensureProfessionalProfileBelongsToUser(professional, accountId),
       ),
       te.chainFirstW(({ patientAccount }) => this.ensureNoActivePts(patientAccount.getId())),
-      te.bindW("pts", ({ patientAccount, professional }) => {
-        const pts = ProjetoTerapeuticoSingular.create({
+      te.let("pts", ({ patientAccount, professional }) =>
+        ProjetoTerapeuticoSingular.create({
           patientId: patientAccount.getId(),
           responsibleProfessionalId: professional.getId(),
           socialSituation,
           multidisciplinaryTeamIds,
-        });
-
-        return te.right(pts);
-      }),
+        })
+      ),
       te.chainW((args) => () => this.ptsRepo.createNewPts(args.pts)),
     )();
   }
