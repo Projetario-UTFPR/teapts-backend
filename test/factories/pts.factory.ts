@@ -62,11 +62,19 @@ async function createAndPersist(prismaService: PrismaService, params?: CreatePar
     patientId: patient.getId(),
   });
 
+  const basePayload = ptsMapper.intoPrisma(pts);
+  const teamPayload = ptsMapper.mapMultidisciplinaryTeam(pts.getMultidisciplinaryTeam());
+
+  const payload = {
+    ...basePayload,
+    multidisciplinaryTeam: teamPayload.createPayload,
+  };
+
   return await pipe(
     taskEither.tryCatch(
       () =>
         prismaService.projetoTerapeuticoSingular.create({
-          data: ptsMapper.intoPrisma(pts),
+          data: payload,
           include: { multidisciplinaryTeam: { select: { professionalId: true } } },
         }),
       (error) => error,
