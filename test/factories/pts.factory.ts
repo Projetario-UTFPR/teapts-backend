@@ -32,6 +32,7 @@ async function create({
   responsibleProfessionalId,
   socialSituation = faker.lorem.paragraphs({ min: 1, max: 5 }),
   timeline = createTimeline(),
+  activitiesIds = []
 }: CreateParams = {}) {
   responsibleProfessionalId ??= (await professionalsFactory.create()).getId();
   patientId ??= (await patientsFactory.create()).getId();
@@ -45,6 +46,7 @@ async function create({
     id,
     multidisciplinaryTeam,
     timeline,
+    activitiesIds,
   });
 }
 
@@ -75,7 +77,7 @@ async function createAndPersist(prismaService: PrismaService, params?: CreatePar
       () =>
         prismaService.projetoTerapeuticoSingular.create({
           data: payload,
-          include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+          include: { multidisciplinaryTeam: { select: { professionalId: true } }, activities: { select: { id: true } } },
         }),
       (error) => error,
     ),
