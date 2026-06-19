@@ -5,18 +5,22 @@ import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
+import { ShowActivePtsQueryHandler } from "@/modules/therapeutic-journey/query-handlers/show-active-pts.query";
 import { CreatePtsDto } from "@/modules/therapeutic-journey/dtos/create-pts.dto";
 import { UpdateMultidisciplinaryTeamDTO } from "@/modules/therapeutic-journey/dtos/update-multidisciplinary-team.dto";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { CreateDraftPtsService } from "@/modules/therapeutic-journey/services/create-draft-pts.service";
 import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journey/services/update-multidisciplinary-team.service";
+import { VerifyProfessionalIsAuthorizedService } from "@/modules/therapeutic-journey/services/verify-professional-is-authorized.service";
 import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  Param,
   Post,
   Put,
 } from "@nestjs/common";
@@ -26,19 +30,23 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
-  ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiParam,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
+import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/presenters/pts-with-professional-and-patient.presenter";
 
 @Controller("v1/pts")
 export class PtsController {
   public constructor(
     private readonly createDraftPts: CreateDraftPtsService,
     private readonly updateMultidisciplinaryTeam: UpdateMultidisciplinaryTeamService,
+    private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
+    private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
   ) {}
 
   @Post("create")
@@ -99,11 +107,11 @@ export class PtsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiNoContentResponse({
-    description: "Multidisciplinary team successfully updated. No content returned.",
+    description: "The multidisciplinary team was successfully updated.",
   })
   @ApiNotFoundResponse({
     type: BasicExceptionPresenter,
-    description: "PTS wasn't found.",
+    description: "The PTS couldn't be found.",
   })
   @ApiForbiddenResponse({
     type: BasicExceptionPresenter,
@@ -138,10 +146,6 @@ export class PtsController {
       },
     },
   })
-  @ApiInternalServerErrorResponse({
-    type: BasicExceptionPresenter,
-    description: "Internal Server Error.",
-  })
   public saveNewMultidisciplinaryTeam(
     @Body() body: UpdateMultidisciplinaryTeamDTO,
     @CurrentUser() { account }: AuthCollection,
@@ -161,6 +165,70 @@ export class PtsController {
         return error;
       }),
       te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @Get(":patientId")
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: "The PTS got to be successfully retrieved and presented!",
+    type: PtsWithProfessionalAndPatientPresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "User has no access to this PTS.",
+    content: {
+      "application/json": {
+        examples: {
+          accountNotAuthorized: {
+            summary: "Conta não autorizada como paciente nem como profissional",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Este usuário não pode acessar esse PTS em nenhum dos seus possíveis perfis " +
+                "profissionais, tampouco é o paciente dono deste PTS.",
+            }),
+          },
+          ptsNotActive: {
+            summary: "PTS não-corrente",
+            value: BasicExceptionPresenter.present({
+              message: "O PTS buscado não está mais ativo e, portanto, não pode ser mais acessado.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiParam({
+    name: "patientId",
+    description: "The ID of the patient whose PTS is to be displayed.",
+    type: "string",
+    format: "uuid",
+  })
+  public showPts(
+    @Param("patientId") patientId: string,
+    @CurrentUser() { account, patientProfile }: AuthCollection,
+  ) {
+    const verificationPipeline = pipe(
+      true,
+      te.fromPredicate(
+        () => !!patientId && patientId === patientProfile?.getId()?.toString(),
+        () => false,
+      ),
+      te.map(() => "patient" as const),
+      te.orElseW(() =>
+        pipe(
+          () => this.verifyProfessionalIsAuthorized.execute({ patientId, account }),
+          te.map(() => "professional" as const),
+        ),
+      ),
+    );
+
+    return pipe(
+      () => verificationPipeline(),
+      te.chainW((kind) => () => {
+        const shallOmitSocialSituation = kind === "patient";
+        return this.showActivePtsQuery.execute({ patientId, shallOmitSocialSituation });
+      }),
+      te.getOrElse((error) => exceptionsFactory.fromError(error)),
     )();
   }
 }
