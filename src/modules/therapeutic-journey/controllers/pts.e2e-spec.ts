@@ -8,6 +8,7 @@ import { Patient } from "@/modules/patient/entities/patient.entity";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { type INestApplication } from "@nestjs/common";
 import accountsFactory from "@test/factories/accounts.factory";
+import documentsFactory from "@test/factories/documents.factory";
 import patientsFactory from "@test/factories/patients.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
 import ptsFactory from "@test/factories/pts.factory";
@@ -460,5 +461,93 @@ describe("[e2e] PTS Controller (v1)", () => {
         );
       },
     );
+  });
+
+  describe("PUT /v1/pts/activity/create", () => {
+    const getValidActivityParams = (documentId?: string) => ({
+      professionalId: professional.getId().toString(),
+      patientId: patient.getId().toString(),
+      title: "Caminhada Assistida e Mobilidade",
+      frequency: {
+        times: 3,
+        interval: "week",
+      },
+      documentsIds: documentId ? [documentId] : [],
+    });
+
+    test("create activity route requires authentication", { tags: ["createActivity"] }, async () => {
+      await request(app.getHttpServer())
+        .put("/v1/pts/activity/create")
+        .send(getValidActivityParams())
+        .expect(401);
+    });
+
+    it.each([
+      [{ professionalId: undefined }, "professionalId"] as const,
+      [{ patientId: undefined }, "patientId"] as const,
+      [{ title: undefined }, "title"] as const,
+      [{ frequency: undefined }, "frequency"] as const,
+    ])(
+      "should return 422 when `$1` is missing",
+      { tags: ["createActivity"] },
+      async (override, missingProperty) => {
+        const body = {
+          ...getValidActivityParams(),
+          ...override,
+        };
+
+        const response = await request(app.getHttpServer())
+          .put("/v1/pts/activity/create")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(422);
+
+        assertIsValidationErrorsBag(response);
+        expect(response.body.errors).toHaveProperty(missingProperty);
+      },
+    );
+
+    it(
+      "should return 400 when the provided documentId does not exist",
+      { tags: ["createActivity"] },
+      async () => {
+        const nonExistingDocumentId = generateUUID().toString();
+
+        const body = getValidActivityParams(nonExistingDocumentId);
+
+        const response = await request(app.getHttpServer())
+          .put("/v1/pts/activity/create")
+          .set({ authorization: `Bearer ${professionalAccountToken}` })
+          .send(body)
+          .expect(400);
+
+        expect(response.body).toHaveProperty("message");
+      },
+    );
+
+    it("should create a new activity successfully", { tags: ["createActivity"] }, async () => {
+      const mockDocument = await documentsFactory.createAndPersist(prisma, {
+        patientId: patient.getId(),
+      });
+
+      const body = getValidActivityParams(mockDocument.getId().toString());
+
+      await request(app.getHttpServer())
+        .put("/v1/pts/activity/create")
+        .set({ authorization: `Bearer ${professionalAccountToken}` })
+        .send(body)
+        .expect(201);
+
+      const persistedActivity = await prisma.activity.findFirstOrThrow({
+        where: { title: "Caminhada Assistida e Mobilidade" },
+        include: { activityReferringToDocuments: true },
+      });
+
+      expect(persistedActivity).toBeDefined();
+      expect(persistedActivity.activityReferringToDocuments).toHaveLength(1);
+      expect(persistedActivity.activityReferringToDocuments[0].documentId).toBe(
+        mockDocument.getId().toString()
+      );
+    });
   });
 });
