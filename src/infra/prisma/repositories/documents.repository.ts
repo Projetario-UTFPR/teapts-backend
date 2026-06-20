@@ -14,7 +14,7 @@ import { pipe } from "fp-ts/lib/function";
 
 @Injectable()
 export class PrismaDocumentsRepository implements DocumentsRepository {
-  public constructor(private readonly prisma: PrismaService) { }
+  public constructor(private readonly prisma: PrismaService) {}
 
   public createDocument(document: Document) {
     return pipe(
@@ -42,17 +42,19 @@ export class PrismaDocumentsRepository implements DocumentsRepository {
     return pipe(
       te.tryCatch(
         () => this.prisma.document.findUnique({ where: { id: id.toString() } }),
-        (error) => new IrrecoverableError({ message: 'Internal error trying to get document', cause: error as Error })
+        (error) =>
+          new IrrecoverableError({
+            message: "Internal error trying to get document",
+            cause: error as Error,
+          }),
       ),
-      te.chainW(
-        (document) => {
-          if (!document) {
-            return te.left(new DocumentNotFoundError(id))
-          }
-          return te.right(document)
+      te.chainW((document) => {
+        if (!document) {
+          return te.left(new DocumentNotFoundError(id));
         }
-      ),
-      te.map(documentsMapper.fromPrisma)
+        return te.right(document);
+      }),
+      te.map(documentsMapper.fromPrisma),
     )();
   }
 }

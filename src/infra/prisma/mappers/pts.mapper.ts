@@ -89,13 +89,12 @@ function fromPrisma(
     }[];
   } & {
     activities: {
-      id: UUID
+      id: UUID;
     }[];
   },
 ): ProjetoTerapeuticoSingular {
   const teamIds = raw.multidisciplinaryTeam.map((member) => member.professionalId as UUID);
   const activitiesIds = raw.activities.map((activity) => activity.id as UUID);
-
 
   const multidisciplinaryTeam = new WatchedList<UUID>(teamIds);
 

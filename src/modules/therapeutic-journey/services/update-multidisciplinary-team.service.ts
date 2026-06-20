@@ -34,7 +34,7 @@ export class UpdateMultidisciplinaryTeamService {
   public constructor(
     private readonly ptsRepo: PtsRepository,
     private readonly professionalsRepo: ProfessionalsRepository,
-  ) { }
+  ) {}
 
   public async execute({
     ptsId,

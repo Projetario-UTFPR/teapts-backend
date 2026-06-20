@@ -30,7 +30,7 @@ export class CreateDraftPtsService {
     private readonly ptsRepo: PtsRepository,
     private readonly accountsRepo: AccountsRepository,
     private readonly professionalsRepo: ProfessionalsRepository,
-  ) { }
+  ) {}
 
   public execute({
     professionalId,
@@ -53,7 +53,7 @@ export class CreateDraftPtsService {
           responsibleProfessionalId: professional.getId(),
           socialSituation,
           multidisciplinaryTeamIds,
-        })
+        }),
       ),
       te.chainW((args) => () => this.ptsRepo.createNewPts(args.pts)),
     )();

@@ -17,4 +17,4 @@ import { CreateActivityService } from "./services/create-activity.service";
   ],
   exports: [VerifyProfessionalIsAuthorizedService],
 })
-export class TherapeuticJourneyModule { }
+export class TherapeuticJourneyModule {}

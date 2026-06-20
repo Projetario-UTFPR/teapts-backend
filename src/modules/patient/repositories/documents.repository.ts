@@ -17,5 +17,7 @@ export abstract class DocumentsRepository {
     document: Document,
   ): Promise<Either<IrrecoverableError | PatientNotFoundError, Document>>;
 
-  public abstract getById(id: UUID): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>>;
+  public abstract getById(
+    id: UUID,
+  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>>;
 }

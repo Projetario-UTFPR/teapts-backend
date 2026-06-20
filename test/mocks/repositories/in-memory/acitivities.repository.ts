@@ -5,30 +5,30 @@ import { either } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 
 interface ActivityReferringToDocuments {
-    activityId: string;
-    documentId: string;
+  activityId: string;
+  documentId: string;
 }
 
 export class InMemoryActivityRepository implements ActivityRepository {
-    public items: Activity[] = [];
+  public items: Activity[] = [];
 
-    public activityDocumentsRelation: ActivityReferringToDocuments[] = [];
+  public activityDocumentsRelation: ActivityReferringToDocuments[] = [];
 
-    public async createNewActivity(
-        activity: Activity
-    ): Promise<Either<IrrecoverableError, Activity>> {
-        const snapshot = activity.toSnapshot();
-        const activityId = snapshot.id;
+  public async createNewActivity(
+    activity: Activity,
+  ): Promise<Either<IrrecoverableError, Activity>> {
+    const snapshot = activity.toSnapshot();
+    const activityId = snapshot.id;
 
-        this.items.push(activity);
+    this.items.push(activity);
 
-        snapshot.documentsIds.forEach((documentId) => {
-            this.activityDocumentsRelation.push({
-                activityId: activityId.toString(),
-                documentId: documentId.toString(),
-            });
-        });
+    snapshot.documentsIds.forEach((documentId) => {
+      this.activityDocumentsRelation.push({
+        activityId: activityId.toString(),
+        documentId: documentId.toString(),
+      });
+    });
 
-        return either.right(activity);
-    }
+    return either.right(activity);
+  }
 }

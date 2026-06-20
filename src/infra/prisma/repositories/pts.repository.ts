@@ -30,7 +30,10 @@ export class PrismaPtsRepository extends PtsRepository {
               patientId: patientId.toString(),
               status: { in: ["Running", "Planning"] },
             },
-            include: { multidisciplinaryTeam: { select: { professionalId: true } }, activities: { select: { id: true } } },
+            include: {
+              multidisciplinaryTeam: { select: { professionalId: true } },
+              activities: { select: { id: true } },
+            },
           }),
         (error) => {
           if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
@@ -81,7 +84,10 @@ export class PrismaPtsRepository extends PtsRepository {
         () =>
           this.prisma.projetoTerapeuticoSingular.create({
             data: payload,
-            include: { multidisciplinaryTeam: { select: { professionalId: true } }, activities: { select: { id: true } } },
+            include: {
+              multidisciplinaryTeam: { select: { professionalId: true } },
+              activities: { select: { id: true } },
+            },
           }),
         (error) => {
           if (!isForeignKeyError(error)) {
@@ -110,16 +116,15 @@ export class PrismaPtsRepository extends PtsRepository {
     id: UUID,
   ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
     try {
-      const
-        data = await this.prisma.projetoTerapeuticoSingular.findUnique({
-          where: {
-            id: id.toString(),
-          },
-          include: {
-            multidisciplinaryTeam: { select: { professionalId: true } },
-            activities: { select: { id: true } },
-          },
-        });
+      const data = await this.prisma.projetoTerapeuticoSingular.findUnique({
+        where: {
+          id: id.toString(),
+        },
+        include: {
+          multidisciplinaryTeam: { select: { professionalId: true } },
+          activities: { select: { id: true } },
+        },
+      });
 
       if (!data) {
         return left(new PtsNotFoundError());

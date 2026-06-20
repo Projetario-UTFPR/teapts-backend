@@ -27,7 +27,7 @@ import { PrismaActivityRepository } from "./repositories/activity.repository";
     ProfessionalsRepository,
     PtsRepository,
     DocumentsRepository,
-    ActivityRepository
+    ActivityRepository,
   ],
 })
-export class PrismaModule { }
+export class PrismaModule {}

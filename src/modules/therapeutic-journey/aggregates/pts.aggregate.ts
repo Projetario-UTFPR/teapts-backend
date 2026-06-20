@@ -28,7 +28,7 @@ type PtsProps = {
    */
   socialSituation: string;
   timeline: PtsTimeline;
-  activitiesIds: UUID[],
+  activitiesIds: UUID[];
 };
 
 type CreateNewPtsParams = {

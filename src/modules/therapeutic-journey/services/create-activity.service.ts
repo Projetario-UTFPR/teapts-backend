@@ -38,7 +38,7 @@ export class CreateActivityService {
     private readonly documentsRepo: DocumentsRepository,
     private readonly ptsRepo: PtsRepository,
     private readonly professionalsRepo: ProfessionalsRepository,
-  ) { }
+  ) {}
 
   public async execute({
     professionalId,
@@ -50,9 +50,15 @@ export class CreateActivityService {
   }: Params): Promise<CreateActivityResult> {
     return pipe(
       te.Do,
-      te.apSW('pts', () => this.ptsRepo.findActivePtsByPatientId(patientId)),
-      te.apSW('professional', () => this.professionalsRepo.findById(professionalId)),
-      te.apSW('documents', pipe(documentsIds, te.traverseArray((id) => () => this.documentsRepo.getById(id)))),
+      te.apSW("pts", () => this.ptsRepo.findActivePtsByPatientId(patientId)),
+      te.apSW("professional", () => this.professionalsRepo.findById(professionalId)),
+      te.apSW(
+        "documents",
+        pipe(
+          documentsIds,
+          te.traverseArray((id) => () => this.documentsRepo.getById(id)),
+        ),
+      ),
       te.filterOrElseW(
         ({ professional }) => professional.belongsToAccount(accountId),
         () => new ProfessionalDoesNotBelongToUserAccountError(professionalId),
@@ -68,9 +74,14 @@ export class CreateActivityService {
         }
         return te.right(documents);
       }),
-      te.let("activity", () => Activity.create({ documentsIds, assigneeProfessionalId: professionalId, frequency, title })),
-      te.chainW(({ activity }) => () => this.activityRepo.createNewActivity(activity)),
+      te.let("activity", () =>
+        Activity.create({ documentsIds, assigneeProfessionalId: professionalId, frequency, title }),
+      ),
+      te.chainW(
+        ({ activity }) =>
+          () =>
+            this.activityRepo.createNewActivity(activity),
+      ),
     )();
   }
-
 }

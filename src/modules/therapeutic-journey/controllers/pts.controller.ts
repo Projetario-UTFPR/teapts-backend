@@ -54,7 +54,7 @@ export class PtsController {
     private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
     private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
     private readonly createActivity: CreateActivityService,
-  ) { }
+  ) {}
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -251,7 +251,7 @@ export class PtsController {
   })
   @ApiBadRequestResponse({
     type: BasicExceptionPresenter,
-    description: "Document does not belong to patient."
+    description: "Document does not belong to patient.",
   })
   @ApiInternalServerErrorResponse({
     type: BasicExceptionPresenter,
@@ -267,7 +267,17 @@ export class PtsController {
   ) {
     return pipe(
       te.fromEither(Frequency.create(body.frequency)),
-      te.chain((frequency) => () => this.createActivity.execute({ professionalId: body.professionalId, patientId: body.patientId, accountId: account.getId(), documentsIds: body.documentsIds, title: body.title, frequency })),
+      te.chain(
+        (frequency) => () =>
+          this.createActivity.execute({
+            professionalId: body.professionalId,
+            patientId: body.patientId,
+            accountId: account.getId(),
+            documentsIds: body.documentsIds,
+            title: body.title,
+            frequency,
+          }),
+      ),
       te.mapLeft((error) => {
         if (error instanceof IrrecoverableError) {
           throw new InternalServerErrorException(

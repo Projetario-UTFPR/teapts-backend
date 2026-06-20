@@ -14,7 +14,9 @@ export class InMemoryDocumentsRepository implements DocumentsRepository {
     return e.right(document);
   }
 
-  public async getById(id: UUID): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>> {
+  public async getById(
+    id: UUID,
+  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>> {
     const document = this.items.find((doc) => doc.getId() === id);
 
     if (!document) {
