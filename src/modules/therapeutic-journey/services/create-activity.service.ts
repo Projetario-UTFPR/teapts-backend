@@ -13,7 +13,6 @@ import { DocumentsRepository } from "@/modules/patient/repositories/documents.re
 import { DocumentDoestNotBelongToPatientError } from "@/modules/patient/errors/document-does-not-belong-to-patient.error";
 import { Either } from "fp-ts/lib/Either";
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
-import { PtsNotFoundError } from "../errors/pts-not-found.error";
 
 type Params = {
   professionalId: UUID;
@@ -28,7 +27,6 @@ type CreateActivityResult = Either<
   | ProfessionalDoesNotBelongToUserAccountError
   | ProfessionalNotAuthorizedToAccessPts
   | DocumentDoestNotBelongToPatientError
-  | PtsNotFoundError
   | IrrecoverableError,
   Activity
 >;
