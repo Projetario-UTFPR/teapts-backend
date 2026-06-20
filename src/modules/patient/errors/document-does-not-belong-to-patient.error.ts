@@ -1,11 +1,11 @@
-import { BadRequestError } from "@/common/errors/bad-request.error";
+import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { UUID } from "@/common/uuid";
 
 /**
  * Indicates that a professional tried to activate a document's file, but
  * the document hasn't been stored yet.
  */
-export class DocumentDoestNotBelongToPatientError extends BadRequestError {
+export class DocumentDoestNotBelongToPatientError extends ForbiddenError {
   public constructor(id: UUID) {
     super({
       message:
