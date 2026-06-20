@@ -24,7 +24,7 @@ export class PrismaProfessionalsRepository extends ProfessionalsRepository {
         () => this.prisma.professional.findMany({ where: { id: { in: ids } } }),
         (error) =>
           new IrrecoverableError({
-            message: `Error occurred in ${PrismaProfessionalsRepository.name} when trying to find professionals by ids '${ids}'.`,
+            message: `Error occurred in ${PrismaProfessionalsRepository.name} when trying to find professionals by ids "${ids}".`,
             cause: error as Error,
           }),
       ),

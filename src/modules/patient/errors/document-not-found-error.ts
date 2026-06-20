@@ -5,7 +5,7 @@ import { Document } from "../aggregates/document.aggregate";
 export class DocumentNotFoundError extends ResourceNotFoundError {
   public constructor(id: UUID) {
     super({
-      message: `O documento especificado não foi encontrado. ID: ${id}`,
+      message: `Não foi possível encontrar um documento identificado por "${id}".`,
       subject: Document.name,
     });
   }

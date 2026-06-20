@@ -44,7 +44,7 @@ export class PrismaDocumentsRepository implements DocumentsRepository {
         () => this.prisma.document.findUnique({ where: { id: id.toString() } }),
         (error) =>
           new IrrecoverableError({
-            message: "Internal error trying to get document",
+            message: `Error occurred in ${PrismaDocumentsRepository.name} when finding document by ID "${id.toString()}".`,
             cause: error as Error,
           }),
       ),

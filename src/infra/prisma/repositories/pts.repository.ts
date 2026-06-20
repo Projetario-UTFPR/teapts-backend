@@ -134,7 +134,7 @@ export class PrismaPtsRepository extends PtsRepository {
     } catch (error) {
       return left(
         new IrrecoverableError({
-          message: `Error occurred in ${PrismaPtsRepository.name} when trying to get PTS by ID '${id.toString()}'.`,
+          message: `Error occurred in ${PrismaPtsRepository.name} when trying to get PTS by ID "${id.toString()}".`,
           cause: error as Error,
         }),
       );
