@@ -239,7 +239,7 @@ export class PtsController {
     )();
   }
 
-  @Put("activity/create")
+  @Post("activity/create")
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiCreatedResponse({
@@ -247,7 +247,7 @@ export class PtsController {
   })
   @ApiForbiddenResponse({
     type: BasicExceptionPresenter,
-    description: "Account does not belong to professional.",
+    description: "Professional does not belong to mutidiscipinary team.",
   })
   @ApiBadRequestResponse({
     type: BasicExceptionPresenter,
@@ -257,6 +257,10 @@ export class PtsController {
     type: BasicExceptionPresenter,
     description: "Internal Server Error.",
   })
+  @ApiNotFoundResponse({
+    type: BasicExceptionPresenter,
+    description: "Document does not exist.",
+  })
   public createNewActivity(
     @Body() body: CreateActivityDTO,
     @CurrentUser() { account }: AuthCollection,
@@ -264,7 +268,6 @@ export class PtsController {
     return pipe(
       te.fromEither(Frequency.create(body.frequency)),
       te.chain((frequency) => () => this.createActivity.execute({ professionalId: body.professionalId, patientId: body.patientId, accountId: account.getId(), documentsIds: body.documentsIds, title: body.title, frequency })),
-      te.map(() => undefined),
       te.mapLeft((error) => {
         if (error instanceof IrrecoverableError) {
           throw new InternalServerErrorException(
