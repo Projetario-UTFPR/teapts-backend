@@ -5,9 +5,10 @@ import { UpdateMultidisciplinaryTeamService } from "@/modules/therapeutic-journe
 import { VerifyProfessionalIsAuthorizedService } from "@/modules/therapeutic-journey/services/verify-professional-is-authorized.service";
 import { Module } from "@nestjs/common";
 import { CreateActivityService } from "./services/create-activity.service";
+import { ActivitiesController } from "@/modules/therapeutic-journey/controllers/activities.controller";
 
 @Module({
-  controllers: [PtsController],
+  controllers: [PtsController, ActivitiesController],
   providers: [
     CreateDraftPtsService,
     VerifyProfessionalIsAuthorizedService,

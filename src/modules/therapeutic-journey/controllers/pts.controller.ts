@@ -30,7 +30,6 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
-  ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -41,9 +40,6 @@ import {
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/presenters/pts-with-professional-and-patient.presenter";
-import { CreateActivityDTO } from "../dtos/create-new-activity-dto";
-import { CreateActivityService } from "../services/create-activity.service";
-import { Frequency } from "@/common/time/value-objects/frequency.vo";
 
 @Controller("v1/pts")
 @ApiTags("Projeto Terapêutico Singular (PTS)")
@@ -53,7 +49,6 @@ export class PtsController {
     private readonly updateMultidisciplinaryTeam: UpdateMultidisciplinaryTeamService,
     private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
     private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
-    private readonly createActivity: CreateActivityService,
   ) {}
 
   @Post("create")
@@ -236,60 +231,6 @@ export class PtsController {
         return this.showActivePtsQuery.execute({ patientId, shallOmitSocialSituation });
       }),
       te.getOrElse((error) => exceptionsFactory.fromError(error)),
-    )();
-  }
-
-  @Post("activity/create")
-  @HttpCode(HttpStatus.CREATED)
-  @ApiBearerAuth()
-  @ApiCreatedResponse({
-    description: "Activity successfully created.",
-  })
-  @ApiForbiddenResponse({
-    type: BasicExceptionPresenter,
-    description: "Professional does not belong to mutidiscipinary team.",
-  })
-  @ApiBadRequestResponse({
-    type: BasicExceptionPresenter,
-    description: "Document does not belong to patient.",
-  })
-  @ApiInternalServerErrorResponse({
-    type: BasicExceptionPresenter,
-    description: "Internal Server Error.",
-  })
-  @ApiNotFoundResponse({
-    type: BasicExceptionPresenter,
-    description: "Document does not exist.",
-  })
-  public createNewActivity(
-    @Body() body: CreateActivityDTO,
-    @CurrentUser() { account }: AuthCollection,
-  ) {
-    return pipe(
-      te.fromEither(Frequency.create(body.frequency)),
-      te.chain(
-        (frequency) => () =>
-          this.createActivity.execute({
-            professionalId: body.professionalId,
-            patientId: body.patientId,
-            accountId: account.getId(),
-            documentsIds: body.documentsIds,
-            title: body.title,
-            frequency,
-          }),
-      ),
-      te.mapLeft((error) => {
-        if (error instanceof IrrecoverableError) {
-          throw new InternalServerErrorException(
-            BasicExceptionPresenter.present({
-              message: "Ocorreu um erro interno ao processar a criação da atividade.",
-            }),
-            { cause: error },
-          );
-        }
-        return error;
-      }),
-      te.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }
