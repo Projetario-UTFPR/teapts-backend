@@ -11,8 +11,6 @@ import { pipe } from "fp-ts/lib/function";
 import { ActivityRepository } from "../repositories/activity.repository";
 import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
 import { DocumentDoestNotBelongToPatientError } from "@/modules/patient/errors/document-does-not-belong-to-patient.error";
-import { Either } from "fp-ts/lib/Either";
-import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 
 type Params = {
   professionalId: UUID;
@@ -22,14 +20,6 @@ type Params = {
   title: string;
   frequency: Frequency;
 };
-
-type CreateActivityResult = Either<
-  | ProfessionalDoesNotBelongToUserAccountError
-  | ProfessionalNotAuthorizedToAccessPts
-  | DocumentDoestNotBelongToPatientError
-  | IrrecoverableError,
-  Activity
->;
 
 @Injectable()
 export class CreateActivityService {
@@ -47,7 +37,7 @@ export class CreateActivityService {
     documentsIds,
     title,
     frequency,
-  }: Params): Promise<CreateActivityResult> {
+  }: Params) {
     return pipe(
       te.Do,
       te.apSW("pts", () => this.ptsRepo.findActivePtsByPatientId(patientId)),
