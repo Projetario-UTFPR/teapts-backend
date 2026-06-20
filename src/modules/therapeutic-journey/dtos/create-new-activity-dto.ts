@@ -1,13 +1,16 @@
 import { type UUID } from "@/common/uuid";
 import { DTO } from "@/infra/http/dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Expose } from "class-transformer";
+import { Expose, Transform } from "class-transformer";
 import { z } from "zod";
 import { TimeUnit } from "@/common/time/value-objects/frequency.vo";
 
-const timeUnitSchema = z.enum(TimeUnit, {
-    message: "Unidade de tempo inválida.",
-});
+const timeUnitSchema = z.enum(
+    Object.values(TimeUnit) as [string, ...string[]],
+    {
+        message: "Unidade de tempo inválida.",
+    }
+);
 
 const createActivitySchema = z.object({
     title: z.string().min(1, "O título da atividade é obrigatório."),
@@ -89,6 +92,7 @@ export class CreateActivityDTO extends DTO implements CreateActivitySchema {
     public readonly documentsIds!: UUID[];
 
     @Expose()
+    @Transform(({ obj }) => obj.frequency)
     @ApiProperty({
         description: "The time frequency configuration for the activity.",
         example: {
