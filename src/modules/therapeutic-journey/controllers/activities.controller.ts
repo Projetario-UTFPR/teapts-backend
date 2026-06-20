@@ -19,6 +19,7 @@ import {
   ForbiddenException,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
 } from "@nestjs/common";
 import {
@@ -99,15 +100,15 @@ export class ActivitiesController {
   public createNewActivity(
     @Body() body: CreateActivityDTO,
     @CurrentUser() { account }: AuthCollection,
+    @Param("patientId") patientId: string,
   ) {
-    console.log("chamou");
     return pipe(
       te.fromEither(Frequency.create(body.frequency)),
       te.chainW(
         (frequency) => () =>
           this.createActivity.execute({
             professionalId: body.professionalId,
-            patientId: body.patientId,
+            patientId,
             accountId: account.getId(),
             documentsIds: body.documentsIds,
             title: body.title,
