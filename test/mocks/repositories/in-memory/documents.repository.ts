@@ -3,8 +3,9 @@ import { UUID } from "@/common/uuid";
 import { Document } from "@/modules/patient/aggregates/document.aggregate";
 import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
 import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
-import { either as e } from "fp-ts";
+import { either as e, taskEither as te } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
 
 export class InMemoryDocumentsRepository implements DocumentsRepository {
   public items: Document[] = [];
@@ -23,5 +24,40 @@ export class InMemoryDocumentsRepository implements DocumentsRepository {
       return e.left(new DocumentNotFoundError(id));
     }
     return e.right(document);
+  }
+
+  public checkExistsAndBelongsToPatient(
+    documentsIds: UUID[],
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>> {
+    return pipe(
+      te.right(
+        this.items.filter((doc) =>
+          documentsIds.some((id) => id.toString() === doc.getId().toString()),
+        ),
+      ),
+
+      te.chainW((documents) => {
+        const memoryDocumentsIds = new Set(documents.map((doc) => doc.getId().toString()));
+
+        const invalidDocumentId = documentsIds.find(
+          (documentId) => !memoryDocumentsIds.has(documentId.toString()),
+        );
+
+        if (invalidDocumentId) {
+          return te.left(new DocumentNotFoundError(invalidDocumentId));
+        }
+
+        const hasDocumentFromAnotherPatient = documents.some(
+          (document) => !document.belongsToPatient(patientId),
+        );
+
+        if (hasDocumentFromAnotherPatient) {
+          return te.right(false);
+        }
+
+        return te.right(true);
+      }),
+    )();
   }
 }
