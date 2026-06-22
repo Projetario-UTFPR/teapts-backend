@@ -16,6 +16,7 @@ import { Activity } from "../aggregates/activity.aggregate";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
 import documentsFactory from "@test/factories/documents.factory";
 import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
+import { CannotAttachDocumentError } from "../errors/cannot-attach-document.error";
 
 describe("[Service] Create Activity Service", () => {
   let activityRepository: InMemoryActivityRepository;
@@ -156,5 +157,30 @@ describe("[Service] Create Activity Service", () => {
 
     assert(e.isLeft(result));
     expect(result.left).toBeInstanceOf(DocumentNotFoundError);
+  });
+
+  it("should deny activity creation when document does not belong to patient", async () => {
+    const { account, documents, professional, patientId } = await getEntities();
+
+    const notPatientDocument = await documentsFactory.create();
+    documentsRepo.items.push(notPatientDocument);
+
+    const result = await sut.execute({
+      accountId: account.getId(),
+      professionalId: professional.getId(),
+      patientId,
+      title: "Regulação de sono",
+      documentsIds: [
+        documents.documentOne.getId(),
+        documents.documentTwo.getId(),
+        notPatientDocument.getId(),
+      ],
+      frequency: activityFactory.generateRandomFrequency(),
+    });
+
+    expect(e.isLeft(result)).toBe(true);
+
+    assert(e.isLeft(result));
+    expect(result.left).toBeInstanceOf(CannotAttachDocumentError);
   });
 });
