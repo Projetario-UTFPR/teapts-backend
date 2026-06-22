@@ -20,4 +20,9 @@ export abstract class DocumentsRepository {
   public abstract getById(
     id: UUID,
   ): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>>;
+
+  public abstract checkExistsAndBelongsToPatient(
+    documentIds: UUID[],
+    pacientId: UUID,
+  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>>;
 }
