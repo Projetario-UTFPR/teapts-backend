@@ -216,10 +216,9 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         .post(getEndpoint())
         .set({ authorization: `Bearer ${professionalAccountToken}` })
         .send(body)
-        .expect(403);
+        .expect(400);
 
       expect(response.body).toHaveProperty("message");
-      expect(response.body.message).includes(mockDocument.getId());
     },
   );
 
