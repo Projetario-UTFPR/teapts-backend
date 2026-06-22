@@ -10,7 +10,7 @@ import { Frequency } from "@/common/time/value-objects/frequency.vo";
 import { pipe } from "fp-ts/lib/function";
 import { ActivityRepository } from "../repositories/activity.repository";
 import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
-import { DocumentDoestNotBelongToPatientError } from "@/modules/patient/errors/document-does-not-belong-to-patient.error";
+import { CannotAttachDocumentError } from "../errors/cannot-attach-document.error";
 
 type Params = {
   professionalId: UUID;
@@ -42,13 +42,6 @@ export class CreateActivityService {
       te.Do,
       te.apSW("pts", () => this.ptsRepo.findActivePtsByPatientId(patientId)),
       te.apSW("professional", () => this.professionalsRepo.findById(professionalId)),
-      te.apSW(
-        "documents",
-        pipe(
-          documentsIds,
-          te.traverseArray((id) => () => this.documentsRepo.getById(id)),
-        ),
-      ),
       te.filterOrElseW(
         ({ professional }) => professional.belongsToAccount(accountId),
         () => new ProfessionalDoesNotBelongToUserAccountError(professionalId),
@@ -57,13 +50,15 @@ export class CreateActivityService {
         ({ pts, professional }) => pts.canBeModifiedByProfessional(professional),
         () => new ProfessionalNotAuthorizedToAccessPts(),
       ),
-      te.chainW(({ documents }) => {
-        const invalidDocument = documents.find((document) => !document.belongsToPatient(patientId));
-        if (invalidDocument !== undefined) {
-          return te.left(new DocumentDoestNotBelongToPatientError(invalidDocument.getId()));
-        }
-        return te.right(documents);
-      }),
+      te.chainFirstW(() =>
+        pipe(
+          () => this.documentsRepo.checkExistsAndBelongsToPatient(documentsIds, patientId),
+          te.filterOrElseW(
+            (canAttach) => canAttach === true,
+            () => new CannotAttachDocumentError(),
+          ),
+        ),
+      ),
       te.let("activity", () =>
         Activity.create({ documentsIds, assigneeProfessionalId: professionalId, frequency, title }),
       ),
