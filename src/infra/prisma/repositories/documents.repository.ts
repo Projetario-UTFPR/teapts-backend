@@ -57,4 +57,45 @@ export class PrismaDocumentsRepository implements DocumentsRepository {
       te.map(documentsMapper.fromPrisma),
     )();
   }
+
+  public checkExistsAndBelongsToPatient(
+    documentsIds: UUID[],
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>> {
+    return pipe(
+      te.tryCatch(
+        () =>
+          this.prisma.document.findMany({
+            where: { id: { in: documentsIds.map((id) => id.toString()) } },
+          }),
+        (error) =>
+          new IrrecoverableError({
+            message: "Internal error trying to get document",
+            cause: error as Error,
+          }),
+      ),
+      te.map((prismaDocuments) =>
+        prismaDocuments.map((document) => documentsMapper.fromPrisma(document)),
+      ),
+      te.chainW((documents) => {
+        const prismaDocumentsIds = documents.map((document) => document.getId().toString());
+        const documentsSet = new Set(prismaDocumentsIds);
+
+        const invalidDocumentId = documentsIds.find(
+          (documentId) => !documentsSet.has(documentId.toString()),
+        );
+        if (invalidDocumentId) {
+          return te.left(new DocumentNotFoundError(invalidDocumentId));
+        }
+
+        const hasDocumentFromAnotherPatient = documents.some(
+          (document) => !document.belongsToPatient(patientId),
+        );
+        if (hasDocumentFromAnotherPatient) {
+          return te.right(false);
+        }
+        return te.right(true);
+      }),
+    )();
+  }
 }
