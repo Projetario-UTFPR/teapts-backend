@@ -29,7 +29,7 @@ export class InMemoryDocumentsRepository implements DocumentsRepository {
   public checkExistsAndBelongsToPatient(
     documentsIds: UUID[],
     patientId: UUID,
-  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>> {
+  ): Promise<Either<IrrecoverableError, boolean>> {
     return pipe(
       te.right(
         this.items.filter((doc) =>
@@ -37,26 +37,16 @@ export class InMemoryDocumentsRepository implements DocumentsRepository {
         ),
       ),
 
-      te.chainW((documents) => {
-        const memoryDocumentsIds = new Set(documents.map((doc) => doc.getId().toString()));
+      te.map((documents) => {
+        const memoryDocumentsIds = new Set(documents.map((doc) => doc.getId()));
 
-        const invalidDocumentId = documentsIds.find(
-          (documentId) => !memoryDocumentsIds.has(documentId.toString()),
+        const containsUnexistingDocuments = documentsIds.some(
+          (document) => !memoryDocumentsIds.has(document),
         );
 
-        if (invalidDocumentId) {
-          return te.left(new DocumentNotFoundError(invalidDocumentId));
-        }
+        if (containsUnexistingDocuments) return false;
 
-        const hasDocumentFromAnotherPatient = documents.some(
-          (document) => !document.belongsToPatient(patientId),
-        );
-
-        if (hasDocumentFromAnotherPatient) {
-          return te.right(false);
-        }
-
-        return te.right(true);
+        return documents.every((document) => document.belongsToPatient(patientId));
       }),
     )();
   }

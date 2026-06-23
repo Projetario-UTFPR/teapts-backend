@@ -21,8 +21,14 @@ export abstract class DocumentsRepository {
     id: UUID,
   ): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>>;
 
+  /**
+   * Checks whether every document exists and belongs to the patient.
+   *
+   * @return `true` if, and only if, every document from `documentIds`
+   * exists and belongs to `patientId`-identified patient. `false` otherwise;
+   */
   public abstract checkExistsAndBelongsToPatient(
     documentIds: UUID[],
     pacientId: UUID,
-  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>>;
+  ): Promise<Either<IrrecoverableError, boolean>>;
 }
