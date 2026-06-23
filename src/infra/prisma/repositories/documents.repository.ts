@@ -58,44 +58,25 @@ export class PrismaDocumentsRepository implements DocumentsRepository {
     )();
   }
 
-  public checkExistsAndBelongsToPatient(
-    documentsIds: UUID[],
-    patientId: UUID,
-  ): Promise<Either<IrrecoverableError | DocumentNotFoundError, boolean>> {
+  public checkExistsAndBelongsToPatient(documentsIds: UUID[], patientId: UUID) {
+    const uniqueDocumentsIds = [...new Set(documentsIds.map((document) => document.toString()))];
+    if (uniqueDocumentsIds.length === 0) return te.right(true)();
+
     return pipe(
       te.tryCatch(
         () =>
-          this.prisma.document.findMany({
-            where: { id: { in: documentsIds.map((id) => id.toString()) } },
+          this.prisma.document.count({
+            where: { id: { in: uniqueDocumentsIds }, patientAccountId: patientId.toString() },
           }),
         (error) =>
           new IrrecoverableError({
-            message: "Internal error trying to get document",
+            message:
+              `Error occurred in ${PrismaDocumentsRepository.name} when checking every documents with ` +
+              `ID in (${documentsIds.join(", ")}) exists and belongs to patient of id "${patientId}".`,
             cause: error as Error,
           }),
       ),
-      te.map((prismaDocuments) =>
-        prismaDocuments.map((document) => documentsMapper.fromPrisma(document)),
-      ),
-      te.chainW((documents) => {
-        const prismaDocumentsIds = documents.map((document) => document.getId().toString());
-        const documentsSet = new Set(prismaDocumentsIds);
-
-        const invalidDocumentId = documentsIds.find(
-          (documentId) => !documentsSet.has(documentId.toString()),
-        );
-        if (invalidDocumentId) {
-          return te.left(new DocumentNotFoundError(invalidDocumentId));
-        }
-
-        const hasDocumentFromAnotherPatient = documents.some(
-          (document) => !document.belongsToPatient(patientId),
-        );
-        if (hasDocumentFromAnotherPatient) {
-          return te.right(false);
-        }
-        return te.right(true);
-      }),
+      te.map((documentsCount) => documentsCount === uniqueDocumentsIds.length),
     )();
   }
 }
