@@ -1,12 +1,15 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
+import { UUID } from "@/common/uuid";
 import documentsMapper from "@/infra/prisma/mappers/documents.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Document } from "@/modules/patient/aggregates/document.aggregate";
+import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
 import { PatientNotFoundError } from "@/modules/patient/errors/patient-not-found-error";
 import { DocumentsRepository } from "@/modules/patient/repositories/documents.repository";
 import { Injectable } from "@nestjs/common";
 import { PrismaClientKnownRequestError } from "@prisma-gen/internal/prismaNamespace";
 import { taskEither as te } from "fp-ts";
+import { Either } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 
 @Injectable()
@@ -32,6 +35,48 @@ export class PrismaDocumentsRepository implements DocumentsRepository {
         },
       ),
       te.map(documentsMapper.fromPrisma),
+    )();
+  }
+
+  public getById(id: UUID): Promise<Either<IrrecoverableError | DocumentNotFoundError, Document>> {
+    return pipe(
+      te.tryCatch(
+        () => this.prisma.document.findUnique({ where: { id: id.toString() } }),
+        (error) =>
+          new IrrecoverableError({
+            message: `Error occurred in ${PrismaDocumentsRepository.name} when finding document by ID "${id.toString()}".`,
+            cause: error as Error,
+          }),
+      ),
+      te.chainW((document) => {
+        if (!document) {
+          return te.left(new DocumentNotFoundError(id));
+        }
+        return te.right(document);
+      }),
+      te.map(documentsMapper.fromPrisma),
+    )();
+  }
+
+  public checkExistsAndBelongsToPatient(documentsIds: UUID[], patientId: UUID) {
+    const uniqueDocumentsIds = [...new Set(documentsIds.map((document) => document.toString()))];
+    if (uniqueDocumentsIds.length === 0) return te.right(true)();
+
+    return pipe(
+      te.tryCatch(
+        () =>
+          this.prisma.document.count({
+            where: { id: { in: uniqueDocumentsIds }, patientAccountId: patientId.toString() },
+          }),
+        (error) =>
+          new IrrecoverableError({
+            message:
+              `Error occurred in ${PrismaDocumentsRepository.name} when checking every documents with ` +
+              `ID in (${documentsIds.join(", ")}) exists and belongs to patient of id "${patientId}".`,
+            cause: error as Error,
+          }),
+      ),
+      te.map((documentsCount) => documentsCount === uniqueDocumentsIds.length),
     )();
   }
 }
