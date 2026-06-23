@@ -15,7 +15,6 @@ import { ProfessionalNotAuthorizedToAccessPts } from "../errors/professional-not
 import { Activity } from "../aggregates/activity.aggregate";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
 import documentsFactory from "@test/factories/documents.factory";
-import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
 import { CannotAttachDocumentError } from "../errors/cannot-attach-document.error";
 
 describe("[Service] Create Activity Service", () => {
@@ -156,7 +155,7 @@ describe("[Service] Create Activity Service", () => {
     expect(e.isLeft(result)).toBe(true);
 
     assert(e.isLeft(result));
-    expect(result.left).toBeInstanceOf(DocumentNotFoundError);
+    expect(result.left).toBeInstanceOf(CannotAttachDocumentError);
   });
 
   it("should deny activity creation when document does not belong to patient", async () => {
