@@ -40,6 +40,38 @@ export class Document extends AggregateRoot<DocumentProps> {
     return other instanceof this.constructor && this._props.id === other._props.id;
   }
 
+  public getId(): UUID {
+    return this._props.id;
+  }
+
+  public getPatientId(): UUID {
+    return this._props.patientId;
+  }
+
+  public getTitle(): string {
+    return this._props.title;
+  }
+
+  public getDocumentFileKey(): string {
+    return this._props.documentFileKey;
+  }
+
+  public getDescription(): string {
+    return this._props.description!;
+  }
+
+  public getCreatedAt(): Date {
+    return this._props.createdAt;
+  }
+
+  public getLastUpdatedAt(): Date | undefined {
+    return this._props.lastUpdatedAt;
+  }
+
+  public belongsToPatient(patientId: UUID) {
+    return patientId === this._props.patientId;
+  }
+
   private touch() {
     this._props.lastUpdatedAt = new Date();
   }

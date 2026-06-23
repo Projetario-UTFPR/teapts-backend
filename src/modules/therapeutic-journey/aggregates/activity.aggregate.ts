@@ -41,6 +41,22 @@ export class Activity extends AggregateRoot<ActivityProps> {
   public equals(other: AggregateRoot<ActivityProps>) {
     return other instanceof Activity && this._props.id === other._props.id;
   }
+
+  public getId(): UUID {
+    return this._props.id;
+  }
+
+  public getTitle(): string {
+    return this._props.title;
+  }
+
+  public getAssigneProfessionalId(): UUID {
+    return this._props.assigneeProfessionalId;
+  }
+
+  public getState(): Activity.State {
+    return this._props.state;
+  }
 }
 
 export namespace Activity {

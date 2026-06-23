@@ -32,6 +32,7 @@ async function create({
   responsibleProfessionalId,
   socialSituation = faker.lorem.paragraphs({ min: 1, max: 5 }),
   timeline = createTimeline(),
+  activitiesIds = [],
 }: CreateParams = {}) {
   responsibleProfessionalId ??= (await professionalsFactory.create()).getId();
   patientId ??= (await patientsFactory.create()).getId();
@@ -45,6 +46,7 @@ async function create({
     id,
     multidisciplinaryTeam,
     timeline,
+    activitiesIds,
   });
 }
 
@@ -62,12 +64,23 @@ async function createAndPersist(prismaService: PrismaService, params?: CreatePar
     patientId: patient.getId(),
   });
 
+  const basePayload = ptsMapper.intoPrisma(pts);
+  const teamPayload = ptsMapper.mapMultidisciplinaryTeam(pts.getMultidisciplinaryTeam());
+
+  const payload = {
+    ...basePayload,
+    multidisciplinaryTeam: teamPayload.createPayload,
+  };
+
   return await pipe(
     taskEither.tryCatch(
       () =>
         prismaService.projetoTerapeuticoSingular.create({
-          data: ptsMapper.intoPrisma(pts),
-          include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+          data: payload,
+          include: {
+            multidisciplinaryTeam: { select: { professionalId: true } },
+            activities: { select: { id: true } },
+          },
         }),
       (error) => error,
     ),

@@ -24,11 +24,13 @@ import {
   ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiParam,
+  ApiTags,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 
+@ApiTags("Prontuário")
 @Controller("v1/patient/:patientId/prontuario")
 export class ProntuarioController {
   public constructor(

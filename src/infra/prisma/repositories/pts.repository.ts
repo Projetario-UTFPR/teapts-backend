@@ -30,7 +30,10 @@ export class PrismaPtsRepository extends PtsRepository {
               patientId: patientId.toString(),
               status: { in: ["Running", "Planning"] },
             },
-            include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+            include: {
+              multidisciplinaryTeam: { select: { professionalId: true } },
+              activities: { select: { id: true } },
+            },
           }),
         (error) => {
           if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
@@ -81,7 +84,10 @@ export class PrismaPtsRepository extends PtsRepository {
         () =>
           this.prisma.projetoTerapeuticoSingular.create({
             data: payload,
-            include: { multidisciplinaryTeam: { select: { professionalId: true } } },
+            include: {
+              multidisciplinaryTeam: { select: { professionalId: true } },
+              activities: { select: { id: true } },
+            },
           }),
         (error) => {
           if (!isForeignKeyError(error)) {
@@ -116,6 +122,7 @@ export class PrismaPtsRepository extends PtsRepository {
         },
         include: {
           multidisciplinaryTeam: { select: { professionalId: true } },
+          activities: { select: { id: true } },
         },
       });
 
@@ -127,7 +134,7 @@ export class PrismaPtsRepository extends PtsRepository {
     } catch (error) {
       return left(
         new IrrecoverableError({
-          message: `Error occurred in ${PrismaPtsRepository.name} when trying to get PTS by ID '${id.toString()}'.`,
+          message: `Error occurred in ${PrismaPtsRepository.name} when trying to get PTS by ID "${id.toString()}".`,
           cause: error as Error,
         }),
       );

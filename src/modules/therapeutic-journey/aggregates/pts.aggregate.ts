@@ -28,6 +28,7 @@ type PtsProps = {
    */
   socialSituation: string;
   timeline: PtsTimeline;
+  activitiesIds: UUID[];
 };
 
 type CreateNewPtsParams = {
@@ -60,6 +61,7 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
       responsibleProfessionalId,
       timeline: PtsTimeline.create(),
       multidisciplinaryTeam,
+      activitiesIds: [],
     });
   }
 
@@ -182,6 +184,9 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.timeline.status === PtsTimeline.Status.Concluded;
   }
 
+  /**
+   * A PTS is considered active when it's either under planning or is running already.
+   */
   public isActive() {
     const activeStatuses = [PtsTimeline.Status.Planning, PtsTimeline.Status.Running];
     return activeStatuses.includes(this._props.timeline.status);

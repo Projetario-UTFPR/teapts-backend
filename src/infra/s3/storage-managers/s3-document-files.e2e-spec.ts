@@ -33,7 +33,7 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
   it("should provide a valid signed URL for uploading the file to a given bucket", async () => {
     const fileName = "patient-document.txt";
     const fileType = "text/plain";
-    const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
+    const fileBlob = new Blob([Buffer.from("Very confidential info regarding some patient.")]);
     const file = new File([fileBlob], fileName);
 
     const result = await storage.getSignedUploadUrl({
@@ -80,7 +80,7 @@ describe("S3 Document Files Storage", { tags: ["integration"] }, () => {
     async () => {
       const fileName = "patient-document.txt";
       const fileType = "text/plain";
-      const fileBlob = new Blob([Buffer.from("Very confidential info regardig some patient.")]);
+      const fileBlob = new Blob([Buffer.from("Very confidential info regarding some patient.")]);
       const file = new File([fileBlob], fileName);
 
       const result = await storage.getSignedUploadUrl({
