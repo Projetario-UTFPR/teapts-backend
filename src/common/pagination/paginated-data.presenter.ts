@@ -3,6 +3,13 @@ import { ApiProperty } from "@nestjs/swagger";
 
 type PresenterClass<T> = Function & { prototype: T };
 
+export interface IPaginatedDataPresenter<T = unknown> {
+  page: number;
+  perPage: number;
+  totalElements: number;
+  items: T[];
+}
+
 /**
  * This is not an actual class, but a generator. Use it to instantiate paginated presenters
  * for your already-existing presenters.
@@ -13,7 +20,7 @@ type PresenterClass<T> = Function & { prototype: T };
  * ) {}
  */
 export function PaginatedDataPresenter<T extends object>(presenter: PresenterClass<T>) {
-  class BasePaginatedDataPresenter {
+  class BasePaginatedDataPresenter implements IPaginatedDataPresenter<T> {
     @ApiProperty({ description: "The current page of the pagination.", type: "number" })
     public readonly page!: number;
 
