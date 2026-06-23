@@ -87,15 +87,21 @@ function fromPrisma(
     multidisciplinaryTeam: {
       professionalId: string;
     }[];
+  } & {
+    activities: {
+      id: UUID;
+    }[];
   },
 ): ProjetoTerapeuticoSingular {
   const teamIds = raw.multidisciplinaryTeam.map((member) => member.professionalId as UUID);
+  const activitiesIds = raw.activities.map((activity) => activity.id as UUID);
 
   const multidisciplinaryTeam = new WatchedList<UUID>(teamIds);
 
   return ProjetoTerapeuticoSingular.createUnchecked({
     id: raw.id,
     multidisciplinaryTeam,
+    activitiesIds,
     patientId: raw.patientId,
     responsibleProfessionalId: raw.responsibleProfessionalId,
     socialSituation: raw.socialSituation,
