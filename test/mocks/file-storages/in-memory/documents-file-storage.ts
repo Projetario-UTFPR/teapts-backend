@@ -4,6 +4,7 @@ import {
   ActivateDocumentFileParams,
   DeleteDocumentFileParams,
   DocumentFilesStorage,
+  GetSignedReadUrlParams,
   GetSignedUploadUrlParams,
   GetSignedUploadUrlResult,
   UploadDocumentFileParams,
@@ -62,5 +63,10 @@ export class InMemoryDocumentFilesStorage implements DocumentFilesStorage {
     const fileKey = generateUniqueFileName(fileName);
     const url = `http://test-system.dev/upload${fileKey}?type=${fileType}`;
     return either.right({ bucketUrl: url, fileKey });
+  }
+
+  public async getSignedReadUrl({ fileKey }: GetSignedReadUrlParams) {
+    const url = `http://test-system.dev/get/${fileKey}`;
+    return either.right({ documentUrl: url });
   }
 }
