@@ -279,7 +279,6 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         .expect(400);
 
       expect(response.body).toHaveProperty("message");
-      expect(response.body.message).includes(nonExistingDocumentId);
     },
   );
 

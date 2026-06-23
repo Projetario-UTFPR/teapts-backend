@@ -54,7 +54,7 @@ export class CreateActivityService {
         pipe(
           () => this.documentsRepo.checkExistsAndBelongsToPatient(documentsIds, patientId),
           te.filterOrElseW(
-            (canAttach) => canAttach === true,
+            (canAttach) => canAttach,
             () => new CannotAttachDocumentError(),
           ),
         ),
