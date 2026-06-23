@@ -1,3 +1,4 @@
+import { BasePaginationDto } from "@/common/pagination/pagination-dto";
 import { AuthCollection } from "@/infra/auth/auth-collection";
 import { CurrentUser } from "@/infra/auth/decorators/current-user";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
@@ -7,16 +8,20 @@ import { InitiateDocumentUploadDto } from "@/modules/patient/dtos/initiate-docum
 import { UploadDocumentDto } from "@/modules/patient/dtos/upload-document.dto";
 import { PatientNotFoundError } from "@/modules/patient/errors/patient-not-found-error";
 import { DocumentUploadInitiationPresenter } from "@/modules/patient/presenters/document-upload-initiation.presenter";
+import { ListProntuarioByPatientIdQueryHandler } from "@/modules/patient/query-handlers/list-prontuario-by-patient-id.query";
 import { AddNewDocumentToProntuarioService } from "@/modules/patient/services/add-new-document-to-prontuario.service";
 import { SignDocumentUploadUrlService } from "@/modules/patient/services/sign-document-upload-url.service";
+import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modules/therapeutic-journey/services/verify-account-is-authorized-as-patient-or-professional.service";
 import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -37,6 +42,8 @@ export class ProntuarioController {
   public constructor(
     private readonly signDocumentUploadUrl: SignDocumentUploadUrlService,
     private readonly addNewDocument: AddNewDocumentToProntuarioService,
+    private readonly verifyAccountIsAuthorizedToAccessResource: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
+    private readonly listProntuarioQH: ListProntuarioByPatientIdQueryHandler,
   ) {}
 
   @ApiBearerAuth()
@@ -171,6 +178,59 @@ export class ProntuarioController {
 
         return exceptionsFactory.fromError(error);
       }),
+    )();
+  }
+
+  @ApiBearerAuth()
+  @ApiUnprocessableEntityResponse({
+    description: "The query parameters are invalid.",
+    type: ValidationErrorBagPresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "Professional is not authorized.",
+    content: {
+      "application/json": {
+        examples: {
+          professionalNotAuthorized: {
+            summary: "Unauthorized professional",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Esse profissional não tem acesso ao PTS (e, logo, ao prontuário) do paciente.",
+            }),
+          },
+          professionalProfileDoesntBelongToActualUser: {
+            summary: "Professional profile belonging to others",
+            value: BasicExceptionPresenter.present({
+              message:
+                "O perfil profissional escolhido não pertence à conta do usuário autenticado.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiParam({
+    name: "patientId",
+    description: "The ID of the patient whose prontuário is to be listed.",
+    type: "string",
+    format: "uuid",
+  })
+  @Get("")
+  @HttpCode(HttpStatus.OK)
+  public async listDocuments(
+    @Param("patientId") patientId: string,
+    @Query() { page, limit }: BasePaginationDto,
+    @CurrentUser() { account, patientProfile }: AuthCollection,
+  ) {
+    return pipe(
+      () =>
+        this.verifyAccountIsAuthorizedToAccessResource.execute({
+          patientId,
+          account,
+          accountPatientProfile: patientProfile,
+        }),
+      te.chainW(() => () => this.listProntuarioQH.execute({ page, limit, patientId })),
+      te.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }
