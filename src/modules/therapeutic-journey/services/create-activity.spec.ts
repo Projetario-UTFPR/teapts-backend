@@ -16,12 +16,16 @@ import { Activity } from "../aggregates/activity.aggregate";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
 import documentsFactory from "@test/factories/documents.factory";
 import { CannotAttachDocumentError } from "../errors/cannot-attach-document.error";
+import { VerifyProfessionalIsAuthorizedService } from "@/modules/therapeutic-journey/services/verify-professional-is-authorized.service";
+import { InMemoryAccountsRepository } from "@test/mocks/repositories/in-memory/accounts.repository";
 
 describe("[Service] Create Activity Service", () => {
   let activityRepository: InMemoryActivityRepository;
   let documentsRepo: InMemoryDocumentsRepository;
   let ptsRepo: InMemoryPtsRepository;
   let professionalsRepo: InMemoryProfessionalsRepository;
+  let accountsRepo: InMemoryAccountsRepository;
+  let verifyProfessionalService: VerifyProfessionalIsAuthorizedService;
   let sut: CreateActivityService;
 
   beforeEach(() => {
@@ -29,7 +33,9 @@ describe("[Service] Create Activity Service", () => {
     documentsRepo = new InMemoryDocumentsRepository();
     professionalsRepo = new InMemoryProfessionalsRepository();
     ptsRepo = new InMemoryPtsRepository(professionalsRepo);
-    sut = new CreateActivityService(activityRepository, documentsRepo, ptsRepo, professionalsRepo);
+    accountsRepo = new InMemoryAccountsRepository();
+    verifyProfessionalService = new VerifyProfessionalIsAuthorizedService(ptsRepo, accountsRepo);
+    sut = new CreateActivityService(activityRepository, documentsRepo, verifyProfessionalService);
   });
 
   const getEntities = async () => {
@@ -47,6 +53,7 @@ describe("[Service] Create Activity Service", () => {
     });
     pts.updateMultidisciplinaryTeam([professional.getId()]);
 
+    accountsRepo.accounts.push(account);
     professionalsRepo.professionals.push(professional);
     ptsRepo.items.push(pts);
     documentsRepo.items.push(documentOne);

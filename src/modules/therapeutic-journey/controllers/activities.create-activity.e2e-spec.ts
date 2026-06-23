@@ -107,7 +107,7 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
   );
 
   it(
-    "should thread as bad request when pts does not exist",
+    "should not allow modifications to a non-active or non-existing PTS",
     { tags: ["createActivity"] },
     async () => {
       const activeTimeline = ptsFactory.createTimeline({
@@ -139,10 +139,9 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         .post(_getEndpoint("non-existing-patient-id"))
         .set({ authorization: `Bearer ${professionalAccountToken}` })
         .send(body)
-        .expect(400);
+        .expect(403);
 
       expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toBe("Não foi encontrado nenhum PTS para esse paciente.");
     },
   );
 
@@ -184,9 +183,6 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         .expect(403);
 
       expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toBe(
-        `Não foi possível encontrar nenhum perfil profissional com id "${otherProfessionalId}".`,
-      );
     },
   );
 
