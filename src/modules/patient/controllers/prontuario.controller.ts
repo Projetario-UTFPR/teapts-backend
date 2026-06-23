@@ -20,6 +20,7 @@ import {
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -38,6 +39,7 @@ export class ProntuarioController {
     private readonly addNewDocument: AddNewDocumentToProntuarioService,
   ) {}
 
+  @ApiBearerAuth()
   @ApiCreatedResponse({
     description: "URL for uploading the document successfully issued.",
     type: DocumentUploadInitiationPresenter,
@@ -107,6 +109,7 @@ export class ProntuarioController {
     )();
   }
 
+  @ApiBearerAuth()
   @ApiNoContentResponse({
     description: "The document has been successfully created and persisted.",
   })
