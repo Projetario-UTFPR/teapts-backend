@@ -6,6 +6,7 @@ import {
   ActivateDocumentFileParams,
   DeleteDocumentFileParams,
   DocumentFilesStorage,
+  GetSignedReadUrlParams,
   GetSignedUploadUrlParams,
   GetSignedUploadUrlResult,
   UploadDocumentFileParams,
@@ -14,6 +15,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   NoSuchKey,
   PutObjectCommand,
   PutObjectTaggingCommand,
@@ -135,6 +137,25 @@ export class S3DocumentFilesStorage extends DocumentFilesStorage {
           }),
       ),
       te.map((bucketUrl) => ({ fileKey, bucketUrl })),
+    )();
+  }
+
+  public getSignedReadUrl({ fileKey }: GetSignedReadUrlParams) {
+    const command = new GetObjectCommand({
+      Bucket: this.storageConfig.DOCUMENTS_BUCKET,
+      Key: fileKey,
+    });
+
+    return pipe(
+      te.tryCatch(
+        () => getSignedUrl(this.s3, command, { expiresIn: 3600 }),
+        (error) =>
+          new IrrecoverableError({
+            message: `Error occurred in ${S3DocumentFilesStorage.name} when generating signed URL for reading document of key "${fileKey}".`,
+            cause: error as Error,
+          }),
+      ),
+      te.map((url) => ({ documentUrl: url })),
     )();
   }
 }

@@ -28,6 +28,12 @@ export type GetSignedUploadUrlResult = WithFileKey<{
   bucketUrl: string;
 }>;
 
+export type GetSignedReadUrlParams = WithFileKey;
+
+export type GetSignedReadUrlResult = {
+  documentUrl: string;
+};
+
 export abstract class DocumentFilesStorage {
   /**
    * Stores the descriptor of a document in some storage in a pending state.
@@ -66,4 +72,12 @@ export abstract class DocumentFilesStorage {
   public abstract getSignedUploadUrl(
     params: GetSignedUploadUrlParams,
   ): Promise<Either<IrrecoverableError, GetSignedUploadUrlResult>>;
+
+  /**
+   * Generates a temporary signed URL to read/download the document's file by its
+   * `fileKey` identifier.
+   */
+  public abstract getSignedReadUrl(
+    params: GetSignedReadUrlParams,
+  ): Promise<Either<IrrecoverableError, GetSignedReadUrlResult>>;
 }
