@@ -12,6 +12,7 @@ import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/
 import { TimelineRecord } from "@/modules/therapeutic-journey/aggregates/timeline-record.aggregate";
 import { CreateActivityDTO } from "@/modules/therapeutic-journey/dtos/create-new-activity-dto";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
+import { ShallowActivityPresenter } from "@/modules/therapeutic-journey/presenters/shallow-activity.presenter";
 import { CreateActivityService } from "@/modules/therapeutic-journey/services/create-activity.service";
 import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
 import {
@@ -55,6 +56,7 @@ export class ActivitiesController {
   @ApiBearerAuth()
   @ApiCreatedResponse({
     description: "Activity successfully created.",
+    type: ShallowActivityPresenter,
   })
   @ApiUnprocessableEntityResponse({
     type: ValidationErrorBagPresenter,
@@ -143,6 +145,7 @@ export class ActivitiesController {
           }),
         ),
       ),
+      te.map(ShallowActivityPresenter.present),
       te.getOrElse((error) => {
         if (error instanceof PtsNotFoundError || error instanceof DocumentNotFoundError) {
           // These resources not being found indicates that the user performed some bad
