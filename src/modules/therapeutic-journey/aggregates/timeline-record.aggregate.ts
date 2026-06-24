@@ -7,10 +7,12 @@ interface ITimelineRecord {
    */
   id: UUID;
   /**
-   * The type of target which this record is about.
-   * @example "pts" when it's a change regarding something within the PTS itself — like being approved.
+   * The type of target which this record is about. E.g.: "pts"
+   * when it's a change regarding something within the PTS itself — like being approved.
+   *
+   * @example "pts"
    */
-  target: TimelineRecord.Target;
+  target: TimelineRecord.TargetType;
   /**
    * The nature of the event being registred.
    */
@@ -76,7 +78,7 @@ export namespace TimelineRecord {
   /**
    * The target of the event that has been triggered.
    */
-  export enum Target {
+  export enum TargetType {
     Pts = "pts",
     Activity = "activity",
   }
