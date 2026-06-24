@@ -9,9 +9,11 @@ import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
+import { TimelineRecord } from "@/modules/therapeutic-journey/aggregates/timeline-record.aggregate";
 import { CreateActivityDTO } from "@/modules/therapeutic-journey/dtos/create-new-activity-dto";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { CreateActivityService } from "@/modules/therapeutic-journey/services/create-activity.service";
+import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
 import {
   BadRequestException,
   Body,
@@ -43,7 +45,10 @@ import { pipe } from "fp-ts/lib/function";
   format: "uuid",
 })
 export class ActivitiesController {
-  public constructor(private readonly createActivity: CreateActivityService) {}
+  public constructor(
+    private readonly createActivity: CreateActivityService,
+    private readonly createTimelineRecord: CreateActivePtsTimelineRecordService,
+  ) {}
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -114,6 +119,29 @@ export class ActivitiesController {
             title: body.title,
             frequency,
           }),
+      ),
+      // silently adding a timeline record — yet in foreground
+      // see: https://github.com/orgs/Projetario-UTFPR/projects/1/views/1?pane=issue&itemId=204038934
+      te.chainFirstW((activity) =>
+        pipe(
+          () =>
+            this.createTimelineRecord.execute({
+              patientId,
+              description: `A nova atividade ${body.title} foi sugerida.`,
+              target: TimelineRecord.TargetType.Activity,
+              targetId: activity.getId(),
+              type: TimelineRecord.Type.Created,
+              responsibleProfessionalId: body.professionalId,
+            }),
+          te.orElseW((error) => {
+            console.error(
+              "Ocorreu uma falha ao criar (silenciosamente) o registro de Timeline " +
+                `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
+              error,
+            );
+            return te.right(undefined);
+          }),
+        ),
       ),
       te.getOrElse((error) => {
         if (error instanceof PtsNotFoundError || error instanceof DocumentNotFoundError) {

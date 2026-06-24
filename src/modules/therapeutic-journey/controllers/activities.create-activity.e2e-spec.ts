@@ -16,6 +16,7 @@ import { either as e } from "fp-ts";
 import request from "supertest";
 import type { App } from "supertest/types";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
+import { TimelineRecordTarget } from "@prisma-gen/enums";
 
 describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
   let app: INestApplication<App>;
@@ -368,4 +369,47 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
       );
     },
   );
+
+  it("should create a timeline register upon successful activity creation", async () => {
+    const pts = await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+      responsibleProfessionalId: professional.getId(),
+    });
+
+    const body = getValidActivityParams();
+
+    const previouslyExistingTimelineRecords = await prisma.timelineRecord.count({
+      where: { projetoTerapeuticoSingularId: pts.getId().toString() },
+    });
+
+    expect(previouslyExistingTimelineRecords).toBe(0);
+
+    const response = await request(app.getHttpServer())
+      .post(getEndpoint())
+      .set({ authorization: `Bearer ${professionalAccountToken}` })
+      .send(body)
+      .expect(201);
+
+    const existingTimelineRecords = await prisma.timelineRecord.count({
+      where: { projetoTerapeuticoSingularId: pts.getId().toString() },
+    });
+
+    expect(existingTimelineRecords, "it should have created a new timeline record").toBe(1);
+
+    const activity = response.body;
+    const newTimelineRecord = await prisma.timelineRecord.findFirstOrThrow({
+      where: { projetoTerapeuticoSingularId: pts.getId().toString() },
+    });
+
+    expect(newTimelineRecord, "it should had correctly filled the timeline record").toEqual(
+      expect.objectContaining({
+        type: "Created",
+        targetId: activity.id,
+        targetType: TimelineRecordTarget.Activity,
+        description: expect.stringContaining(body.title),
+        authorProfessionalId: professional.getId().toString(),
+      }),
+    );
+  });
 });
