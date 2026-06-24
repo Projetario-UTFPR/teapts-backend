@@ -3,7 +3,7 @@ import { DTO } from "@/infra/http/dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Expose, Transform } from "class-transformer";
 import { z } from "zod";
-import { FrequencyDto } from "@/common/dtos/frequency.dto";
+import { FrequencyDto } from "@/common/time/dtos/frequency.dto";
 
 const createActivitySchema = z.object({
   title: z.string().min(1, "O título da atividade é obrigatório."),

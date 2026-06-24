@@ -45,6 +45,7 @@ model Professional {
   leadingJourneys       ProjetoTerapeuticoSingular[]     @relation("ResponsibleRelation")
   journeysWhereIsMember ProfessionalParticipatingOnPTS[]
   activities            Activity[]
+  timelineRecords       TimelineRecord[]
 
   @@map("professional")
 }
@@ -98,7 +99,8 @@ model ProjetoTerapeuticoSingular {
 
   multidisciplinaryTeam ProfessionalParticipatingOnPTS[]
 
-  activities Activity[]
+  activities      Activity[]
+  timelineRecords TimelineRecord[]
 
   @@map("projeto_terapeutico_singular")
 }
@@ -155,4 +157,35 @@ model Activity {
   projetoTerapeuticoSingularId String?                     @map("projeto_terapeutico_singular_id")
 
   @@map("activity")
+}
+
+enum TimelineRecordTarget {
+  Pts
+  Activity
+}
+
+enum TimelineRecordType {
+  Created
+  Approved
+  Edited
+  Removed
+  Other
+}
+
+model TimelineRecord {
+  id          String             @id @default(uuid())
+  type        TimelineRecordType
+  description String
+  happenedAt  DateTime           @map("happened_at")
+
+  targetId   String               @map("target_id")
+  targetType TimelineRecordTarget @map("target_type")
+
+  projetoTerapeuticoSingularId String                     @map("projeto_terapeutico_singular_id")
+  pts                          ProjetoTerapeuticoSingular @relation(fields: [projetoTerapeuticoSingularId], references: [id])
+
+  authorProfessionalId String?       @map("author_professional_id")
+  authorProfessional   Professional? @relation(fields: [authorProfessionalId], references: [id])
+
+  @@map("timeline_record")
 }

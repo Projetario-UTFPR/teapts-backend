@@ -7,6 +7,7 @@ import { Module } from "@nestjs/common";
 import { CreateActivityService } from "./services/create-activity.service";
 import { ActivitiesController } from "@/modules/therapeutic-journey/controllers/activities.controller";
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modules/therapeutic-journey/services/verify-account-is-authorized-as-patient-or-professional.service";
+import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
 
 @Module({
   controllers: [PtsController, ActivitiesController],
@@ -17,6 +18,7 @@ import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modul
     UpdateMultidisciplinaryTeamService,
     ShowActivePtsQueryHandler,
     CreateActivityService,
+    CreateActivePtsTimelineRecordService,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,
