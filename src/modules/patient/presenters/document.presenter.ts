@@ -22,6 +22,7 @@ export class DocumentPresenter {
     description:
       "The URL with which the document can be displayed, accessed and/or download. Whenever it " +
       "could not be generated for some reason, it becomes `null`.",
+    type: "string",
     format: "uri",
     nullable: true,
   })

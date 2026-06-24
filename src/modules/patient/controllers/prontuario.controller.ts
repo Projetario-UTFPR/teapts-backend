@@ -8,6 +8,7 @@ import { InitiateDocumentUploadDto } from "@/modules/patient/dtos/initiate-docum
 import { UploadDocumentDto } from "@/modules/patient/dtos/upload-document.dto";
 import { PatientNotFoundError } from "@/modules/patient/errors/patient-not-found-error";
 import { DocumentUploadInitiationPresenter } from "@/modules/patient/presenters/document-upload-initiation.presenter";
+import { PaginatedProntuarioPresenter } from "@/modules/patient/presenters/paginated-prontuario.presenter";
 import { ListProntuarioByPatientIdQueryHandler } from "@/modules/patient/query-handlers/list-prontuario-by-patient-id.query";
 import { AddNewDocumentToProntuarioService } from "@/modules/patient/services/add-new-document-to-prontuario.service";
 import { SignDocumentUploadUrlService } from "@/modules/patient/services/sign-document-upload-url.service";
@@ -29,6 +30,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
+  ApiOkResponse,
   ApiParam,
   ApiTags,
   ApiUnprocessableEntityResponse,
@@ -182,6 +184,10 @@ export class ProntuarioController {
   }
 
   @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "The paginated prontuário response.",
+    type: PaginatedProntuarioPresenter,
+  })
   @ApiUnprocessableEntityResponse({
     description: "The query parameters are invalid.",
     type: ValidationErrorBagPresenter,
