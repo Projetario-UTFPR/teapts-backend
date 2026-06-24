@@ -446,7 +446,9 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         { plainPassword: "D0utorHous3" },
         { hasher },
       );
-      professional = await professionalsFactory.createAndPersist(prisma, { account: professionalAccount });
+      professional = await professionalsFactory.createAndPersist(prisma, {
+        account: professionalAccount,
+      });
       const profTokenResult = await tokensService.execute({ account: professionalAccount });
       if (e.isLeft(profTokenResult)) throw new Error("Failed to issue professional token.");
       professionalToken = profTokenResult.right.accessToken;
@@ -456,7 +458,9 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         { plainPassword: "Gh4nd1" },
         { hasher },
       );
-      patient = await patientsFactory.createAndPersist(prisma, { accountId: patientAccount.getId() });
+      patient = await patientsFactory.createAndPersist(prisma, {
+        accountId: patientAccount.getId(),
+      });
       const patTokenResult = await tokensService.execute({ account: patientAccount });
       if (e.isLeft(patTokenResult)) throw new Error("Failed to issue patient token.");
       patientToken = patTokenResult.right.accessToken;
@@ -476,98 +480,119 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
       await prisma.activity.createMany({ data: activities });
     };
 
-    it("should require authentication to list activities", { tags: ["listActivities"] }, async () => {
-      await request(app.getHttpServer())
-        .get(getEndpoint())
-        .expect(401);
-    });
+    it(
+      "should require authentication to list activities",
+      { tags: ["listActivities"] },
+      async () => {
+        await request(app.getHttpServer()).get(getEndpoint()).expect(401);
+      },
+    );
 
-    it("should deny listing when patientId is not a valid UUID", { tags: ["listActivities"] }, async () => {
-      const response = await request(app.getHttpServer())
-        .get(_getEndpoint("invalid-uuid-format"))
-        .set({ authorization: `Bearer ${patientToken}` })
-        .expect(400);
+    it(
+      "should deny listing when patientId is not a valid UUID",
+      { tags: ["listActivities"] },
+      async () => {
+        const response = await request(app.getHttpServer())
+          .get(_getEndpoint("invalid-uuid-format"))
+          .set({ authorization: `Bearer ${patientToken}` })
+          .expect(400);
 
-      expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toMatch(/uuid/i);
-    });
+        expect(response.body).toHaveProperty("message");
+        expect(response.body.message).toMatch(/uuid/i);
+      },
+    );
 
-    it("should block a professional from listing activities if they don't belong to the PTS", { tags: ["listActivities"] }, async () => {
-      await ptsFactory.createAndPersist(prisma, {
-        patientId: patient.getId(),
-        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
-      });
+    it(
+      "should block a professional from listing activities if they don't belong to the PTS",
+      { tags: ["listActivities"] },
+      async () => {
+        await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+        });
 
-      const response = await request(app.getHttpServer())
-        .get(getEndpoint())
-        .set({ authorization: `Bearer ${professionalToken}` })
-        .expect(403);
+        const response = await request(app.getHttpServer())
+          .get(getEndpoint())
+          .set({ authorization: `Bearer ${professionalToken}` })
+          .expect(403);
 
-      expect(response.body).toHaveProperty("message");
-    });
+        expect(response.body).toHaveProperty("message");
+      },
+    );
 
-    it("should block a patient from listing activities of another patient's PTS", { tags: ["listActivities"] }, async () => {
-      const otherPatient = await patientsFactory.createAndPersist(prisma);
-      await ptsFactory.createAndPersist(prisma, {
-        patientId: otherPatient.getId(),
-        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
-      });
+    it(
+      "should block a patient from listing activities of another patient's PTS",
+      { tags: ["listActivities"] },
+      async () => {
+        const otherPatient = await patientsFactory.createAndPersist(prisma);
+        await ptsFactory.createAndPersist(prisma, {
+          patientId: otherPatient.getId(),
+          timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+        });
 
-      const response = await request(app.getHttpServer())
-        .get(_getEndpoint(otherPatient.getId().toString()))
-        .set({ authorization: `Bearer ${patientToken}` })
-        .expect(403);
+        const response = await request(app.getHttpServer())
+          .get(_getEndpoint(otherPatient.getId().toString()))
+          .set({ authorization: `Bearer ${patientToken}` })
+          .expect(403);
 
-      expect(response.body).toHaveProperty("message");
-    });
+        expect(response.body).toHaveProperty("message");
+      },
+    );
 
-    it("should allow a patient to list activities from their own PTS", { tags: ["listActivities"] }, async () => {
-      const pts = await ptsFactory.createAndPersist(prisma, {
-        patientId: patient.getId(),
-        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
-      });
+    it(
+      "should allow a patient to list activities from their own PTS",
+      { tags: ["listActivities"] },
+      async () => {
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+        });
 
-      await seedActivities(pts.getId().toString(), 2);
+        await seedActivities(pts.getId().toString(), 2);
 
-      const response = await request(app.getHttpServer())
-        .get(getEndpoint())
-        .set({ authorization: `Bearer ${patientToken}` })
+        const response = await request(app.getHttpServer())
+          .get(getEndpoint())
+          .set({ authorization: `Bearer ${patientToken}` });
 
-      console.log(response.body.message);
+        console.log(response.body.message);
 
-      expect(response.body).toHaveProperty("items");
-      expect(response.body.items).toHaveLength(2);
-      expect(response.body.count).toBe(2);
-    });
+        expect(response.body).toHaveProperty("items");
+        expect(response.body.items).toHaveLength(2);
+        expect(response.body.count).toBe(2);
+      },
+    );
 
-    it("should allow an authorized professional to list activities and paginate them correctly", { tags: ["listActivities"] }, async () => {
-      const pts = await ptsFactory.createAndPersist(prisma, {
-        patientId: patient.getId(),
-        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
-        responsibleProfessionalId: professional.getId(),
-      });
+    it(
+      "should allow an authorized professional to list activities and paginate them correctly",
+      { tags: ["listActivities"] },
+      async () => {
+        const pts = await ptsFactory.createAndPersist(prisma, {
+          patientId: patient.getId(),
+          timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+          responsibleProfessionalId: professional.getId(),
+        });
 
-      await seedActivities(pts.getId().toString(), 5);
+        await seedActivities(pts.getId().toString(), 5);
 
-      const responsePage1 = await request(app.getHttpServer())
-        .get(getEndpoint("?page=1&limit=3"))
-        .set({ authorization: `Bearer ${professionalToken}` })
-        .expect(200);
+        const responsePage1 = await request(app.getHttpServer())
+          .get(getEndpoint("?page=1&limit=3"))
+          .set({ authorization: `Bearer ${professionalToken}` })
+          .expect(200);
 
-      expect(responsePage1.body.items).toHaveLength(3);
-      expect(responsePage1.body.count).toBe(5);
-      expect(responsePage1.body.currentPage).toBe(1);
-      expect(responsePage1.body.resolvedLimit).toBe(3);
+        expect(responsePage1.body.items).toHaveLength(3);
+        expect(responsePage1.body.count).toBe(5);
+        expect(responsePage1.body.currentPage).toBe(1);
+        expect(responsePage1.body.resolvedLimit).toBe(3);
 
-      const responsePage2 = await request(app.getHttpServer())
-        .get(getEndpoint("?page=2&limit=3"))
-        .set({ authorization: `Bearer ${professionalToken}` })
-        .expect(200);
+        const responsePage2 = await request(app.getHttpServer())
+          .get(getEndpoint("?page=2&limit=3"))
+          .set({ authorization: `Bearer ${professionalToken}` })
+          .expect(200);
 
-      expect(responsePage2.body.items).toHaveLength(2);
-      expect(responsePage2.body.count).toBe(5);
-      expect(responsePage2.body.currentPage).toBe(2);
-    });
+        expect(responsePage2.body.items).toHaveLength(2);
+        expect(responsePage2.body.count).toBe(5);
+        expect(responsePage2.body.currentPage).toBe(2);
+      },
+    );
   });
-
 });

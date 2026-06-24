@@ -27,4 +27,4 @@ import { ListActivitiesQueryHandler } from "./query-handlers/list-activities.que
     VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
   ],
 })
-export class TherapeuticJourneyModule { }
+export class TherapeuticJourneyModule {}
