@@ -8,6 +8,7 @@ import { CreateActivityService } from "./services/create-activity.service";
 import { ActivitiesController } from "@/modules/therapeutic-journey/controllers/activities.controller";
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modules/therapeutic-journey/services/verify-account-is-authorized-as-patient-or-professional.service";
 import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
+import { ListActivitiesQueryHandler } from "./query-handlers/list-activities.query";
 
 @Module({
   controllers: [PtsController, ActivitiesController],
@@ -19,10 +20,11 @@ import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-jour
     ShowActivePtsQueryHandler,
     CreateActivityService,
     CreateActivePtsTimelineRecordService,
+    ListActivitiesQueryHandler,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,
     VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
   ],
 })
-export class TherapeuticJourneyModule {}
+export class TherapeuticJourneyModule { }
