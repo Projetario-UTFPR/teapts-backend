@@ -554,8 +554,6 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
           .get(getEndpoint())
           .set({ authorization: `Bearer ${patientToken}` });
 
-        console.log(response.body.message);
-
         expect(response.body).toHaveProperty("items");
         expect(response.body.items).toHaveLength(2);
         expect(response.body.count).toBe(2);
