@@ -3,17 +3,13 @@ import { CurrentUser } from "@/infra/auth/decorators/current-user";
 import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
-import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
-import { ProfessionalNotAuthorizedToAccessPts } from "@/modules/therapeutic-journey/errors/professional-not-authorized-to-access-pts.error";
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "../services/verify-account-is-authorized-as-patient-or-professional.service";
 import {
   Controller,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Query,
 } from "@nestjs/common";
 import {
@@ -37,7 +33,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) {}
+  ) { }
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)
@@ -59,7 +55,7 @@ export class TimelineController {
     type: ValidationErrorBagPresenter,
   })
   public listTimeline(
-    @Param("patientId", ParseUUIDPipe) patientId: string,
+    @Param("patientId") patientId: string,
     @Query() dto: ListTimelineRecordsDto,
     @CurrentUser() { account, patientProfile }: AuthCollection,
   ) {
@@ -95,16 +91,7 @@ export class TimelineController {
         }),
       ),
 
-      te.getOrElse((error) => {
-        if (
-          error instanceof ProfessionalNotAuthorizedToAccessPts ||
-          error instanceof ProfessionalDoesNotBelongToUserAccountError
-        ) {
-          throw new ForbiddenException(BasicExceptionPresenter.present(error), { cause: error });
-        }
-
-        return exceptionsFactory.fromError(error);
-      }),
+      te.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }
