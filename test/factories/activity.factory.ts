@@ -66,10 +66,7 @@ type CreateAndPersistParams = Partial<CreateParams> & {
   projetoTerapeuticoSingularId: string;
 };
 
-async function createAndPersist(
-  prismaService: PrismaService,
-  params: CreateAndPersistParams
-) {
+async function createAndPersist(prismaService: PrismaService, params: CreateAndPersistParams) {
   const activity = await create(params);
 
   const data = activityMapper.intoPrisma(activity);

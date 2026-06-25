@@ -475,7 +475,7 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
           projetoTerapeuticoSingularId: ptsId,
           assigneeProfessionalId: professional.getId(),
           state: Activity.State.Suggested,
-        })
+        }),
       );
 
       await Promise.all(promises);
