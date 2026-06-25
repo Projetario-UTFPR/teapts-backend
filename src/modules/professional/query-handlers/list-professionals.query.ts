@@ -23,7 +23,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListProfessionalsQueryHandler {
-  public constructor(private readonly prisma: PrismaService) { }
+  public constructor(private readonly prisma: PrismaService) {}
 
   public execute({
     limit,

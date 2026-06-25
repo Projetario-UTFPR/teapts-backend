@@ -4,14 +4,7 @@ import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter
 import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "../services/verify-account-is-authorized-as-patient-or-professional.service";
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Query,
-} from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, Param, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -33,7 +26,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) { }
+  ) {}
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)

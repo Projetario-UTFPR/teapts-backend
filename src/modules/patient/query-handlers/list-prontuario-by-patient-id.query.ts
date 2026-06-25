@@ -23,7 +23,7 @@ export class ListProntuarioByPatientIdQueryHandler {
   public constructor(
     private readonly prisma: PrismaService,
     private readonly documentsStorage: DocumentFilesStorage,
-  ) { }
+  ) {}
 
   public execute({ limit, page, patientId }: Params): Promise<Either<IrrecoverableError, Result>> {
     const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });

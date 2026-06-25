@@ -21,7 +21,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListActivitiesQueryHandler {
-  public constructor(private readonly prisma: PrismaService) { }
+  public constructor(private readonly prisma: PrismaService) {}
 
   public execute({ limit, page, patientId }: Params): Promise<Either<IrrecoverableError, Result>> {
     const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });

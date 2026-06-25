@@ -31,7 +31,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListTimelineRecordsQueryHandler {
-  public constructor(private readonly prisma: PrismaService) { }
+  public constructor(private readonly prisma: PrismaService) {}
 
   public execute({
     limit,

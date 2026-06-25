@@ -30,4 +30,4 @@ import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-
     VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
   ],
 })
-export class TherapeuticJourneyModule { }
+export class TherapeuticJourneyModule {}
