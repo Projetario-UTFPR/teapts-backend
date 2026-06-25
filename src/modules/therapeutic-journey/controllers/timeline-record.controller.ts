@@ -37,7 +37,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) {}
+  ) { }
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)
@@ -81,6 +81,8 @@ export class TimelineController {
             type: dto.type,
             responsibleProfessionalId: dto.professionalId,
             description: dto.description,
+            startDate: dto.startDate,
+            endDate: dto.endDate,
           }),
       ),
 
