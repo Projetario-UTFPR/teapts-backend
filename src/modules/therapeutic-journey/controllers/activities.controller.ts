@@ -20,22 +20,32 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiOkResponse,
   ApiParam,
   ApiTags,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
+import { ListActivitiesQueryHandler } from "../query-handlers/list-activities.query";
+import { PaginatedActivitiesPresenter } from "../presenters/paginated-activities.presenter";
+import { ListActivitiesDto } from "../dtos/list-activities.dto";
+import { ProfessionalDoesNotBelongToUserAccountError } from "../errors/professional-does-not-belong-to-user-account.error";
+import { ProfessionalNotAuthorizedToAccessPts } from "../errors/professional-not-authorized-to-access-pts.error";
+import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "../services/verify-account-is-authorized-as-patient-or-professional.service";
 
 @Controller("v1/pts/:patientId/activity")
 @ApiTags("PTS's Activities")
@@ -49,6 +59,8 @@ export class ActivitiesController {
   public constructor(
     private readonly createActivity: CreateActivityService,
     private readonly createTimelineRecord: CreateActivePtsTimelineRecordService,
+    private readonly listActivitiesHandler: ListActivitiesQueryHandler,
+    private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
   ) {}
 
   @Post("create")
@@ -171,6 +183,69 @@ export class ActivitiesController {
           const validationErrors = new ValidationErrorsBag();
           validationErrors.appendError(frequencyViolationAsInvalidArgumentError);
           return exceptionsFactory.fromError(validationErrors);
+        }
+
+        return exceptionsFactory.fromError(error);
+      }),
+    )();
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "A paginated list of activities registered in the PTS.",
+    type: PaginatedActivitiesPresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not authorized to access the requested PTS.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiBadRequestResponse({
+    description: "The request have integrity issues (UUID invalid).",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "Some of the query parameters contain validation errors.",
+    type: ValidationErrorBagPresenter,
+  })
+  public listActivities(
+    @Param("patientId", ParseUUIDPipe) patientId: string,
+    @Query() { limit, page }: ListActivitiesDto,
+    @CurrentUser() { account, patientProfile }: AuthCollection,
+  ) {
+    return pipe(
+      () =>
+        this.verifyAuthService.execute({
+          patientId,
+          account,
+          accountPatientProfile: patientProfile,
+        }),
+
+      te.chainW(
+        () => () =>
+          this.listActivitiesHandler.execute({
+            patientId,
+            page,
+            limit,
+          }),
+      ),
+
+      te.map(({ activities, count, currentPage, resolvedLimit }) =>
+        PaginatedActivitiesPresenter.present({
+          items: activities,
+          count,
+          currentPage,
+          resolvedLimit,
+        }),
+      ),
+
+      te.getOrElse((error) => {
+        if (
+          error instanceof ProfessionalNotAuthorizedToAccessPts ||
+          error instanceof ProfessionalDoesNotBelongToUserAccountError
+        ) {
+          throw new ForbiddenException(BasicExceptionPresenter.present(error), { cause: error });
         }
 
         return exceptionsFactory.fromError(error);
