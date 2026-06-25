@@ -61,7 +61,7 @@ export class ActivitiesController {
     private readonly createTimelineRecord: CreateActivePtsTimelineRecordService,
     private readonly listActivitiesHandler: ListActivitiesQueryHandler,
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
-  ) {}
+  ) { }
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -150,7 +150,7 @@ export class ActivitiesController {
           te.orElseW((error) => {
             console.error(
               "Ocorreu uma falha ao criar (silenciosamente) o registro de Timeline " +
-                `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
+              `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
               error,
             );
             return te.right(undefined);
@@ -202,19 +202,12 @@ export class ActivitiesController {
     type: BasicExceptionPresenter,
   })
   @ApiBadRequestResponse({
-    description: "The request have integrity issues.",
-    content: {
-      "application/json": {
-        examples: {
-          invalidUUID: {
-            summary: "Invalid Patient ID",
-            value: BasicExceptionPresenter.present({
-              message: "Validation failed (uuid is expected)",
-            }),
-          },
-        },
-      },
-    },
+    description: "The request have integrity issues (UUID invalid).",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "Some of the query parameters contain validation errors.",
+    type: ValidationErrorBagPresenter,
   })
   public listActivities(
     @Param("patientId", ParseUUIDPipe) patientId: string,
@@ -224,7 +217,7 @@ export class ActivitiesController {
     return pipe(
       () =>
         this.verifyAuthService.execute({
-          patientId: patientId,
+          patientId,
           account,
           accountPatientProfile: patientProfile,
         }),
