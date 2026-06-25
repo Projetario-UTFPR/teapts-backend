@@ -18,6 +18,12 @@ const schema = z
       })
       .optional(),
     description: z.string().trim().optional(),
+    startDate: z.coerce
+      .date({ error: () => ({ message: "A data inicial (startDate) é inválida." }) })
+      .optional(),
+    endDate: z.coerce
+      .date({ error: () => ({ message: "A data final (endDate) é inválida." }) })
+      .optional(),
   })
   .extend(BasePaginationDto.baseSchema.shape);
 
@@ -53,6 +59,22 @@ export class ListTimelineRecordsDto extends BasePaginationDto implements ListTim
     type: "string",
   })
   public readonly description?: string | undefined;
+
+  @Expose()
+  @ApiPropertyOptional({
+    description: "Filters the timeline records starting from this date and time (ISO 8601).",
+    type: "string",
+    format: "date-time",
+  })
+  public readonly startDate?: Date | undefined;
+
+  @Expose()
+  @ApiPropertyOptional({
+    description: "Filters the timeline records up to this date and time (ISO 8601).",
+    type: "string",
+    format: "date-time",
+  })
+  public readonly endDate?: Date | undefined;
 
   protected schema = schema;
 }
