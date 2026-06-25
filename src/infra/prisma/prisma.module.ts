@@ -10,6 +10,8 @@ import { DocumentsRepository } from "@/modules/patient/repositories/documents.re
 import { PrismaDocumentsRepository } from "@/infra/prisma/repositories/documents.repository";
 import { ActivityRepository } from "@/modules/therapeutic-journey/repositories/activity.repository";
 import { PrismaActivityRepository } from "./repositories/activity.repository";
+import { TimelineRepository } from "@/modules/therapeutic-journey/repositories/timeline.repository";
+import { PrismaTimelineRepository } from "@/infra/prisma/repositories/timeline.repository";
 
 @Global()
 @Module({
@@ -20,6 +22,7 @@ import { PrismaActivityRepository } from "./repositories/activity.repository";
     { provide: PtsRepository, useClass: PrismaPtsRepository },
     { provide: DocumentsRepository, useClass: PrismaDocumentsRepository },
     { provide: ActivityRepository, useClass: PrismaActivityRepository },
+    { provide: TimelineRepository, useClass: PrismaTimelineRepository },
   ],
   exports: [
     PrismaService,
@@ -28,6 +31,7 @@ import { PrismaActivityRepository } from "./repositories/activity.repository";
     PtsRepository,
     DocumentsRepository,
     ActivityRepository,
+    TimelineRepository,
   ],
 })
 export class PrismaModule {}
