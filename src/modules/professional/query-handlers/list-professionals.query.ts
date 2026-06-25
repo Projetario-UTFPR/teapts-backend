@@ -4,7 +4,7 @@ import { PaginationResult } from "@/common/pagination/pagination-result";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { ProfessionalWithAccountPresenter } from "@/modules/professional/presenters/professional-with-account.presenter";
 import { Either } from "fp-ts/lib/Either";
-import paginationUtlis from "@/common/pagination/pagination-utils";
+import paginationUtils from "@/common/pagination/pagination-utils";
 import professionalsMapper from "@/infra/prisma/mappers/professionals.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Injectable } from "@nestjs/common";
@@ -23,7 +23,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListProfessionalsQueryHandler {
-  public constructor(private readonly prisma: PrismaService) {}
+  public constructor(private readonly prisma: PrismaService) { }
 
   public execute({
     limit,
@@ -31,7 +31,7 @@ export class ListProfessionalsQueryHandler {
     name,
     specialisms,
   }: Params): Promise<Either<IrrecoverableError, Result>> {
-    const { offset, resolvedPage, resolvedLimit } = paginationUtlis.resolveOffset({ page, limit });
+    const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
     const where = this.resolveWhereClause({ specialisms, name });
     return pipe(
       te.Do,

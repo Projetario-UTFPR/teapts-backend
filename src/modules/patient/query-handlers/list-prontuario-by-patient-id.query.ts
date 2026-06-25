@@ -1,7 +1,7 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { PaginationParams } from "@/common/pagination/pagination-params";
 import { Either } from "fp-ts/lib/Either";
-import paginationUtlis from "@/common/pagination/pagination-utils";
+import paginationUtils from "@/common/pagination/pagination-utils";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Injectable } from "@nestjs/common";
 import { taskEither as te } from "fp-ts";
@@ -23,10 +23,10 @@ export class ListProntuarioByPatientIdQueryHandler {
   public constructor(
     private readonly prisma: PrismaService,
     private readonly documentsStorage: DocumentFilesStorage,
-  ) {}
+  ) { }
 
   public execute({ limit, page, patientId }: Params): Promise<Either<IrrecoverableError, Result>> {
-    const { offset, resolvedPage, resolvedLimit } = paginationUtlis.resolveOffset({ page, limit });
+    const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
 
     let where: DocumentFindManyArgs["where"] = { patientAccountId: patientId.toString() };
 

@@ -4,13 +4,13 @@ import { taskEither as te } from "fp-ts";
 import { Either } from "fp-ts/lib/Either";
 
 import { PrismaService } from "@/infra/prisma/prisma";
-import { TimelineRecordFindManyArgs } from "@prisma-gen/models"; // Ajuste se o nome gerado for diferente
+import { TimelineRecordFindManyArgs } from "@prisma-gen/models";
 import timelineRecordMapper from "@/infra/prisma/mappers/timeline-record.mapper";
 
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { PaginationParams } from "@/common/pagination/pagination-params";
 import { PaginationResult } from "@/common/pagination/pagination-result";
-import paginationUtlis from "@/common/pagination/pagination-utils"; // Mantido o typo do seu import original local
+import paginationUtils from "@/common/pagination/pagination-utils";
 
 import { TimelineRecord } from "../aggregates/timeline-record.aggregate";
 import { TimelineRecordPresenter } from "../presenters/timeline-record.presenter";
@@ -31,7 +31,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListTimelineRecordsQueryHandler {
-  public constructor(private readonly prisma: PrismaService) {}
+  public constructor(private readonly prisma: PrismaService) { }
 
   public execute({
     limit,
@@ -44,7 +44,7 @@ export class ListTimelineRecordsQueryHandler {
     startDate,
     endDate,
   }: Params): Promise<Either<IrrecoverableError, Result>> {
-    const { offset, resolvedPage, resolvedLimit } = paginationUtlis.resolveOffset({ page, limit });
+    const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
     const where = this.resolveWhereClause({
       patientId,
       responsibleProfessionalId,
