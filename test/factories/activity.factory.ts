@@ -5,6 +5,8 @@ import {
   TimeUnit,
 } from "@/common/time/value-objects/frequency.vo";
 import { generateUUID, UUID } from "@/common/uuid";
+import activityMapper from "@/infra/prisma/mappers/activity.mapper";
+import { PrismaService } from "@/infra/prisma/prisma";
 import { Activity } from "@/modules/therapeutic-journey/aggregates/activity.aggregate";
 import { faker } from "@faker-js/faker";
 
@@ -60,5 +62,26 @@ async function create({
     createdAt,
   });
 }
+type CreateAndPersistParams = Partial<CreateParams> & {
+  projetoTerapeuticoSingularId: string;
+};
 
-export default { create, generateRandomFrequency };
+async function createAndPersist(
+  prismaService: PrismaService,
+  params: CreateAndPersistParams
+) {
+  const activity = await create(params);
+
+  const data = activityMapper.intoPrisma(activity);
+
+  await prismaService.activity.create({
+    data: {
+      ...data,
+      projetoTerapeuticoSingularId: params.projetoTerapeuticoSingularId,
+    },
+  });
+
+  return activity;
+}
+
+export default { create, createAndPersist, generateRandomFrequency };
