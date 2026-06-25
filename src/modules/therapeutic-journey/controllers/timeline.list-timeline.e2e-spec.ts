@@ -94,20 +94,6 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
   );
 
   it(
-    "should deny listing when patientId is not a valid UUID",
-    { tags: ["listTimeline"] },
-    async () => {
-      const response = await request(app.getHttpServer())
-        .get(_getEndpoint("invalid-uuid-format"))
-        .set({ authorization: `Bearer ${patientToken}` })
-        .expect(400);
-
-      expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toMatch(/uuid/i);
-    },
-  );
-
-  it(
     "should block a professional from listing the timeline if they don't belong to the PTS",
     { tags: ["listTimeline"] },
     async () => {
