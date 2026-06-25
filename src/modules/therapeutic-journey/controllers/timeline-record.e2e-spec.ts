@@ -344,4 +344,42 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
       expect(response.body.items[0].description).toBe(targetDescription);
     },
   );
+
+  it(
+    "should correctly filter timeline records within a specific date range",
+    { tags: ["listTimeline"] },
+    async () => {
+      const pts = await ptsFactory.createAndPersist(prisma, {
+        patientId: patient.getId(),
+        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+        responsibleProfessionalId: professional.getId(),
+      });
+
+      await seedTimelineRecords(pts.getId().toString(), 1, {
+        description: "Registro do início do ano",
+        happenedAt: new Date("2026-01-10T10:00:00.000Z"),
+      });
+
+      await seedTimelineRecords(pts.getId().toString(), 1, {
+        description: "Registro alvo do meio do ano",
+        happenedAt: new Date("2026-06-15T14:30:00.000Z"),
+      });
+
+      await seedTimelineRecords(pts.getId().toString(), 1, {
+        description: "Registro do fim do ano",
+        happenedAt: new Date("2026-12-25T09:00:00.000Z"),
+      });
+
+      const query = "?startDate=2026-06-01T00:00:00.000Z&endDate=2026-06-30T23:59:59.999Z";
+
+      const response = await request(app.getHttpServer())
+        .get(getEndpoint(query))
+        .set({ authorization: `Bearer ${patientToken}` })
+        .expect(200);
+
+      expect(response.body.items).toHaveLength(1);
+      expect(response.body.count).toBe(1);
+      expect(response.body.items[0].description).toBe("Registro alvo do meio do ano");
+    },
+  );
 });
