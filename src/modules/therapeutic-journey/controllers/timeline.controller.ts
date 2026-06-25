@@ -26,7 +26,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) {}
+  ) { }
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)
@@ -37,7 +37,33 @@ export class TimelineController {
   })
   @ApiForbiddenResponse({
     description: "The user is not authorized to access the requested PTS timeline.",
-    type: BasicExceptionPresenter,
+    content: {
+      "application/json": {
+        examples: {
+          patientNotAuthorized: {
+            summary: "Unauthorized patient",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Esse paciente não tem acesso ao histórico.",
+            }),
+          },
+          professionalNotAuthorized: {
+            summary: "Unauthorized professional",
+            value: BasicExceptionPresenter.present({
+              message:
+                "Esse profissional não tem acesso ao histórico do paciente.",
+            }),
+          },
+          professionalProfileDoesntBelongToActualUser: {
+            summary: "Professional profile belonging to others",
+            value: BasicExceptionPresenter.present({
+              message:
+                "O perfil profissional escolhido não pertence à conta do usuário autenticado.",
+            }),
+          },
+        },
+      },
+    },
   })
   @ApiBadRequestResponse({
     description: "The request has integrity issues (UUID invalid).",
