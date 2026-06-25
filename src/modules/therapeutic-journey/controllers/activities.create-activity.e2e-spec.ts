@@ -16,7 +16,9 @@ import { either as e } from "fp-ts";
 import request from "supertest";
 import type { App } from "supertest/types";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
-import { ActivityState, TimelineRecordTarget } from "@prisma-gen/enums";
+import { TimelineRecordTarget } from "@prisma-gen/enums";
+import { Activity } from "../aggregates/activity.aggregate";
+import activityFactory from "@test/factories/activity.factory";
 
 describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
   let app: INestApplication<App>;
@@ -467,17 +469,16 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
     });
 
     const seedActivities = async (ptsId: string, count: number) => {
-      const activities = Array.from({ length: count }).map((_, index) => ({
-        id: generateUUID().toString(),
-        title: `Atividade de Teste ${index + 1}`,
-        projetoTerapeuticoSingularId: ptsId,
-        state: ActivityState.Suggested,
-        frequency: { times: 1, interval: "day" },
-        createdAt: new Date(),
-        assigneeProfessionalId: professional.getId().toString(),
-      }));
+      const promises = Array.from({ length: count }).map((_, index) =>
+        activityFactory.createAndPersist(prisma, {
+          title: `Atividade de Teste ${index + 1}`,
+          projetoTerapeuticoSingularId: ptsId,
+          assigneeProfessionalId: professional.getId(),
+          state: Activity.State.Suggested,
+        })
+      );
 
-      await prisma.activity.createMany({ data: activities });
+      await Promise.all(promises);
     };
 
     it(
