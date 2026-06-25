@@ -31,7 +31,7 @@ export type Result = PaginationResult & {
 
 @Injectable()
 export class ListTimelineRecordsQueryHandler {
-  public constructor(private readonly prisma: PrismaService) { }
+  public constructor(private readonly prisma: PrismaService) {}
 
   public execute({
     limit,
@@ -42,7 +42,7 @@ export class ListTimelineRecordsQueryHandler {
     type,
     description,
     startDate,
-    endDate
+    endDate,
   }: Params): Promise<Either<IrrecoverableError, Result>> {
     const { offset, resolvedPage, resolvedLimit } = paginationUtlis.resolveOffset({ page, limit });
     const where = this.resolveWhereClause({
@@ -52,7 +52,7 @@ export class ListTimelineRecordsQueryHandler {
       type,
       description,
       startDate,
-      endDate
+      endDate,
     });
 
     return pipe(
@@ -120,8 +120,17 @@ export class ListTimelineRecordsQueryHandler {
     type,
     description,
     startDate,
-    endDate
-  }: Pick<Params, "patientId" | "responsibleProfessionalId" | "target" | "type" | "description" | "startDate" | "endDate">) {
+    endDate,
+  }: Pick<
+    Params,
+    | "patientId"
+    | "responsibleProfessionalId"
+    | "target"
+    | "type"
+    | "description"
+    | "startDate"
+    | "endDate"
+  >) {
     let where: TimelineRecordFindManyArgs["where"] = {};
 
     if (patientId) {

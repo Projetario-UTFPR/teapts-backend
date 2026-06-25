@@ -37,7 +37,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) { }
+  ) {}
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)
