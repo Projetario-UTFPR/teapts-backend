@@ -5,48 +5,48 @@ import { TimelineRecord } from "@/modules/therapeutic-journey/aggregates/timelin
 import { faker } from "@faker-js/faker";
 
 type CreateParams = {
-    id: UUID,
-    target: TimelineRecord.TargetType,
-    type: TimelineRecord.Type,
-    targetId: UUID,
-    description: string,
-    happenedAt: Date,
-    ptsId: UUID,
-    responsibleProfessionalId?: UUID,
+  id: UUID;
+  target: TimelineRecord.TargetType;
+  type: TimelineRecord.Type;
+  targetId: UUID;
+  description: string;
+  happenedAt: Date;
+  ptsId: UUID;
+  responsibleProfessionalId?: UUID;
 };
 
 async function create({
-    id = generateUUID(),
-    target = TimelineRecord.TargetType.Activity,
-    type = TimelineRecord.Type.Created,
-    targetId = generateUUID(),
-    description = faker.lorem.words(3),
-    happenedAt = new Date(),
-    ptsId = generateUUID(),
-    responsibleProfessionalId = generateUUID(),
+  id = generateUUID(),
+  target = TimelineRecord.TargetType.Activity,
+  type = TimelineRecord.Type.Created,
+  targetId = generateUUID(),
+  description = faker.lorem.words(3),
+  happenedAt = new Date(),
+  ptsId = generateUUID(),
+  responsibleProfessionalId = generateUUID(),
 }: Partial<CreateParams> = {}) {
-    return TimelineRecord.createUnchecked({
-        id,
-        target,
-        type,
-        targetId,
-        description,
-        happenedAt,
-        ptsId,
-        responsibleProfessionalId
-    });
+  return TimelineRecord.createUnchecked({
+    id,
+    target,
+    type,
+    targetId,
+    description,
+    happenedAt,
+    ptsId,
+    responsibleProfessionalId,
+  });
 }
 
 type CreateAndPersistParams = Partial<CreateParams>;
 
 async function createAndPersist(prismaService: PrismaService, params: CreateAndPersistParams) {
-    const timelineRecord = await create(params);
+  const timelineRecord = await create(params);
 
-    const data = timelineRecordMapper.intoPrisma(timelineRecord);
+  const data = timelineRecordMapper.intoPrisma(timelineRecord);
 
-    await prismaService.timelineRecord.create({ data });
+  await prismaService.timelineRecord.create({ data });
 
-    return timelineRecord;
+  return timelineRecord;
 }
 
 export default { create, createAndPersist };
