@@ -3,6 +3,7 @@ import { type UUID } from "@/common/uuid";
 import { Account } from "@/modules/identity/entities/account.aggregate";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
 import { AccountsRepository } from "@/modules/identity/repositories/accounts.repository";
+import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalDoesNotBelongToUserAccountError } from "@/modules/therapeutic-journey/errors/professional-does-not-belong-to-user-account.error";
 import { ProfessionalNotAuthorizedToAccessPts } from "@/modules/therapeutic-journey/errors/professional-not-authorized-to-access-pts.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
@@ -18,6 +19,13 @@ type Params = {
   accountId?: UUID;
   account?: Account;
   professionalId?: UUID;
+  /**
+   * If given, this function assumes it's the patient's active PTS.
+   *
+   * When you already have the patient's active PTS in hand, using
+   * this parameter avoids an extra datastore request to retrieve it.
+   */
+  pts?: ProjetoTerapeuticoSingular;
 };
 
 /**
@@ -66,7 +74,7 @@ export class VerifyProfessionalIsAuthorizedService {
   > {
     return await pipe(
       te.Do,
-      te.apSW("pts", () => this.ptsRepository.findActivePtsByPatientId(patientId)),
+      te.apSW("pts", this.resolvePts(patientId)),
       te.apSW("account", this.resolveAccount(accountId, account)),
       te.chainFirstEitherKW(({ account, pts }) => {
         const professionalProfileDoesntMatchAccount =
@@ -100,6 +108,10 @@ export class VerifyProfessionalIsAuthorizedService {
         return new ProfessionalNotAuthorizedToAccessPts();
       }),
     )();
+  }
+
+  private resolvePts(patientId: UUID, pts?: ProjetoTerapeuticoSingular) {
+    return pts ? te.right(pts) : () => this.ptsRepository.findActivePtsByPatientId(patientId);
   }
 
   private resolveAccount(
