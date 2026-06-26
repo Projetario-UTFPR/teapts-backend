@@ -21,9 +21,7 @@ const schema = z
     startDate: z.coerce
       .date({ error: () => ({ message: "A data inicial é inválida." }) })
       .optional(),
-    endDate: z.coerce
-      .date({ error: () => ({ message: "A data final é inválida." }) })
-      .optional(),
+    endDate: z.coerce.date({ error: () => ({ message: "A data final é inválida." }) }).optional(),
   })
   .extend(BasePaginationDto.baseSchema.shape);
 

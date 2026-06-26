@@ -3,4 +3,4 @@ import { ShallowActivityPresenter } from "./shallow-activity.presenter";
 
 export class PaginatedActivitiesPresenter extends PaginatedDataPresenter(
   ShallowActivityPresenter,
-) { }
+) {}

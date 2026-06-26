@@ -24,7 +24,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
 } from "@nestjs/common";
@@ -61,7 +60,7 @@ export class ActivitiesController {
     private readonly createTimelineRecord: CreateActivePtsTimelineRecordService,
     private readonly listActivitiesHandler: ListActivitiesQueryHandler,
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
-  ) { }
+  ) {}
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -150,7 +149,7 @@ export class ActivitiesController {
           te.orElseW((error) => {
             console.error(
               "Ocorreu uma falha ao criar (silenciosamente) o registro de Timeline " +
-              `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
+                `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
               error,
             );
             return te.right(undefined);

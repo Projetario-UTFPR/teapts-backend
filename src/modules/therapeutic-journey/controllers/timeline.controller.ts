@@ -26,7 +26,7 @@ export class TimelineController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
-  ) { }
+  ) {}
 
   @Get(":patientId/timeline")
   @HttpCode(HttpStatus.OK)
@@ -43,15 +43,13 @@ export class TimelineController {
           patientNotAuthorized: {
             summary: "Unauthorized patient",
             value: BasicExceptionPresenter.present({
-              message:
-                "Esse paciente não tem acesso ao histórico.",
+              message: "Esse paciente não tem acesso ao histórico.",
             }),
           },
           professionalNotAuthorized: {
             summary: "Unauthorized professional",
             value: BasicExceptionPresenter.present({
-              message:
-                "Esse profissional não tem acesso ao histórico do paciente.",
+              message: "Esse profissional não tem acesso ao histórico do paciente.",
             }),
           },
           professionalProfileDoesntBelongToActualUser: {
