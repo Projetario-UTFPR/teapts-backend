@@ -17,8 +17,7 @@ import request from "supertest";
 import type { App } from "supertest/types";
 import { PtsTimeline } from "../value-objects/pts-timeline.vo";
 import { TimelineRecordTarget } from "@prisma-gen/enums";
-import { Activity } from "../aggregates/activity.aggregate";
-import activityFactory from "@test/factories/activity.factory";
+import { ShallowActivityPresenter } from "@/modules/therapeutic-journey/presenters/shallow-activity.presenter";
 
 describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
   let app: INestApplication<App>;
@@ -413,5 +412,38 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
         authorProfessionalId: professional.getId().toString(),
       }),
     );
+  });
+
+  it("should associate activity with the PTS", async () => {
+    const pts = await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
+      responsibleProfessionalId: professional.getId(),
+    });
+
+    const body = getValidActivityParams();
+
+    const previouslyExistingTimelineRecords = await prisma.timelineRecord.count({
+      where: { projetoTerapeuticoSingularId: pts.getId().toString() },
+    });
+
+    expect(previouslyExistingTimelineRecords).toBe(0);
+
+    const response = await request(app.getHttpServer())
+      .post(getEndpoint())
+      .set({ authorization: `Bearer ${professionalAccountToken}` })
+      .send(body)
+      .expect(201);
+
+    const existingTimelineRecords = await prisma.timelineRecord.count({
+      where: { projetoTerapeuticoSingularId: pts.getId().toString() },
+    });
+
+    expect(existingTimelineRecords, "it should have created a new timeline record").toBe(1);
+
+    const activity = response.body as ShallowActivityPresenter;
+    const activityFromDb = await prisma.activity.findUniqueOrThrow({ where: { id: activity.id } });
+
+    expect(activityFromDb.projetoTerapeuticoSingularId).toBe(pts.getId().toString());
   });
 });
