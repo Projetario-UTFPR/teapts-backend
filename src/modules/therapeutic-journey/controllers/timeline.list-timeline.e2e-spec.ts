@@ -148,7 +148,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
 
       expect(response.body).toHaveProperty("items");
       expect(response.body.items).toHaveLength(2);
-      expect(response.body.count).toBe(2);
+      expect(response.body.totalElements).toBe(2);
     },
   );
 
@@ -170,9 +170,9 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(responsePage1.body.items).toHaveLength(3);
-      expect(responsePage1.body.count).toBe(5);
-      expect(responsePage1.body.currentPage).toBe(1);
-      expect(responsePage1.body.resolvedLimit).toBe(3);
+      expect(responsePage1.body.totalElements).toBe(5);
+      expect(responsePage1.body.page).toBe(1);
+      expect(responsePage1.body.perPage).toBe(3);
 
       const responsePage2 = await request(app.getHttpServer())
         .get(getEndpoint("?page=2&limit=3"))
@@ -180,8 +180,8 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(responsePage2.body.items).toHaveLength(2);
-      expect(responsePage2.body.count).toBe(5);
-      expect(responsePage2.body.currentPage).toBe(2);
+      expect(responsePage2.body.totalElements).toBe(5);
+      expect(responsePage2.body.page).toBe(2);
     },
   );
 
@@ -211,7 +211,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(response.body.items).toHaveLength(2);
-      expect(response.body.count).toBe(2);
+      expect(response.body.totalElements).toBe(2);
       expect(response.body.items[0].target).toBe(TimelineRecord.TargetType.Activity);
       expect(response.body.items[0].type).toBe(TimelineRecord.Type.Approved);
     },
@@ -260,7 +260,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(resTarget.body.items).toHaveLength(2);
-      expect(resTarget.body.count).toBe(2);
+      expect(resTarget.body.totalElements).toBe(2);
       expect(
         resTarget.body.items.every((i) => i.target === TimelineRecord.TargetType.Activity),
       ).toBe(true);
@@ -297,7 +297,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(resEmpty.body.items).toHaveLength(0);
-      expect(resEmpty.body.count).toBe(0);
+      expect(resEmpty.body.totalElements).toBe(0);
     },
   );
 
@@ -326,7 +326,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(response.body.items).toHaveLength(1);
-      expect(response.body.count).toBe(1);
+      expect(response.body.totalElements).toBe(1);
       expect(response.body.items[0].description).toBe(targetDescription);
     },
   );
@@ -364,7 +364,7 @@ describe("[e2e] Timeline Controller :: List Timeline Records (v1)", () => {
         .expect(200);
 
       expect(response.body.items).toHaveLength(1);
-      expect(response.body.count).toBe(1);
+      expect(response.body.totalElements).toBe(1);
       expect(response.body.items[0].description).toBe("Registro alvo do meio do ano");
     },
   );
