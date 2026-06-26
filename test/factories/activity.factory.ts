@@ -4,21 +4,16 @@ import {
   TimeInterval,
   TimeUnit,
 } from "@/common/time/value-objects/frequency.vo";
-import { generateUUID, UUID } from "@/common/uuid";
+import { generateUUID } from "@/common/uuid";
 import activityMapper from "@/infra/prisma/mappers/activity.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Activity } from "@/modules/therapeutic-journey/aggregates/activity.aggregate";
+import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { faker } from "@faker-js/faker";
+import ptsFactory from "@test/factories/pts.factory";
 
-type CreateParams = {
-  id: UUID;
-  title: string;
-  assigneeProfessionalId: UUID;
-  frequency: Frequency;
-  documentsIds: UUID[];
-  state: Activity.State;
-  createdAt: Date;
-};
+type OriginalCreateParams = Parameters<(typeof Activity)["createUnchecked"]>[0];
+type CreateParams = Omit<OriginalCreateParams, "ptsId"> & { pts: ProjetoTerapeuticoSingular };
 
 export function generateRandomFrequency(): Frequency {
   const timeUnits = Object.values(TimeUnit);
@@ -51,7 +46,10 @@ async function create({
   documentsIds = [],
   state = Activity.State.Suggested,
   createdAt = new Date(),
+  pts,
 }: Partial<CreateParams> = {}) {
+  pts ??= await ptsFactory.create();
+
   return Activity.createUnchecked({
     id,
     title,
@@ -60,23 +58,17 @@ async function create({
     documentsIds,
     state,
     createdAt,
+    ptsId: pts.getId(),
   });
 }
-type CreateAndPersistParams = Partial<CreateParams> & {
-  projetoTerapeuticoSingularId: string;
-};
-
-async function createAndPersist(prismaService: PrismaService, params: CreateAndPersistParams) {
+type CreateAndPersistParams = Partial<CreateParams>;
+async function createAndPersist(prisma: PrismaService, params: CreateAndPersistParams) {
+  params.pts ??= await ptsFactory.createAndPersist(prisma);
   const activity = await create(params);
 
   const data = activityMapper.intoPrisma(activity);
 
-  await prismaService.activity.create({
-    data: {
-      ...data,
-      projetoTerapeuticoSingularId: params.projetoTerapeuticoSingularId,
-    },
-  });
+  await prisma.activity.create({ data });
 
   return activity;
 }
