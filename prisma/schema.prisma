@@ -153,8 +153,8 @@ model Activity {
 
   activityReferringToDocuments ActivityReferringToDocument[]
 
-  projetoTerapeuticoSingular   ProjetoTerapeuticoSingular? @relation(fields: [projetoTerapeuticoSingularId], references: [id])
-  projetoTerapeuticoSingularId String?                     @map("projeto_terapeutico_singular_id")
+  projetoTerapeuticoSingular   ProjetoTerapeuticoSingular @relation(fields: [projetoTerapeuticoSingularId], references: [id])
+  projetoTerapeuticoSingularId String                     @map("projeto_terapeutico_singular_id")
 
   @@map("activity")
 }

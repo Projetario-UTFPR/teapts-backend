@@ -10,6 +10,7 @@ type ActivityProps = {
   documentsIds: UUID[];
   state: Activity.State;
   createdAt: Date;
+  ptsId: UUID;
 };
 
 type CreateNewActivityParams = {
@@ -17,6 +18,7 @@ type CreateNewActivityParams = {
   frequency: Frequency;
   assigneeProfessionalId: UUID;
   documentsIds?: UUID[];
+  ptsId: UUID;
 };
 
 export class Activity extends AggregateRoot<ActivityProps> {
