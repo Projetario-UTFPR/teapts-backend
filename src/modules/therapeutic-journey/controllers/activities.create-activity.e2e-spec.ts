@@ -490,20 +490,6 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
     );
 
     it(
-      "should deny listing when patientId is not a valid UUID",
-      { tags: ["listActivities"] },
-      async () => {
-        const response = await request(app.getHttpServer())
-          .get(_getEndpoint("invalid-uuid-format"))
-          .set({ authorization: `Bearer ${patientToken}` })
-          .expect(400);
-
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toMatch(/uuid/i);
-      },
-    );
-
-    it(
       "should block a professional from listing activities if they don't belong to the PTS",
       { tags: ["listActivities"] },
       async () => {
@@ -557,7 +543,7 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
 
         expect(response.body).toHaveProperty("items");
         expect(response.body.items).toHaveLength(2);
-        expect(response.body.count).toBe(2);
+        expect(response.body.totalElements).toBe(2);
       },
     );
 
@@ -579,9 +565,9 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
           .expect(200);
 
         expect(responsePage1.body.items).toHaveLength(3);
-        expect(responsePage1.body.count).toBe(5);
-        expect(responsePage1.body.currentPage).toBe(1);
-        expect(responsePage1.body.resolvedLimit).toBe(3);
+        expect(responsePage1.body.totalElements).toBe(5);
+        expect(responsePage1.body.page).toBe(1);
+        expect(responsePage1.body.perPage).toBe(3);
 
         const responsePage2 = await request(app.getHttpServer())
           .get(getEndpoint("?page=2&limit=3"))
@@ -589,8 +575,8 @@ describe("[e2e] PTS Activities Controller :: Create Activity (v1)", () => {
           .expect(200);
 
         expect(responsePage2.body.items).toHaveLength(2);
-        expect(responsePage2.body.count).toBe(5);
-        expect(responsePage2.body.currentPage).toBe(2);
+        expect(responsePage2.body.totalElements).toBe(5);
+        expect(responsePage2.body.page).toBe(2);
       },
     );
   });

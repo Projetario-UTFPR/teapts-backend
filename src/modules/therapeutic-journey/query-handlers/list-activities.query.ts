@@ -3,7 +3,7 @@ import { PaginationParams } from "@/common/pagination/pagination-params";
 import { PaginationResult } from "@/common/pagination/pagination-result";
 import { ShallowActivityPresenter } from "@/modules/therapeutic-journey/presenters/shallow-activity.presenter";
 import { Either } from "fp-ts/lib/Either";
-import paginationUtlis from "@/common/pagination/pagination-utils";
+import paginationUtils from "@/common/pagination/pagination-utils";
 import activityMapper from "@/infra/prisma/mappers/activity.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Injectable } from "@nestjs/common";
@@ -24,7 +24,7 @@ export class ListActivitiesQueryHandler {
   public constructor(private readonly prisma: PrismaService) {}
 
   public execute({ limit, page, patientId }: Params): Promise<Either<IrrecoverableError, Result>> {
-    const { offset, resolvedPage, resolvedLimit } = paginationUtlis.resolveOffset({ page, limit });
+    const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
     const where = this.resolveWhereClause({ patientId });
 
     return pipe(
