@@ -61,7 +61,7 @@ export class ActivitiesController {
     private readonly createTimelineRecord: CreateActivePtsTimelineRecordService,
     private readonly listActivitiesHandler: ListActivitiesQueryHandler,
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
-  ) {}
+  ) { }
 
   @Post("create")
   @HttpCode(HttpStatus.CREATED)
@@ -150,7 +150,7 @@ export class ActivitiesController {
           te.orElseW((error) => {
             console.error(
               "Ocorreu uma falha ao criar (silenciosamente) o registro de Timeline " +
-                `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
+              `sobre a criação da atividade de ID "${activity.getId().toString()}".`,
               error,
             );
             return te.right(undefined);
@@ -210,7 +210,7 @@ export class ActivitiesController {
     type: ValidationErrorBagPresenter,
   })
   public listActivities(
-    @Param("patientId", ParseUUIDPipe) patientId: string,
+    @Param("patientId") patientId: string,
     @Query() { limit, page }: ListActivitiesDto,
     @CurrentUser() { account, patientProfile }: AuthCollection,
   ) {
