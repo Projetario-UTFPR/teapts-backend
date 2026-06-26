@@ -35,7 +35,12 @@ describe("[Service] Create Activity Service", () => {
     ptsRepo = new InMemoryPtsRepository(professionalsRepo);
     accountsRepo = new InMemoryAccountsRepository();
     verifyProfessionalService = new VerifyProfessionalIsAuthorizedService(ptsRepo, accountsRepo);
-    sut = new CreateActivityService(activityRepository, documentsRepo, verifyProfessionalService);
+    sut = new CreateActivityService(
+      activityRepository,
+      documentsRepo,
+      ptsRepo,
+      verifyProfessionalService,
+    );
   });
 
   const getEntities = async () => {

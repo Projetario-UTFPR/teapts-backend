@@ -1,0 +1,114 @@
+import { AuthCollection } from "@/infra/auth/auth-collection";
+import { CurrentUser } from "@/infra/auth/decorators/current-user";
+import { BasicExceptionPresenter } from "@/infra/http/exceptions/basic.presenter";
+import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
+import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
+import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "../services/verify-account-is-authorized-as-patient-or-professional.service";
+import { Controller, Get, HttpCode, HttpStatus, Param, Query } from "@nestjs/common";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnprocessableEntityResponse,
+} from "@nestjs/swagger";
+import { taskEither as te } from "fp-ts";
+import { pipe } from "fp-ts/lib/function";
+
+import { ListTimelineRecordsDto } from "../dtos/list-timeline-records.dto";
+import { ListTimelineRecordsQueryHandler } from "../query-handlers/list-timeline-records.query";
+import { PaginatedTimelinePresenter } from "../presenters/paginated-timeline-records.presenter";
+
+@ApiTags("Timeline")
+@Controller("v1/pts")
+export class TimelineController {
+  constructor(
+    private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
+    private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
+  ) {}
+
+  @Get(":patientId/timeline")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "A paginated list of timeline records registered in the PTS.",
+    type: PaginatedTimelinePresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not authorized to access the requested PTS timeline.",
+    content: {
+      "application/json": {
+        examples: {
+          patientNotAuthorized: {
+            summary: "Unauthorized patient",
+            value: BasicExceptionPresenter.present({
+              message: "Esse paciente não tem acesso ao histórico.",
+            }),
+          },
+          professionalNotAuthorized: {
+            summary: "Unauthorized professional",
+            value: BasicExceptionPresenter.present({
+              message: "Esse profissional não tem acesso ao histórico do paciente.",
+            }),
+          },
+          professionalProfileDoesntBelongToActualUser: {
+            summary: "Professional profile belonging to others",
+            value: BasicExceptionPresenter.present({
+              message:
+                "O perfil profissional escolhido não pertence à conta do usuário autenticado.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: "The request has integrity issues (UUID invalid).",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "Some of the query parameters contain validation errors.",
+    type: ValidationErrorBagPresenter,
+  })
+  public listTimeline(
+    @Param("patientId") patientId: string,
+    @Query() dto: ListTimelineRecordsDto,
+    @CurrentUser() { account, patientProfile }: AuthCollection,
+  ) {
+    return pipe(
+      () =>
+        this.verifyAuthService.execute({
+          patientId,
+          account,
+          accountPatientProfile: patientProfile,
+        }),
+
+      te.chainW(
+        () => () =>
+          this.listTimelineRecordsHandler.execute({
+            patientId,
+            page: dto.page,
+            limit: dto.limit,
+            target: dto.target,
+            type: dto.type,
+            responsibleProfessionalId: dto.professionalId,
+            description: dto.description,
+            startDate: dto.startDate,
+            endDate: dto.endDate,
+          }),
+      ),
+
+      te.map(({ records, count, currentPage, resolvedLimit }) =>
+        PaginatedTimelinePresenter.present({
+          items: records,
+          count,
+          currentPage,
+          resolvedLimit,
+        }),
+      ),
+
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+}

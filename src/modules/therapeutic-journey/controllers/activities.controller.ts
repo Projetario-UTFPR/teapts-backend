@@ -24,7 +24,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
 } from "@nestjs/common";
@@ -210,7 +209,7 @@ export class ActivitiesController {
     type: ValidationErrorBagPresenter,
   })
   public listActivities(
-    @Param("patientId", ParseUUIDPipe) patientId: string,
+    @Param("patientId") patientId: string,
     @Query() { limit, page }: ListActivitiesDto,
     @CurrentUser() { account, patientProfile }: AuthCollection,
   ) {

@@ -28,7 +28,7 @@ function stateFromPrisma(state: $Enums.ActivityState): Activity.State {
   }
 }
 
-function intoPrisma(activity: Activity) {
+function intoPrisma(activity: Activity): Prisma.ActivityCreateArgs["data"] {
   const snapshot = activity.toSnapshot();
 
   return {
@@ -42,6 +42,7 @@ function intoPrisma(activity: Activity) {
       duration: snapshot.frequency.duration,
     },
     state: stateIntoPrisma(snapshot.state),
+    projetoTerapeuticoSingularId: snapshot.ptsId.toString(),
   };
 }
 
@@ -62,6 +63,7 @@ function fromPrisma(raw: Prisma.ActivityModel & { documents: { id: string }[] })
 
   return Activity.createUnchecked({
     id: raw.id,
+    ptsId: raw.projetoTerapeuticoSingularId,
     assigneeProfessionalId: raw.assigneeProfessionalId,
     title: raw.title,
     frequency,
