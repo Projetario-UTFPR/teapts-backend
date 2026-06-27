@@ -3,8 +3,7 @@ import { ApiProperty, ApiSchema } from "@nestjs/swagger";
 import { Prisma } from "@prisma-gen/client";
 
 @ApiSchema({
-  description:
-    "A representation of a professional profile aggregated with data regarding the account to which it belongs.",
+  description: "A representation of a patient profile.",
 })
 export class PatientPresenter {
   @ApiProperty({ description: "A list of support contacts.", type: [SupportContactPresenter] })
