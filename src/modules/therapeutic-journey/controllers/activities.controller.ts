@@ -10,7 +10,7 @@ import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/
 import { DocumentNotFoundError } from "@/modules/patient/errors/document-not-found-error";
 import { ProfessionalProfileNotFoundError } from "@/modules/professional/errors/professional-profile-not-found.error";
 import { TimelineRecord } from "@/modules/therapeutic-journey/aggregates/timeline-record.aggregate";
-import { CreateActivityDTO } from "@/modules/therapeutic-journey/dtos/create-new-activity-dto";
+import { CreateActivityDTO } from "@/modules/therapeutic-journey/dtos/create-new-activity.dto";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
 import { ShallowActivityPresenter } from "@/modules/therapeutic-journey/presenters/shallow-activity.presenter";
 import { CreateActivityService } from "@/modules/therapeutic-journey/services/create-activity.service";
