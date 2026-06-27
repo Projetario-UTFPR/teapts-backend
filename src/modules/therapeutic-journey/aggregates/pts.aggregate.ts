@@ -100,6 +100,11 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
     return this._props.id;
   }
 
+  public updateSocialSituation(newSocialSituation: string) {
+    if (newSocialSituation === this._props.socialSituation) return;
+    this._props.socialSituation = newSocialSituation;
+  }
+
   public getSocialSituation() {
     return this._props.socialSituation;
   }
