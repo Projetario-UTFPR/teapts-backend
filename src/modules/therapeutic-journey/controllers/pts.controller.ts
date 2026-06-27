@@ -43,7 +43,6 @@ import { pipe } from "fp-ts/lib/function";
 import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/presenters/pts-with-professional-and-patient.presenter";
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { PtsDoesNotBelongToPatientError } from "@/modules/therapeutic-journey/errors/pts-does-not-belong-to-patient.error";
-import { StatusIntegrityViolationError } from "@/modules/therapeutic-journey/errors/status-integrity-violation.error";
 import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
 
 @Controller("v1/pts")
@@ -249,6 +248,10 @@ export class PtsController {
     description: "The user is not authorized to approve the PTS.",
     type: BasicExceptionPresenter,
   })
+  @ApiBadRequestResponse({
+    description: "The PTS was not a draft and thus it cannot be approved.",
+    type: BasicExceptionPresenter,
+  })
   @ApiParam({
     name: "ptsId",
     description:
@@ -269,16 +272,6 @@ export class PtsController {
 
     return await pipe(
       () => this.approveDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
-      te.mapLeft((error) => {
-        if (error instanceof StatusIntegrityViolationError) {
-          return new IrrecoverableError({
-            message: `${ApproveDraftPtsService.name} violated the PTS timeline integrity while being executed.`,
-            cause: error,
-          });
-        }
-
-        return error;
-      }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
@@ -288,6 +281,10 @@ export class PtsController {
   })
   @ApiForbiddenResponse({
     description: "The user is not authorized to reject the PTS.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiBadRequestResponse({
+    description: "The PTS was not a draft and thus it cannot be rejected.",
     type: BasicExceptionPresenter,
   })
   @ApiParam({
@@ -310,16 +307,6 @@ export class PtsController {
 
     return await pipe(
       () => this.rejectDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
-      te.mapLeft((error) => {
-        if (error instanceof StatusIntegrityViolationError) {
-          return new IrrecoverableError({
-            message: `${RejectDraftPtsService.name} violated the PTS timeline integrity while being executed.`,
-            cause: error,
-          });
-        }
-
-        return error;
-      }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }

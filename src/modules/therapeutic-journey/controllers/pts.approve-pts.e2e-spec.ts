@@ -1,4 +1,5 @@
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
@@ -85,6 +86,32 @@ describe("[e2e] PTS Controller :: Approve PTS (v1)", () => {
     );
 
     expect(ptsFromDb.acceptedAt, "it should have have been updated with integrity").not.toBeNull();
+  });
+
+  const nonDraftStatuses = Object.values(PtsStatus).filter((status) => status !== "Draft");
+  it.each(nonDraftStatuses)("should not let accept a non-draft PTS", async (status) => {
+    const patientAccount = await accountsFactory.createAndPersist(prisma);
+    await patientsFactory.createAndPersist(prisma, { accountId: patientAccount.getId() });
+
+    const tokens = await tokensService.execute({ account: patientAccount });
+    assert(e.isRight(tokens));
+
+    const pts = await ptsFactory.createAndPersist(prisma, {
+      patientId: patientAccount.getId(),
+      timeline: ptsFactory.createTimeline({ status: ptsMapper.statusFromPrisma(status) }),
+    });
+
+    await request(app.getHttpServer())
+      // the PTS can either exist or not, it should not even test it
+      .patch(ENDPOINT(pts))
+      .set("Authorization", `Bearer ${tokens.right.accessToken}`)
+      .expect(HttpStatus.BAD_REQUEST);
+
+    const ptsFromDb = await prisma.projetoTerapeuticoSingular.findUniqueOrThrow({
+      where: { id: pts.getId().toString() },
+    });
+
+    expect(ptsFromDb.status).toBe(status);
   });
 
   // testing the others have been rejected (keeping timeline integrity) is business of pts repo integration test
