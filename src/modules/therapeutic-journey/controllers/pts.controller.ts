@@ -24,6 +24,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -44,6 +45,10 @@ import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/p
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { PtsDoesNotBelongToPatientError } from "@/modules/therapeutic-journey/errors/pts-does-not-belong-to-patient.error";
 import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
+import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeutic-journey/query-handlers/list-draft-pts-proposal-by-patient-id.query";
+import { PaginatedDraftPtsProposalsPresenter } from "@/modules/therapeutic-journey/presenters/paginated-draft-pts-proposals.presenter";
+import { NotAPatientError } from "@/modules/therapeutic-journey/errors/not-a-patient.error";
+import { ListDraftPtsProposalsDto } from "@/modules/therapeutic-journey/dtos/list-draft-pts-proposals.dto";
 
 @Controller("v1/pts")
 @ApiTags("Projeto Terapêutico Singular (PTS)")
@@ -55,6 +60,7 @@ export class PtsController {
     private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
     private readonly approveDraftPts: ApproveDraftPtsService,
     private readonly rejectDraftPts: RejectDraftPtsService,
+    private readonly listDraftPtsProposals: ListDraftPtsProposalByPatientIdQueryHandler,
   ) {}
 
   @Post("create")
@@ -307,6 +313,31 @@ export class PtsController {
 
     return await pipe(
       () => this.rejectDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @ApiOkResponse({
+    description: "A paginated collection of drafted PTS proposals has been successfully listed.",
+    type: PaginatedDraftPtsProposalsPresenter,
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not a patient and thus cannot see or own any PTS proposal.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "The query parameters contain validation errors.",
+    type: ValidationErrorBagPresenter,
+  })
+  @Get("proposals/me")
+  public async listPtsProposals(
+    @Query() query: ListDraftPtsProposalsDto,
+    @CurrentUser() { patientProfile }: AuthCollection,
+  ) {
+    if (!patientProfile) return exceptionsFactory.fromError(new NotAPatientError());
+
+    return pipe(
+      () => this.listDraftPtsProposals.execute({ ...query, patientId: patientProfile.getId() }),
       te.getOrElse(exceptionsFactory.fromError),
     )();
   }
