@@ -1,5 +1,5 @@
 import appConfig from "@/configs/app.config";
-import keysetConfig from "@/configs/keyset.config";
+import jwtConfig from "@/configs/jwt.config";
 import { JwtPayload } from "@/infra/auth/jwt/payload";
 import { getJwtOptions } from "@/infra/auth/jwt/sign-options";
 import { Account } from "@/modules/identity/entities/account.aggregate";
@@ -16,7 +16,7 @@ type Params = {
 export class AssignTokenService {
   public constructor(
     @Inject(appConfig.KEY) private readonly app: ConfigType<typeof appConfig>,
-    @Inject(keysetConfig.KEY) private readonly keyset: ConfigType<typeof keysetConfig>,
+    @Inject(jwtConfig.KEY) private readonly keyset: ConfigType<typeof jwtConfig>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -33,7 +33,7 @@ export class AssignTokenService {
 
     const refreshToken = await this.jwtService.signAsync(
       { ...payload, refresh: true },
-      getJwtOptions(this.keyset, this.app, "1d").signOptions,
+      getJwtOptions(this.keyset, this.app, this.keyset.JWT_REFRESH_TOKEN_EXPIRATION).signOptions,
     );
 
     return e.right({ accessToken, refreshToken });

@@ -1,4 +1,5 @@
 import { registerAs } from "@nestjs/config";
+import { type JwtSignOptions } from "@nestjs/jwt";
 import z from "zod";
 
 const schema = z.object({
@@ -20,9 +21,19 @@ const schema = z.object({
       (arr) => !arr || arr.every((s) => s.length > 0),
       "APP_AUDIENCE must be a comma-separated list of non-empty strings.",
     ),
+  JWT_ACCESS_TOKEN_EXPIRATION: z
+    .string("JWT_ACCESS_TOKEN_EXPIRATION must be a time-ish string, e.g.: '1h' or '1d'.")
+    .optional()
+    .default("1h")
+    .transform((val) => val as JwtSignOptions["expiresIn"]),
+  JWT_REFRESH_TOKEN_EXPIRATION: z
+    .string("JWT_REFRESH_TOKEN_EXPIRATION must be a time-ish string, e.g.: '1h' or '1d'.")
+    .optional()
+    .default("1d")
+    .transform((val) => val as JwtSignOptions["expiresIn"]),
 });
 
-export default registerAs("keyset", () => {
+export default registerAs("jwt", () => {
   const result = schema.parse(process.env);
   return result;
 });

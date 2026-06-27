@@ -2,7 +2,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { Inject, Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { type ConfigType } from "@nestjs/config";
-import keysetConfig from "@/configs/keyset.config";
+import keysetConfig from "@/configs/jwt.config";
 import { JwtPayload } from "@/infra/auth/jwt/payload";
 import { pipe } from "fp-ts/lib/function";
 import { taskEither as te } from "fp-ts";

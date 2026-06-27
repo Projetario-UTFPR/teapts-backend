@@ -1,5 +1,5 @@
 import appConfig from "@/configs/app.config";
-import keysetConfig from "@/configs/keyset.config";
+import keysetConfig from "@/configs/jwt.config";
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { JwtStrategy } from "@/infra/auth/jwt/strategy";
 import { getJwtOptions } from "@/infra/auth/jwt/sign-options";
