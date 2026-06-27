@@ -13,6 +13,13 @@ class AuthCollectionAccountPresenter {
   @ApiProperty({ description: "The name of the authenticated user." })
   public readonly name!: string;
 
+  @ApiProperty({
+    description: "The role of this account within the system.",
+    enum: Account.Role,
+    example: Account.Role.User,
+  })
+  public readonly role!: string;
+
   public constructor(props: AuthCollectionAccountPresenter) {
     Object.assign(this, props);
   }
@@ -21,6 +28,7 @@ class AuthCollectionAccountPresenter {
     return new AuthCollectionAccountPresenter({
       id: account.getId().toString(),
       name: account.getName(),
+      role: account.getRole(),
     });
   }
 }

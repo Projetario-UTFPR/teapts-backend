@@ -98,6 +98,10 @@ export class Account extends AggregateRoot<AccountProps> {
     this._props.lastUpdatedAt = new Date();
   }
 
+  public getRole() {
+    return this._props.role;
+  }
+
   public isAdmin() {
     return this._props.role === Account.Role.Admin;
   }
