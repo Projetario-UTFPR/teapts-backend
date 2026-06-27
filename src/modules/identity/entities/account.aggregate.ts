@@ -10,14 +10,23 @@ type AccountProps = {
   lastUpdatedAt?: Date;
   createdAt: Date;
   professionalProfilesIds: UUID[];
+  role: Account.Role;
   // wardsIds: UUID[];
 };
 
-type AccountConstructorParams = Omit<AccountProps, "id" | "lastUpdatedAt" | "createdAt">;
+type AccountConstructorParams = Omit<
+  AccountProps,
+  "id" | "lastUpdatedAt" | "createdAt" | "role"
+> & { role?: Account.Role };
 
 export class Account extends AggregateRoot<AccountProps> {
   public static create(props: AccountConstructorParams) {
-    return new this({ ...props, id: generateUUID(), createdAt: new Date() });
+    return new this({
+      ...props,
+      id: generateUUID(),
+      createdAt: new Date(),
+      role: props.role ?? Account.Role.User,
+    });
   }
 
   public static createUnchecked(props: AccountProps) {
@@ -88,8 +97,17 @@ export class Account extends AggregateRoot<AccountProps> {
   private touch() {
     this._props.lastUpdatedAt = new Date();
   }
+
+  public isAdmin() {
+    return this._props.role === Account.Role.Admin;
+  }
 }
 
 export namespace Account {
   export type Props = AccountProps;
+
+  export enum Role {
+    User = "user",
+    Admin = "admin",
+  }
 }

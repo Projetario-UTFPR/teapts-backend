@@ -18,6 +18,7 @@ async function create(
     name = faker.person.fullName(),
     passwordHash,
     plainPassword = randomBytes(64).toString("base64"),
+    role = Account.Role.User,
   }: Params = {},
   { hasher = new MockHasherAndComparator() }: BaseOptions = {},
 ) {
@@ -26,6 +27,7 @@ async function create(
     name,
     passwordHash: passwordHash ?? (await hasher.hash(plainPassword)),
     professionalProfilesIds: [],
+    role,
   });
 }
 
