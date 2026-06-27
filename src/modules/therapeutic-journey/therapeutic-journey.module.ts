@@ -13,6 +13,7 @@ import { TimelinesController } from "./controllers/timeline.controller";
 import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-records.query";
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
+import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeutic-journey/query-handlers/list-draft-pts-proposal-by-patient-id.query";
 
 @Module({
   controllers: [PtsController, ActivitiesController, TimelinesController],
@@ -28,6 +29,7 @@ import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/re
     ListTimelineRecordsQueryHandler,
     ApproveDraftPtsService,
     RejectDraftPtsService,
+    ListDraftPtsProposalByPatientIdQueryHandler,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,

@@ -61,13 +61,10 @@ describe("[Service] Approve PTS Service", () => {
 
     assert(e.isRight(result));
 
-    const everyOtherPtsShouldHaveBeenRejected = () =>
-      ptsRepo.items.filter((pts) => !pts.equals(ptsToApprove)).every((pts) => pts.isRejected());
-
-    expect.toSatisfy(
-      everyOtherPtsShouldHaveBeenRejected,
+    expect(
+      ptsRepo.items.filter((pts) => !pts.equals(ptsToApprove)).every((pts) => pts.isRejected()),
       "every PTS but the one to be approved should have been rejected.",
-    );
+    ).toBe(true);
   });
 
   it("should not let a patient approve a PTS that does not belong to him", async () => {
