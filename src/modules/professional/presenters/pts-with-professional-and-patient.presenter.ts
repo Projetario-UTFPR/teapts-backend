@@ -1,5 +1,5 @@
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
-import { PatientPresenter } from "@/modules/patient/presenters/prisma-patient.presenter";
+import { PatientPresenter } from "@/modules/patient/presenters/patient.presenter";
 import { ProfessionalWithAccountPresenter } from "@/modules/professional/presenters/professional-with-account.presenter";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { ApiProperty, ApiPropertyOptional, ApiSchema } from "@nestjs/swagger";

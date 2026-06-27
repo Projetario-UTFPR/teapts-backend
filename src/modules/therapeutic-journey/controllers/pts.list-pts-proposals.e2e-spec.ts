@@ -1,6 +1,6 @@
 import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { PrismaService } from "@/infra/prisma/prisma";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { PaginatedDraftPtsProposalsPresenter } from "@/modules/therapeutic-journey/presenters/paginated-draft-pts-proposals.presenter";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";

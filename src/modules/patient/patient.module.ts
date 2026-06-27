@@ -3,6 +3,7 @@ import { ProntuarioController } from "@/modules/patient/controllers/prontuario.c
 import { ListPatientsByProfessionalAccountQueryHandler } from "@/modules/patient/query-handlers/list-patients-by-professional-account.query";
 import { ListProntuarioByPatientIdQueryHandler } from "@/modules/patient/query-handlers/list-prontuario-by-patient-id.query";
 import { AddNewDocumentToProntuarioService } from "@/modules/patient/services/add-new-document-to-prontuario.service";
+import { CreatePatientProfileService } from "@/modules/patient/services/create-patient-profile.service";
 import { SignDocumentUploadUrlService } from "@/modules/patient/services/sign-document-upload-url.service";
 import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeutic-journey.module";
 import { Module } from "@nestjs/common";
@@ -16,6 +17,7 @@ import { Module } from "@nestjs/common";
     AddNewDocumentToProntuarioService,
     ListProntuarioByPatientIdQueryHandler,
     ListPatientsByProfessionalAccountQueryHandler,
+    CreatePatientProfileService,
   ],
   controllers: [ProntuarioController, PatientsController],
 })

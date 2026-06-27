@@ -3,7 +3,7 @@ import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { DocumentUploadInitiationPresenter } from "@/modules/patient/presenters/document-upload-initiation.presenter";
 import { DocumentFilesStorage } from "@/modules/patient/storage/document-files.storage";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";

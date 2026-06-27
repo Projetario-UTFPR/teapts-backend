@@ -4,7 +4,7 @@ import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { type INestApplication } from "@nestjs/common";
 import accountsFactory from "@test/factories/accounts.factory";

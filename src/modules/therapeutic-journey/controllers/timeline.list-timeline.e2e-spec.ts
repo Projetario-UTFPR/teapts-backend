@@ -8,7 +8,7 @@ import { AssignTokenService } from "@/infra/auth/assign-token.service";
 import { Hasher } from "@/modules/crypto/hasher";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { getTestingApp } from "@test/get-testing-app";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { INestApplication } from "@nestjs/common";

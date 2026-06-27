@@ -1,5 +1,5 @@
 import { ResourceNotFoundError } from "@/common/errors/resource-not-found.error";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 
 export class PatientNotFoundError extends ResourceNotFoundError {
   public constructor() {

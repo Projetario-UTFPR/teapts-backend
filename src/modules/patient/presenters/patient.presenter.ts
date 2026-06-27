@@ -1,3 +1,4 @@
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { SupportContactPresenter } from "@/modules/patient/presenters/support-contact.presenter";
 import { ApiProperty, ApiSchema } from "@nestjs/swagger";
 import { Prisma } from "@prisma-gen/client";
@@ -13,9 +14,21 @@ export class PatientPresenter {
     Object.assign(this, props);
   }
 
-  public static present(row: Prisma.PatientModel) {
+  public static present(patient: Patient): PatientPresenter;
+  public static present(row: Prisma.PatientModel): PatientPresenter;
+  public static present(patient: Patient | Prisma.PatientModel) {
+    if (patient instanceof Patient) {
+      return new PatientPresenter({
+        supportContacts: patient
+          .getSupportContacts()
+          .map((contact) =>
+            SupportContactPresenter.present(contact as unknown as SupportContactPresenter),
+          ),
+      });
+    }
+
     return new PatientPresenter({
-      supportContacts: row.supportContacts.map((contact) =>
+      supportContacts: patient.supportContacts.map((contact) =>
         SupportContactPresenter.present(contact as unknown as SupportContactPresenter),
       ),
     });

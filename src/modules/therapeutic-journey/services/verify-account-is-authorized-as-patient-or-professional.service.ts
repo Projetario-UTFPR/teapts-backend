@@ -1,6 +1,6 @@
 import { type UUID } from "@/common/uuid";
 import { Account } from "@/modules/identity/entities/account.aggregate";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { VerifyProfessionalIsAuthorizedService } from "@/modules/therapeutic-journey/services/verify-professional-is-authorized.service";
 import { Injectable } from "@nestjs/common";
 import { taskEither as te } from "fp-ts";

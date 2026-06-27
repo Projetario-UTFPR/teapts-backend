@@ -1,20 +1,25 @@
-import { BaseEntity } from "@/common/entities/base-entity";
 import { type SupportContact } from "../value-objects/support-contact.vo";
 import { type UUID } from "@/common/uuid";
 import { either } from "fp-ts";
+import { Account } from "@/modules/identity/entities/account.aggregate";
+import { AggregateRoot } from "@/common/entities/aggregate-root";
 
 type PatientProps = {
   accountId: UUID;
   supportContacts: SupportContact[];
 };
 
-export class Patient extends BaseEntity<PatientProps> {
+export class Patient extends AggregateRoot<PatientProps> {
   public static create(props: PatientProps) {
     return either.right(new this(props));
   }
 
   public static createUnchecked(props: PatientProps) {
     return new this(props);
+  }
+
+  public getAccountId() {
+    return this._props.accountId;
   }
 
   public getId() {
@@ -31,6 +36,11 @@ export class Patient extends BaseEntity<PatientProps> {
 
   public equals(other: Patient): boolean {
     return this === other || this.getId() === other.getId();
+  }
+
+  public belongsToAccount(account: Account | UUID) {
+    const accountId = account instanceof Account ? account.getId() : account;
+    return this._props.accountId === accountId;
   }
 }
 
