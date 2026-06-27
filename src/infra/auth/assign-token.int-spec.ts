@@ -4,7 +4,7 @@ import type { INestApplication } from "@nestjs/common";
 import accountsFactory from "@test/factories/accounts.factory";
 import { either } from "fp-ts";
 import { App } from "supertest/types";
-import keysetConfig from "@/configs/keyset.config";
+import keysetConfig from "@/configs/jwt.config";
 import { ConfigType } from "@nestjs/config";
 import appConfig from "@/configs/app.config";
 import { getTestingApp } from "@test/get-testing-app";

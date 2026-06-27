@@ -16,7 +16,7 @@ type Params = {
 export class AssignTokenService {
   public constructor(
     @Inject(appConfig.KEY) private readonly app: ConfigType<typeof appConfig>,
-    @Inject(keysetConfig.KEY) private readonly keyset: ConfigType<typeof keysetConfig>,
+    @Inject(jwtConfig.KEY) private readonly keyset: ConfigType<typeof jwtConfig>,
     private readonly jwtService: JwtService,
   ) {}
 

@@ -8,7 +8,7 @@ import { ConfigModule } from "@nestjs/config";
 import datastoreConfig from "@/configs/datastore.config";
 import { AuthModule } from "@/infra/auth/auth.module";
 import appConfig from "@/configs/app.config";
-import keysetConfig from "@/configs/keyset.config";
+import keysetConfig from "@/configs/jwt.config";
 import { TherapeuticJourneyModule } from "@/modules/therapeutic-journey/therapeutic-journey.module";
 import { ProfessionalsModule } from "@/modules/professional/professionals.module";
 import { S3Module } from "@/infra/s3/s3.module";
