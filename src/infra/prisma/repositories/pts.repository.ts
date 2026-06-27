@@ -190,6 +190,26 @@ export class PrismaPtsRepository extends PtsRepository {
       );
     }
   }
+
+  public rejectEveryProposalByPatientId(patientId: UUID) {
+    const now = new Date();
+    const client = this.txManager.getTx() ?? this.prisma;
+    return pipe(
+      te.tryCatch(
+        () =>
+          client.projetoTerapeuticoSingular.updateMany({
+            where: { patientId: patientId.toString(), status: "Draft" },
+            data: { status: "Rejected", rejectedAt: now },
+          }),
+        (error) =>
+          new IrrecoverableError({
+            message: `Error occurred in ${PrismaPtsRepository.name} when rejecting many draft PTSs by patient ID.`,
+            cause: error as Error,
+          }),
+      ),
+      te.map(() => {}),
+    )();
+  }
 }
 
 function isForeignKeyError(error: unknown): error is PrismaClientKnownRequestError {
