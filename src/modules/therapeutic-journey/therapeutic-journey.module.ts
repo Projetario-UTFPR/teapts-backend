@@ -9,11 +9,11 @@ import { ActivitiesController } from "@/modules/therapeutic-journey/controllers/
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modules/therapeutic-journey/services/verify-account-is-authorized-as-patient-or-professional.service";
 import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
 import { ListActivitiesQueryHandler } from "./query-handlers/list-activities.query";
-import { TimelineController } from "./controllers/timeline.controller";
+import { TimelinesController } from "./controllers/timeline.controller";
 import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-records.query";
 
 @Module({
-  controllers: [PtsController, ActivitiesController, TimelineController],
+  controllers: [PtsController, ActivitiesController, TimelinesController],
   providers: [
     CreateDraftPtsService,
     VerifyProfessionalIsAuthorizedService,

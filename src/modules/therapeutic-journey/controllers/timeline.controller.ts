@@ -20,9 +20,11 @@ import { ListTimelineRecordsDto } from "../dtos/list-timeline-records.dto";
 import { ListTimelineRecordsQueryHandler } from "../query-handlers/list-timeline-records.query";
 import { PaginatedTimelinePresenter } from "../presenters/paginated-timeline-records.presenter";
 
-@ApiTags("Timeline")
+// ugly ik, but its correct: PTSs are the owners of a single timeline each, and we're referring
+// to timelines in plural... google it
+@ApiTags("PTSs' Timelines")
 @Controller("v1/pts")
-export class TimelineController {
+export class TimelinesController {
   constructor(
     private readonly verifyAuthService: VerifyAccountIsAuthorizedAsPatientOrProfessionalService,
     private readonly listTimelineRecordsHandler: ListTimelineRecordsQueryHandler,
