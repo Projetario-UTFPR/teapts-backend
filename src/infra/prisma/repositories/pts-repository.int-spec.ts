@@ -119,11 +119,15 @@ describe("[Integration] Prisma PTS Repository", () => {
         where: { patientId: patient.getId().toString() },
       });
 
-      const shouldHaveRejectedEveryPts = () => rows.every((row) => row.status === "Rejected");
-      const shouldHaveSetRejectionTimestamp = () => rows.every((row) => row.rejectedAt !== null);
+      expect(
+        rows.every((row) => row.status === "Rejected"),
+        "it should have rejected every PTS",
+      ).toBe(true);
 
-      expect.toSatisfy(shouldHaveRejectedEveryPts);
-      expect.toSatisfy(shouldHaveSetRejectionTimestamp);
+      expect(
+        rows.every((row) => row.rejectedAt !== null),
+        "it should have set rejection timestamp on every rejected PTS",
+      );
     },
   );
 
