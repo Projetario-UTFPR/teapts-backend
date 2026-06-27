@@ -14,6 +14,7 @@ import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
 import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeutic-journey/query-handlers/list-draft-pts-proposal-by-patient-id.query";
+import { UpdateSocialSituationService } from "@/modules/therapeutic-journey/services/update-social-situation.service";
 
 @Module({
   controllers: [PtsController, ActivitiesController, TimelinesController],
@@ -30,6 +31,7 @@ import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeut
     ApproveDraftPtsService,
     RejectDraftPtsService,
     ListDraftPtsProposalByPatientIdQueryHandler,
+    UpdateSocialSituationService,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,
