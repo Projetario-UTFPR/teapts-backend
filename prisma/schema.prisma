@@ -10,13 +10,21 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AccountRole {
+  Admin @map("admin")
+  User  @map("user")
+
+  @@map("account_role_e")
+}
+
 model Account {
-  id            String    @id @default(uuid())
+  id            String      @id @default(uuid())
   name          String
-  email         String    @unique
-  passwordHash  String    @map("password_hash")
-  lastUpdatedAt DateTime? @map("last_updated_at")
-  createdAt     DateTime  @default(now())
+  email         String      @unique
+  passwordHash  String      @map("password_hash")
+  lastUpdatedAt DateTime?   @map("last_updated_at")
+  createdAt     DateTime    @default(now())
+  role          AccountRole @default(User)
 
   patientProfile       Patient?
   professionalProfiles Professional[]
