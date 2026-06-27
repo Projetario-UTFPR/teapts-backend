@@ -21,6 +21,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Param,
+  Patch,
   Post,
   Put,
 } from "@nestjs/common";
@@ -40,6 +41,9 @@ import {
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/presenters/pts-with-professional-and-patient.presenter";
+import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
+import { PtsDoesNotBelongToPatientError } from "@/modules/therapeutic-journey/errors/pts-does-not-belong-to-patient.error";
+import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
 
 @Controller("v1/pts")
 @ApiTags("Projeto Terapêutico Singular (PTS)")
@@ -49,6 +53,8 @@ export class PtsController {
     private readonly updateMultidisciplinaryTeam: UpdateMultidisciplinaryTeamService,
     private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
     private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
+    private readonly approveDraftPts: ApproveDraftPtsService,
+    private readonly rejectDraftPts: RejectDraftPtsService,
   ) {}
 
   @Post("create")
@@ -231,6 +237,77 @@ export class PtsController {
         return this.showActivePtsQuery.execute({ patientId, shallOmitSocialSituation });
       }),
       te.getOrElse((error) => exceptionsFactory.fromError(error)),
+    )();
+  }
+
+  @ApiNoContentResponse({
+    description:
+      "The PTS has been approved successfully. (And every other draft PTS have been rejected.)",
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not authorized to approve the PTS.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiBadRequestResponse({
+    description: "The PTS was not a draft and thus it cannot be approved.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiParam({
+    name: "ptsId",
+    description:
+      "The identifier of the (draft) PTS to be approved. Note that it " +
+      "must belong to the patient already.",
+    type: "string",
+    format: "uuid",
+  })
+  @Patch(":ptsId/approve")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async approvePts(
+    @Param("ptsId") ptsId: string,
+    @CurrentUser() { patientProfile }: AuthCollection,
+  ) {
+    if (!patientProfile) {
+      return exceptionsFactory.fromError(new PtsDoesNotBelongToPatientError(ptsId));
+    }
+
+    return await pipe(
+      () => this.approveDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @ApiNoContentResponse({
+    description: "The PTS has been rejected successfully.",
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not authorized to reject the PTS.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiBadRequestResponse({
+    description: "The PTS was not a draft and thus it cannot be rejected.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiParam({
+    name: "ptsId",
+    description:
+      "The identifier of the (draft) PTS to be rejected. Note that it " +
+      "must belong to the patient already.",
+    type: "string",
+    format: "uuid",
+  })
+  @Patch(":ptsId/reject")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async rejectPts(
+    @Param("ptsId") ptsId: string,
+    @CurrentUser() { patientProfile }: AuthCollection,
+  ) {
+    if (!patientProfile) {
+      return exceptionsFactory.fromError(new PtsDoesNotBelongToPatientError(ptsId));
+    }
+
+    return await pipe(
+      () => this.rejectDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
+      te.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }

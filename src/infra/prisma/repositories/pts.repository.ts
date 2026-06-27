@@ -3,6 +3,7 @@ import { UUID } from "@/common/uuid";
 import { PrismaSchemaForeignKey } from "@/infra/prisma/foreign-keys";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
+import { PrismaTransactionManager } from "@/infra/prisma/transaction-manager";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
 import { PtsNotFoundError } from "@/modules/therapeutic-journey/errors/pts-not-found.error";
@@ -15,17 +16,21 @@ import { pipe } from "fp-ts/lib/function";
 
 @Injectable()
 export class PrismaPtsRepository extends PtsRepository {
-  public constructor(private readonly prisma: PrismaService) {
+  public constructor(
+    private readonly prisma: PrismaService,
+    private readonly txManager: PrismaTransactionManager,
+  ) {
     super();
   }
 
   public findActivePtsByPatientId(
     patientId: UUID,
   ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
+    const client = this.txManager.getTx() ?? this.prisma;
     return pipe(
       te.tryCatch(
         () =>
-          this.prisma.projetoTerapeuticoSingular.findFirstOrThrow({
+          client.projetoTerapeuticoSingular.findFirstOrThrow({
             where: {
               patientId: patientId.toString(),
               status: { in: ["Running", "Planning"] },
@@ -51,10 +56,11 @@ export class PrismaPtsRepository extends PtsRepository {
   }
 
   public activePtsExistsByPatientId(patientId: UUID): Promise<Either<IrrecoverableError, boolean>> {
+    const client = this.txManager.getTx() ?? this.prisma;
     return pipe(
       te.tryCatch(
         () =>
-          this.prisma.projetoTerapeuticoSingular.count({
+          client.projetoTerapeuticoSingular.count({
             where: {
               patientId: patientId.toString(),
               status: { in: ["Running", "Planning"] },
@@ -79,10 +85,12 @@ export class PrismaPtsRepository extends PtsRepository {
       multidisciplinaryTeam: teamPayload.createPayload,
     };
 
+    const client = this.txManager.getTx() ?? this.prisma;
+
     return pipe(
       te.tryCatch(
         () =>
-          this.prisma.projetoTerapeuticoSingular.create({
+          client.projetoTerapeuticoSingular.create({
             data: payload,
             include: {
               multidisciplinaryTeam: { select: { professionalId: true } },
@@ -115,8 +123,10 @@ export class PrismaPtsRepository extends PtsRepository {
   public async getById(
     id: UUID,
   ): Promise<Either<IrrecoverableError | PtsNotFoundError, ProjetoTerapeuticoSingular>> {
+    const client = this.txManager.getTx() ?? this.prisma;
+
     try {
-      const data = await this.prisma.projetoTerapeuticoSingular.findUnique({
+      const data = await client.projetoTerapeuticoSingular.findUnique({
         where: {
           id: id.toString(),
         },
@@ -145,8 +155,10 @@ export class PrismaPtsRepository extends PtsRepository {
     const basePayload = ptsMapper.intoPrisma(pts);
     const teamPayload = ptsMapper.mapMultidisciplinaryTeam(pts.getMultidisciplinaryTeam());
 
+    const client = this.txManager.getTx() ?? this.prisma;
+
     try {
-      await this.prisma.projetoTerapeuticoSingular.update({
+      await client.projetoTerapeuticoSingular.update({
         where: { id: pts.getId().toString() },
         data: {
           ...basePayload,
@@ -177,6 +189,26 @@ export class PrismaPtsRepository extends PtsRepository {
         }),
       );
     }
+  }
+
+  public rejectEveryProposalByPatientId(patientId: UUID) {
+    const now = new Date();
+    const client = this.txManager.getTx() ?? this.prisma;
+    return pipe(
+      te.tryCatch(
+        () =>
+          client.projetoTerapeuticoSingular.updateMany({
+            where: { patientId: patientId.toString(), status: "Draft" },
+            data: { status: "Rejected", rejectedAt: now },
+          }),
+        (error) =>
+          new IrrecoverableError({
+            message: `Error occurred in ${PrismaPtsRepository.name} when rejecting many draft PTSs by patient ID.`,
+            cause: error as Error,
+          }),
+      ),
+      te.map(() => {}),
+    )();
   }
 }
 

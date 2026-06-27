@@ -11,6 +11,8 @@ import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-jour
 import { ListActivitiesQueryHandler } from "./query-handlers/list-activities.query";
 import { TimelinesController } from "./controllers/timeline.controller";
 import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-records.query";
+import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
+import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
 
 @Module({
   controllers: [PtsController, ActivitiesController, TimelinesController],
@@ -24,6 +26,8 @@ import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-
     CreateActivePtsTimelineRecordService,
     ListActivitiesQueryHandler,
     ListTimelineRecordsQueryHandler,
+    ApproveDraftPtsService,
+    RejectDraftPtsService,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,
