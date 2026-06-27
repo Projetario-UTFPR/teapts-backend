@@ -41,4 +41,12 @@ export abstract class PtsRepository {
   public abstract save(
     pts: ProjetoTerapeuticoSingular,
   ): Promise<Either<IrrecoverableError | ProfessionalIsNotRegisteredError, void>>;
+
+  /**
+   * Rejects every PTS in `draft` status that belongs to the patient identified
+   * by `patientId`.
+   */
+  public abstract rejectEveryProposalByPatientId(
+    patientId: UUID,
+  ): Promise<Either<IrrecoverableError, void>>;
 }

@@ -9,11 +9,14 @@ import { ActivitiesController } from "@/modules/therapeutic-journey/controllers/
 import { VerifyAccountIsAuthorizedAsPatientOrProfessionalService } from "@/modules/therapeutic-journey/services/verify-account-is-authorized-as-patient-or-professional.service";
 import { CreateActivePtsTimelineRecordService } from "@/modules/therapeutic-journey/services/create-timeline-record.service";
 import { ListActivitiesQueryHandler } from "./query-handlers/list-activities.query";
-import { TimelineController } from "./controllers/timeline.controller";
+import { TimelinesController } from "./controllers/timeline.controller";
 import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-records.query";
+import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
+import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
+import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeutic-journey/query-handlers/list-draft-pts-proposal-by-patient-id.query";
 
 @Module({
-  controllers: [PtsController, ActivitiesController, TimelineController],
+  controllers: [PtsController, ActivitiesController, TimelinesController],
   providers: [
     CreateDraftPtsService,
     VerifyProfessionalIsAuthorizedService,
@@ -24,6 +27,9 @@ import { ListTimelineRecordsQueryHandler } from "./query-handlers/list-timeline-
     CreateActivePtsTimelineRecordService,
     ListActivitiesQueryHandler,
     ListTimelineRecordsQueryHandler,
+    ApproveDraftPtsService,
+    RejectDraftPtsService,
+    ListDraftPtsProposalByPatientIdQueryHandler,
   ],
   exports: [
     VerifyProfessionalIsAuthorizedService,

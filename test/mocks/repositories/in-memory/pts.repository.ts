@@ -123,4 +123,13 @@ export class InMemoryPtsRepository extends PtsRepository {
 
     return either.right(pts);
   }
+
+  public async rejectEveryProposalByPatientId(patientId: UUID) {
+    for (const pts of this.items) {
+      if (!pts.belongsToPatient(patientId)) continue;
+      if (pts.isDraft()) pts.reject();
+    }
+
+    return either.right(undefined);
+  }
 }
