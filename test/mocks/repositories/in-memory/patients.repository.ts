@@ -1,6 +1,6 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { UUID } from "@/common/uuid";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { PatientsRepository } from "@/modules/patient/repositories/patients.repository";
 import { InMemoryAccountsRepository } from "@test/mocks/repositories/in-memory/accounts.repository";
 import { either as e, taskEither as te } from "fp-ts";

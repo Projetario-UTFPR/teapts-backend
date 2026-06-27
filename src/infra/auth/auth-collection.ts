@@ -3,7 +3,7 @@ import { Professional } from "@/modules/professional/entities/professional.aggre
 
 // oxlint-disable-next-line no-unused-vars needed for docstrings
 import type { CurrentUser } from "@/infra/auth/decorators/current-user";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 
 /**
  * Contains the authenticated user's account and professional profiles.

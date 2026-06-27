@@ -1,7 +1,7 @@
 import { AggregateRoot } from "@/common/entities/aggregate-root";
 import { generateUUID, type UUID } from "@/common/uuid";
 import { WatchedList } from "@/common/entities/watched-list";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { either } from "fp-ts";

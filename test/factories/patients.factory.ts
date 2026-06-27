@@ -1,7 +1,7 @@
 import { generateUUID } from "@/common/uuid";
 import patientsMapper from "@/infra/prisma/mappers/patients.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { resolveAccount } from "@test/factories/utils";
 import { either, taskEither } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";

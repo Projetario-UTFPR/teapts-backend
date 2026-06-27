@@ -1,15 +1,15 @@
-import { BaseEntity } from "@/common/entities/base-entity";
 import { type SupportContact } from "../value-objects/support-contact.vo";
 import { type UUID } from "@/common/uuid";
 import { either } from "fp-ts";
 import { Account } from "@/modules/identity/entities/account.aggregate";
+import { AggregateRoot } from "@/common/entities/aggregate-root";
 
 type PatientProps = {
   accountId: UUID;
   supportContacts: SupportContact[];
 };
 
-export class Patient extends BaseEntity<PatientProps> {
+export class Patient extends AggregateRoot<PatientProps> {
   public static create(props: PatientProps) {
     return either.right(new this(props));
   }

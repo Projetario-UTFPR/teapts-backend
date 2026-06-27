@@ -1,7 +1,7 @@
 import { IrrecoverableError } from "@/common/errors/irrecoverable.error";
 import { type UUID } from "@/common/uuid";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { type Either } from "fp-ts/lib/Either";
 
 export abstract class PatientsRepository {

@@ -1,4 +1,4 @@
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { SupportContact } from "@/modules/patient/value-objects/support-contact.vo";
 import { Prisma } from "@prisma-gen/client";
 

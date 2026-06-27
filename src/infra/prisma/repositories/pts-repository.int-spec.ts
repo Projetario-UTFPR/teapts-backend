@@ -1,4 +1,4 @@
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { either } from "fp-ts";
 import { BaseError } from "@/common/errors/base.error";
 import { TransactionManager } from "@/common/transaction-manager";

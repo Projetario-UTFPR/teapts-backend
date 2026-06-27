@@ -2,7 +2,7 @@ import { TransactionManager } from "@/common/transaction-manager";
 import { type UUID } from "@/common/uuid";
 import { Account } from "@/modules/identity/entities/account.aggregate";
 import { NotAdminError } from "@/modules/identity/errors/not-admin.error";
-import { Patient } from "@/modules/patient/entities/patient.entity";
+import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { AccountAlreadyHasPatientProfileError } from "@/modules/patient/errors/account-already-has-patient-profile.error";
 import { PatientsRepository } from "@/modules/patient/repositories/patients.repository";
 import { SupportContact } from "@/modules/patient/value-objects/support-contact.vo";
