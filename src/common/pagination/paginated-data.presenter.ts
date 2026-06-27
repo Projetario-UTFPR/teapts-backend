@@ -1,3 +1,4 @@
+import { DEFAULT_PAGINATION_LIMIT_PER_PAGE } from "@/common/pagination";
 import { PaginationResult } from "@/common/pagination/pagination-result";
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -21,18 +22,26 @@ export interface IPaginatedDataPresenter<T = unknown> {
  */
 export function PaginatedDataPresenter<T extends object>(presenter: PresenterClass<T>) {
   class BasePaginatedDataPresenter implements IPaginatedDataPresenter<T> {
-    @ApiProperty({ description: "The current page of the pagination.", type: "number" })
+    @ApiProperty({
+      description: "The current page of the pagination.",
+      type: "number",
+      example: 1,
+      default: 1,
+    })
     public readonly page!: number;
 
     @ApiProperty({
       description: "The actual quantity of items being displayed per page.",
       type: "number",
+      example: DEFAULT_PAGINATION_LIMIT_PER_PAGE,
+      default: DEFAULT_PAGINATION_LIMIT_PER_PAGE,
     })
     public readonly perPage!: number;
 
     @ApiProperty({
       description: "The total amount of elements satisfying the query.",
       type: "number",
+      example: 1,
     })
     public readonly totalElements!: number;
 
