@@ -1,4 +1,6 @@
+import { PatientsController } from "@/modules/patient/controllers/patients.controller";
 import { ProntuarioController } from "@/modules/patient/controllers/prontuario.controller";
+import { ListPatientsByProfessionalAccountQueryHandler } from "@/modules/patient/query-handlers/list-patients-by-professional-account.query";
 import { ListProntuarioByPatientIdQueryHandler } from "@/modules/patient/query-handlers/list-prontuario-by-patient-id.query";
 import { AddNewDocumentToProntuarioService } from "@/modules/patient/services/add-new-document-to-prontuario.service";
 import { SignDocumentUploadUrlService } from "@/modules/patient/services/sign-document-upload-url.service";
@@ -13,7 +15,8 @@ import { Module } from "@nestjs/common";
     SignDocumentUploadUrlService,
     AddNewDocumentToProntuarioService,
     ListProntuarioByPatientIdQueryHandler,
+    ListPatientsByProfessionalAccountQueryHandler,
   ],
-  controllers: [ProntuarioController],
+  controllers: [ProntuarioController, PatientsController],
 })
 export class PatientModule {}
