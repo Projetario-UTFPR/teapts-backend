@@ -18,7 +18,7 @@ type Params = {
  * atomically.
  */
 @Injectable()
-export class ApprovePtsService {
+export class ApproveDraftPtsService {
   public constructor(
     private readonly ptsRepo: PtsRepository,
     private readonly txManager: TransactionManager,

@@ -1,7 +1,7 @@
 import { InMemoryProfessionalsRepository } from "@test/mocks/repositories/in-memory/professionals.repository";
 import { InMemoryPtsRepository } from "@test/mocks/repositories/in-memory/pts.repository";
 import { describe, beforeEach } from "vitest";
-import { ApprovePtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
+import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { InMemoryTransactionManager } from "@test/mocks/transaction-manager";
 import patientsFactory from "@test/factories/patients.factory";
 import ptsFactory from "@test/factories/pts.factory";
@@ -13,13 +13,13 @@ describe("[Service] Approve PTS Service", () => {
   let ptsRepo: InMemoryPtsRepository;
   let professionalsRepo: InMemoryProfessionalsRepository;
   let transactionManager: InMemoryTransactionManager;
-  let sut: ApprovePtsService;
+  let sut: ApproveDraftPtsService;
 
   beforeEach(() => {
     professionalsRepo = new InMemoryProfessionalsRepository();
     ptsRepo = new InMemoryPtsRepository(professionalsRepo);
     transactionManager = new InMemoryTransactionManager();
-    sut = new ApprovePtsService(ptsRepo, transactionManager);
+    sut = new ApproveDraftPtsService(ptsRepo, transactionManager);
   });
 
   it("should update the PTS to the 'planning' state", async () => {
