@@ -12,6 +12,8 @@ import { ActivityRepository } from "@/modules/therapeutic-journey/repositories/a
 import { PrismaActivityRepository } from "./repositories/activity.repository";
 import { TimelineRepository } from "@/modules/therapeutic-journey/repositories/timeline.repository";
 import { PrismaTimelineRepository } from "@/infra/prisma/repositories/timeline.repository";
+import { TransactionManager } from "@/common/transaction-manager";
+import { PrismaTransactionManager } from "@/infra/prisma/transaction-manager";
 
 @Global()
 @Module({
@@ -23,6 +25,8 @@ import { PrismaTimelineRepository } from "@/infra/prisma/repositories/timeline.r
     { provide: DocumentsRepository, useClass: PrismaDocumentsRepository },
     { provide: ActivityRepository, useClass: PrismaActivityRepository },
     { provide: TimelineRepository, useClass: PrismaTimelineRepository },
+    { provide: PrismaTransactionManager, useClass: PrismaTransactionManager },
+    { provide: TransactionManager, useExisting: PrismaTransactionManager },
   ],
   exports: [
     PrismaService,
@@ -32,6 +36,7 @@ import { PrismaTimelineRepository } from "@/infra/prisma/repositories/timeline.r
     DocumentsRepository,
     ActivityRepository,
     TimelineRepository,
+    TransactionManager,
   ],
 })
 export class PrismaModule {}
