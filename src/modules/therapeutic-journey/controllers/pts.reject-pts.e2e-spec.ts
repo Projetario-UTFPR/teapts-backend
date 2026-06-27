@@ -88,8 +88,12 @@ describe("[e2e] PTS Controller :: Reject PTS (v1)", () => {
     expect(ptsFromDb.rejectedAt, "it should have have been updated with integrity").not.toBeNull();
   });
 
-  const nonDraftStatuses = Object.values(PtsStatus).filter((status) => status !== "Draft");
-  it.each(nonDraftStatuses)("should not let reject a non-draft PTS", async (status) => {
+  const nonDraftStatuses = Object.values(PtsStatus).filter(
+    // timeline allows you to reject a pts that has been rejected already
+    (status) => status !== "Draft" && status !== "Rejected",
+  );
+
+  it.each(nonDraftStatuses)("should not let reject a non-draft ($0) PTS", async (status) => {
     const patientAccount = await accountsFactory.createAndPersist(prisma);
     await patientsFactory.createAndPersist(prisma, { accountId: patientAccount.getId() });
 

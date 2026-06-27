@@ -88,8 +88,12 @@ describe("[e2e] PTS Controller :: Approve PTS (v1)", () => {
     expect(ptsFromDb.acceptedAt, "it should have have been updated with integrity").not.toBeNull();
   });
 
-  const nonDraftStatuses = Object.values(PtsStatus).filter((status) => status !== "Draft");
-  it.each(nonDraftStatuses)("should not let accept a non-draft PTS", async (status) => {
+  const nonDraftStatuses = Object.values(PtsStatus).filter(
+    // PTS timeline allows you to accept a PTS if it's already in planning status
+    (status) => status !== "Draft" && status !== "Planning",
+  );
+
+  it.each(nonDraftStatuses)("should not let accept a non-draft ($0) PTS", async (status) => {
     const patientAccount = await accountsFactory.createAndPersist(prisma);
     await patientsFactory.createAndPersist(prisma, { accountId: patientAccount.getId() });
 
