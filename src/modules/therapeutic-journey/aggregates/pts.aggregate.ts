@@ -6,6 +6,8 @@ import { Professional } from "@/modules/professional/entities/professional.aggre
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { either } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
+// oxlint-disable-next-line no-unused-vars used in docstrings
+import { type StatusIntegrityViolationError } from "@/modules/therapeutic-journey/errors/status-integrity-violation.error";
 
 type PtsProps = {
   id: UUID;
@@ -109,6 +111,19 @@ export class ProjetoTerapeuticoSingular extends AggregateRoot<PtsProps> {
   public acceptAndBeginPlanning() {
     return pipe(
       this._props.timeline.acceptAndBeginPlanning(),
+      either.map((newTimeline) => {
+        this._props.timeline = newTimeline;
+      }),
+    );
+  }
+
+  /**
+   * Rejects this PTS. Returns a {@link StatusIntegrityViolationError `StatusIntegrityViolationError`}
+   * if the PTS isn't a draft.
+   */
+  public reject() {
+    return pipe(
+      this._props.timeline.reject(),
       either.map((newTimeline) => {
         this._props.timeline = newTimeline;
       }),
