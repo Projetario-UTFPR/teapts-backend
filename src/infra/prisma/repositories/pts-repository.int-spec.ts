@@ -1,7 +1,4 @@
-import type { INestApplication } from "@nestjs/common";
-import { App } from "supertest/types";
 import { Patient } from "@/modules/patient/entities/patient.entity";
-import { PrismaPtsRepository } from "@/infra/prisma/repositories/pts.repository";
 import { either } from "fp-ts";
 import { BaseError } from "@/common/errors/base.error";
 import { TransactionManager } from "@/common/transaction-manager";
@@ -132,7 +129,7 @@ describe("[Integration] Prisma PTS Repository", () => {
 
   // doing this to keep integrity during this test: patients must have only one active PTS at once
   it.each(["Running", "Planning"] as const satisfies PtsStatus[])(
-    "should not reject non-draft PTSs (running with active status '$0')",
+    "should not reject non-draft PTSs (running with active status $0)",
     { tags: ["rejectEveryProposalByPatientId"] },
     async (activeStatus) => {
       const patient = await patientsFactory.createAndPersist(prisma);
