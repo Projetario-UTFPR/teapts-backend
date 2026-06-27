@@ -44,6 +44,7 @@ import { PtsWithProfessionalAndPatientPresenter } from "@/modules/professional/p
 import { ApproveDraftPtsService } from "@/modules/therapeutic-journey/services/approve-pts.service";
 import { PtsDoesNotBelongToPatientError } from "@/modules/therapeutic-journey/errors/pts-does-not-belong-to-patient.error";
 import { StatusIntegrityViolationError } from "@/modules/therapeutic-journey/errors/status-integrity-violation.error";
+import { RejectDraftPtsService } from "@/modules/therapeutic-journey/services/reject-pts.service";
 
 @Controller("v1/pts")
 @ApiTags("Projeto Terapêutico Singular (PTS)")
@@ -54,6 +55,7 @@ export class PtsController {
     private readonly verifyProfessionalIsAuthorized: VerifyProfessionalIsAuthorizedService,
     private readonly showActivePtsQuery: ShowActivePtsQueryHandler,
     private readonly approveDraftPts: ApproveDraftPtsService,
+    private readonly rejectDraftPts: RejectDraftPtsService,
   ) {}
 
   @Post("create")
@@ -267,21 +269,58 @@ export class PtsController {
 
     return await pipe(
       () => this.approveDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
-      te.getOrElse((error) => {
+      te.mapLeft((error) => {
         if (error instanceof StatusIntegrityViolationError) {
-          // we gonna treat it like a irrecoverable error (server internal error)
-          // because this error originated from our application rather than
-          // some user action
-          const irrecoverableError = new IrrecoverableError({
+          return new IrrecoverableError({
             message: `${ApproveDraftPtsService.name} violated the PTS timeline integrity while being executed.`,
             cause: error,
           });
-
-          return exceptionsFactory.fromError(irrecoverableError);
         }
 
-        return exceptionsFactory.fromError(error);
+        return error;
       }),
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @ApiNoContentResponse({
+    description: "The PTS has been rejected successfully.",
+  })
+  @ApiForbiddenResponse({
+    description: "The user is not authorized to reject the PTS.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiParam({
+    name: "ptsId",
+    description:
+      "The identifier of the (draft) PTS to be rejected. Note that it " +
+      "must belong to the patient already.",
+    type: "string",
+    format: "uuid",
+  })
+  @Patch(":ptsId/reject")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async rejectPts(
+    @Param("ptsId") ptsId: string,
+    @CurrentUser() { patientProfile }: AuthCollection,
+  ) {
+    if (!patientProfile) {
+      return exceptionsFactory.fromError(new PtsDoesNotBelongToPatientError(ptsId));
+    }
+
+    return await pipe(
+      () => this.rejectDraftPts.execute({ patientId: patientProfile?.getId(), ptsId }),
+      te.mapLeft((error) => {
+        if (error instanceof StatusIntegrityViolationError) {
+          return new IrrecoverableError({
+            message: `${RejectDraftPtsService.name} violated the PTS timeline integrity while being executed.`,
+            cause: error,
+          });
+        }
+
+        return error;
+      }),
+      te.getOrElse(exceptionsFactory.fromError),
     )();
   }
 }
