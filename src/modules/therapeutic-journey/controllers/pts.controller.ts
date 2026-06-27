@@ -49,6 +49,10 @@ import { ListDraftPtsProposalByPatientIdQueryHandler } from "@/modules/therapeut
 import { PaginatedDraftPtsProposalsPresenter } from "@/modules/therapeutic-journey/presenters/paginated-draft-pts-proposals.presenter";
 import { NotAPatientError } from "@/modules/therapeutic-journey/errors/not-a-patient.error";
 import { ListDraftPtsProposalsDto } from "@/modules/therapeutic-journey/dtos/list-draft-pts-proposals.dto";
+import { UpdateSocialSituationService } from "@/modules/therapeutic-journey/services/update-social-situation.service";
+import { UpdateSocialSituationDto } from "@/modules/therapeutic-journey/dtos/update-social-situation.dto";
+import { ProfessionalIsNotRegisteredError } from "@/modules/therapeutic-journey/errors/professional-is-not-registered.error";
+import { ForbiddenError } from "@/common/errors/forbidden.error";
 
 @Controller("v1/pts")
 @ApiTags("Projeto Terapêutico Singular (PTS)")
@@ -61,6 +65,7 @@ export class PtsController {
     private readonly approveDraftPts: ApproveDraftPtsService,
     private readonly rejectDraftPts: RejectDraftPtsService,
     private readonly listDraftPtsProposals: ListDraftPtsProposalByPatientIdQueryHandler,
+    private readonly updatePtsSocialSituation: UpdateSocialSituationService,
   ) {}
 
   @Post("create")
@@ -339,6 +344,60 @@ export class PtsController {
     return pipe(
       () => this.listDraftPtsProposals.execute({ ...query, patientId: patientProfile.getId() }),
       te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @ApiNoContentResponse({ description: "The social situation has been updated sucessfully." })
+  @ApiForbiddenResponse({
+    description: "User has no access to this PTS.",
+    content: {
+      "application/json": {
+        examples: {
+          inconsistentProfessionalProfile: {
+            summary: "The professional profile either doesn't exist or belongs to another user",
+            value: BasicExceptionPresenter.present({
+              message: "O perfil profissional não existe ou pertence a outra conta.",
+            }),
+          },
+          notAuthorized: {
+            summary: "Professional not authorized",
+            value: BasicExceptionPresenter.present({
+              message: "O profissional não está autorizado a manipular o PTS deste paciente.",
+            }),
+          },
+        },
+      },
+    },
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "The body contains validation errors.",
+    type: ValidationErrorBagPresenter,
+  })
+  @ApiParam({
+    name: "patientId",
+    description: "The identifier of the patient whose social situation is to be updated.",
+  })
+  @Patch(":patientId/social-situation/update")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  public async updateSocialSituation(
+    @Param("patientId") patientId: string,
+    @CurrentUser() { account }: AuthCollection,
+    @Body() { socialSituation }: UpdateSocialSituationDto,
+  ) {
+    return pipe(
+      () =>
+        this.updatePtsSocialSituation.execute({
+          patientId,
+          professionalAccount: account,
+          newSocialSituation: socialSituation,
+        }),
+      te.getOrElse((error) => {
+        if (error instanceof ProfessionalIsNotRegisteredError) {
+          throw new ForbiddenError(BasicExceptionPresenter.present(error), { cause: error });
+        }
+
+        return exceptionsFactory.fromError(error);
+      }),
     )();
   }
 }
