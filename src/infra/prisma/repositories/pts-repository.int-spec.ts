@@ -30,15 +30,6 @@ describe("[Integration] Prisma PTS Repository", () => {
     txManager = app.get(TransactionManager);
   });
 
-  beforeAll(async () => {
-    let app: INestApplication<App> = await getTestingApp({ extraProviders: [PrismaPtsRepository] });
-
-    prisma = app.get(PrismaService);
-    rut = app.get(PrismaPtsRepository);
-
-    await app.init();
-  });
-
   beforeEach(async () => {
     patient = await patientsFactory.createAndPersist(prisma);
   });
