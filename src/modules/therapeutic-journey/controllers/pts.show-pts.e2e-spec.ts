@@ -4,6 +4,7 @@ import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
 import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
+import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";
 import { PtsTimeline } from "@/modules/therapeutic-journey/value-objects/pts-timeline.vo";
 import { INestApplication } from "@nestjs/common";
 import { PtsStatus } from "@prisma-gen/enums";
@@ -37,6 +38,8 @@ describe("[e2e] PTS Controller :: Show PTS (v1)", () => {
 
   let patientAccount: Account;
   let patient: Patient;
+
+  let pts: ProjetoTerapeuticoSingular;
 
   const getEndpoint = () => `/v1/pts/${patient.getId().toString()}`;
 
@@ -72,7 +75,7 @@ describe("[e2e] PTS Controller :: Show PTS (v1)", () => {
     patientAccount = await accountsFactory.createAndPersist(prisma);
     patient = await patientsFactory.createAndPersist(prisma, { accountId: patientAccount.getId() });
 
-    await ptsFactory.createAndPersist(prisma, {
+    pts = await ptsFactory.createAndPersist(prisma, {
       patientId: patient.getId(),
       responsibleProfessionalId: authorizedProfessionals.responsible.profile!.getId(),
       multidisciplinaryTeamIds: [authorizedProfessionals.member.profile!.getId()],
@@ -131,6 +134,9 @@ describe("[e2e] PTS Controller :: Show PTS (v1)", () => {
             professionalId: expect.any(String),
             specialism: expect.any(String),
           }),
+          multidisciplinaryTeamIds: expect.arrayContaining(
+            pts.getMultidisciplinaryTeam().getCurrent(),
+          ),
           socialSituation: expect.any(String),
           status: expect.toBeOneOf(Object.values(PtsTimeline.Status)),
           createdAt: expect.any(String),
@@ -161,6 +167,7 @@ describe("[e2e] PTS Controller :: Show PTS (v1)", () => {
         professionalId: expect.any(String),
         specialism: expect.any(String),
       }),
+      multidisciplinaryTeamIds: expect.arrayContaining(pts.getMultidisciplinaryTeam().getCurrent()),
       status: expect.toBeOneOf(Object.values(PtsTimeline.Status)),
       createdAt: expect.any(String),
       acceptedAt: expect.toBeOneOf([expect.any(String), undefined]),

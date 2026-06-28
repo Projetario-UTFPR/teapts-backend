@@ -24,7 +24,9 @@ export class ProfessionalsController {
     description: "Login required.",
     type: BasicExceptionPresenter,
   })
-  public listProfessionals(@Query() { specialisms, limit, name, page }: ListProfessionalsDto) {
+  public listProfessionals(
+    @Query() { specialisms, limit, name, inIds, page }: ListProfessionalsDto,
+  ) {
     return pipe(
       () =>
         this.listProfessionalsQH.execute({
@@ -32,6 +34,7 @@ export class ProfessionalsController {
           limit,
           name,
           specialisms,
+          inIds,
         }),
       taskEither.map(({ professionals, count, currentPage, resolvedLimit }) =>
         PaginatedProfessionalsWithAccountsPresenter.present({

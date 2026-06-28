@@ -11,8 +11,13 @@ import { Injectable } from "@nestjs/common";
 import { ProfessionalFindManyArgs } from "@prisma-gen/models";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
+import { type UUID } from "@/common/uuid";
 
 export type Params = PaginationParams & {
+  /**
+   * Specify professionals by IDs.
+   */
+  inIds?: UUID[];
   specialisms?: Professional.Specialism[];
   name?: string;
 };
@@ -30,9 +35,10 @@ export class ListProfessionalsQueryHandler {
     page,
     name,
     specialisms,
+    inIds,
   }: Params): Promise<Either<IrrecoverableError, Result>> {
     const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
-    const where = this.resolveWhereClause({ specialisms, name });
+    const where = this.resolveWhereClause({ specialisms, name, inIds });
     return pipe(
       te.Do,
       te.apS("professionals", this.fetchProfessionals({ where, limit, offset })),
@@ -89,7 +95,11 @@ export class ListProfessionalsQueryHandler {
     );
   }
 
-  private resolveWhereClause({ specialisms, name }: Pick<Params, "name" | "specialisms">) {
+  private resolveWhereClause({
+    specialisms,
+    name,
+    inIds,
+  }: Pick<Params, "name" | "specialisms" | "inIds">) {
     let where: ProfessionalFindManyArgs["where"] = {};
 
     if (name) where.account = { name: { contains: name, mode: "insensitive" } };
@@ -97,6 +107,8 @@ export class ListProfessionalsQueryHandler {
     if (specialisms) {
       where.specialism = { in: specialisms.map(professionalsMapper.specialismIntoPrisma) };
     }
+
+    if (inIds) where.id = { in: inIds.map((id) => id.toString()) };
 
     return where;
   }

@@ -1,4 +1,5 @@
 import { BasePaginationDto } from "@/common/pagination/pagination-dto";
+import { generateUUID, UUID } from "@/common/uuid";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Expose } from "class-transformer";
@@ -7,6 +8,24 @@ import z from "zod";
 const schema = z
   .object({
     name: z.string("O nome precisa ser um texto.").optional(),
+    inIds: z
+      .preprocess(
+        (value) => {
+          if (typeof value === "string") {
+            return value.split(",").filter((value) => value !== "");
+          }
+
+          if (!value) return undefined;
+
+          return value;
+        },
+        z.array(
+          z.uuid("Os identificadores precisam ser UUIDs válidos."),
+          "Os identificadores precisam estar em uma lista.",
+        ),
+      )
+      .transform((ids) => ids.map((id) => id as UUID))
+      .optional(),
     specialisms: z
       .preprocess(
         (value) => {
@@ -40,6 +59,31 @@ type ListProfessionalsSchema = z.infer<typeof schema>;
 export class ListProfessionalsDto extends BasePaginationDto implements ListProfessionalsSchema {
   @Expose()
   @ApiPropertyOptional({
+    description:
+      "Filters professionals by including only those whose IDs are included in this list.",
+    type: "array",
+    items: {
+      type: "string",
+      format: "uuid",
+      description: "A UUID identifier of a professional profile.",
+    },
+    examples: {
+      "Repeating parameters": {
+        // Swagger vai montar: ?inIds=uuid1&inIds=uuid2
+        value: [generateUUID(), generateUUID()],
+        summary: "Sends multiple IDs by repeating the parameter",
+      },
+      "Comma-separated": {
+        // O Swagger vai montar: ?inIds=uuid1,uuid2
+        value: `${generateUUID()},${generateUUID()}`,
+        summary: "Sends a single parameter with a comma-separated list of IDs",
+      },
+    },
+  })
+  public readonly inIds?: UUID[];
+
+  @Expose()
+  @ApiPropertyOptional({
     description: "Filters professionals by including only those with one of selected specialisms.",
     type: "array",
     items: {
@@ -48,7 +92,7 @@ export class ListProfessionalsDto extends BasePaginationDto implements ListProfe
       enum: Object.values(Professional.Specialism),
     },
   })
-  public readonly specialisms!: Professional.Specialism[];
+  public readonly specialisms?: Professional.Specialism[];
 
   @Expose()
   @ApiPropertyOptional({
