@@ -29,6 +29,7 @@ export class ShowActivePtsQueryHandler {
             include: {
               patient: true,
               responsibleProfessional: { include: { account: true } },
+              multidisciplinaryTeam: { select: { professional: { select: { id: true } } } },
             },
           }),
         (error) =>

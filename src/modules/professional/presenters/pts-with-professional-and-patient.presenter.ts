@@ -11,13 +11,25 @@ import { Prisma } from "@prisma-gen/client";
     "to which it belongs.",
 })
 export class PtsWithProfessionalAndPatientPresenter {
-  @ApiProperty({ description: "", format: "uuid" }) public readonly id!: string;
+  @ApiProperty({ description: "The identifier of this PTS.", format: "uuid" })
+  public readonly id!: string;
 
   @ApiProperty({ description: "Details regarding the patient of the PTS.", type: PatientPresenter })
   public readonly patient!: PatientPresenter;
 
   @ApiProperty({ description: "The professional responsible for this PTS." })
   public readonly responsibleProfessional!: ProfessionalWithAccountPresenter;
+
+  @ApiProperty({
+    description:
+      "The set of identifiers of the professionals that are member of the multidisciplinary team of this PTS.",
+    type: "array",
+    items: {
+      type: "string",
+      format: "uuid",
+    },
+  })
+  public readonly multidisciplinaryTeamIds!: string[];
 
   @ApiPropertyOptional({
     description:
@@ -76,6 +88,7 @@ export class PtsWithProfessionalAndPatientPresenter {
       patient: Prisma.PatientModel;
       responsibleProfessional: Parameters<typeof ProfessionalWithAccountPresenter.present>[0];
       socialSituation: string | undefined;
+      multidisciplinaryTeam: { professional: { id: string } }[];
     },
   ) {
     return new PtsWithProfessionalAndPatientPresenter({
@@ -83,6 +96,9 @@ export class PtsWithProfessionalAndPatientPresenter {
       patient: PatientPresenter.present(row.patient),
       responsibleProfessional: ProfessionalWithAccountPresenter.present(
         row.responsibleProfessional,
+      ),
+      multidisciplinaryTeamIds: row.multidisciplinaryTeam.map(
+        ({ professional }) => professional.id,
       ),
       socialSituation: row.socialSituation,
       status: ptsMapper.statusFromPrisma(row.status),
