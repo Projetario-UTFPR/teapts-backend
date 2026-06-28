@@ -1,4 +1,4 @@
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import * as jose from "jose";
 import type { INestApplication } from "@nestjs/common";
 import accountsFactory from "@test/factories/accounts.factory";
