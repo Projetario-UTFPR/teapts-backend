@@ -24,7 +24,7 @@ services:
     user: "10001:10001"
     ports:
       - "${BLOB_STORAGE_PORT}:9000"
-      - "9001:9001"
+      - "${RUSTFS_CONSOLE_PORT:-9001}:9001"
     volumes:
       - tea_pts_blob_storage:/data
     environment:

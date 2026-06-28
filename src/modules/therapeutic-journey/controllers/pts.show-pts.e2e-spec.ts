@@ -1,4 +1,4 @@
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";

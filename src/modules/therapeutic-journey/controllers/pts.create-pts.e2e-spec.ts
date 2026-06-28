@@ -1,5 +1,5 @@
 import { generateUUID } from "@/common/uuid";
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";

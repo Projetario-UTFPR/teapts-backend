@@ -1,6 +1,6 @@
 import appConfig from "@/configs/app.config";
 import keysetConfig from "@/configs/jwt.config";
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import { JwtStrategy } from "@/infra/auth/jwt/strategy";
 import { getJwtOptions } from "@/infra/auth/jwt/sign-options";
 import { IdentityModule } from "@/modules/identity/identity.module";
@@ -11,6 +11,7 @@ import { PassportModule } from "@nestjs/passport";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "@/infra/auth/jwt/guard";
 import { GetAuthCollectionQueryHandler } from "@/infra/auth/query-handlers/get-auth-collection.query";
+import { RefreshTokenService } from "@/infra/auth/services/refresh-token.service";
 
 @Global()
 @Module({
@@ -35,7 +36,8 @@ import { GetAuthCollectionQueryHandler } from "@/infra/auth/query-handlers/get-a
     JwtStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     GetAuthCollectionQueryHandler,
+    RefreshTokenService,
   ],
-  exports: [AssignTokenService, GetAuthCollectionQueryHandler],
+  exports: [AssignTokenService, GetAuthCollectionQueryHandler, RefreshTokenService],
 })
 export class AuthModule {}

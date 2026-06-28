@@ -4,7 +4,7 @@ import { PtsTimeline } from "../value-objects/pts-timeline.vo";
 import patientsFactory from "@test/factories/patients.factory";
 import accountsFactory from "@test/factories/accounts.factory";
 import professionalsFactory from "@test/factories/professionals.factory";
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import { Hasher } from "@/modules/crypto/hasher";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { getTestingApp } from "@test/get-testing-app";

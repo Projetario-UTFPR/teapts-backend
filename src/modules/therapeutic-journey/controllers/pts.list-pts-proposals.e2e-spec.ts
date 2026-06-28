@@ -1,4 +1,4 @@
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Patient } from "@/modules/patient/aggregates/patient.aggregate";
 import { Professional } from "@/modules/professional/entities/professional.aggregate";

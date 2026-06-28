@@ -1,4 +1,4 @@
-import { AssignTokenService } from "@/infra/auth/assign-token.service";
+import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import ptsMapper from "@/infra/prisma/mappers/pts.mapper";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { ProjetoTerapeuticoSingular } from "@/modules/therapeutic-journey/aggregates/pts.aggregate";

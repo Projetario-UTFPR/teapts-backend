@@ -1,3 +1,4 @@
+import { AuthCollectionPresenter } from "@/infra/auth/presenters/auth-collection.presenter";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
 import { Account } from "@/modules/identity/entities/account.aggregate";
@@ -167,6 +168,36 @@ describe("[e2e] Sessions Controller (v1)", () => {
       expect.arrayContaining(
         professionalProfilesOfAccount.map((professional) => professional.getId().toString()),
       ),
+    );
+  });
+
+  it("should refresh authentication with valid refresh token", { tags: ["refresh"] }, async () => {
+    await professionalsFactory.createAndPersist(prisma);
+
+    const response = await supertest(app.getHttpServer())
+      .post("/v1/sessions/login")
+      .send({
+        email: account.getEmail(),
+        password,
+      })
+      .expect(200);
+
+    const { refreshToken } = response.body;
+
+    const refreshResponse = await supertest(app.getHttpServer())
+      .patch("/v1/sessions/refresh")
+      .send({ refreshToken })
+      .expect(200);
+
+    expect(refreshResponse.body).toEqual(
+      expect.objectContaining({
+        refreshToken: expect.any(String),
+        accessToken: expect.any(String),
+        authCollection: expect.objectContaining({
+          account: expect.objectContaining({ id: expect.any(String) }),
+          professionalProfiles: expect.arrayContaining([]),
+        } satisfies AuthCollectionPresenter),
+      }),
     );
   });
 });
