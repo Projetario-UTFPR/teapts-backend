@@ -42,7 +42,7 @@ class AuthCollectionProfessionalProfilePresenter {
 
   @ApiProperty({
     description: "The specialism of this professional profile.",
-    enum: [Object.values(Professional.Specialism)],
+    enum: Object.values(Professional.Specialism),
   })
   public readonly specialism!: string;
 
