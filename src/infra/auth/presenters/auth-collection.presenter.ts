@@ -71,6 +71,12 @@ export class AuthCollectionPresenter {
   })
   public readonly professionalProfiles!: AuthCollectionProfessionalProfilePresenter[];
 
+  @ApiProperty({
+    description: "Indicates whether this user has a patient profile associated to it.",
+    type: "boolean",
+  })
+  public readonly isPatient!: boolean;
+
   public constructor(props: AuthCollectionPresenter) {
     Object.assign(this, props);
   }
@@ -81,6 +87,7 @@ export class AuthCollectionPresenter {
       professionalProfiles: authCollection.professionalProfiles.map(
         AuthCollectionProfessionalProfilePresenter.present,
       ),
+      isPatient: !!authCollection.patientProfile,
     });
   }
 }
