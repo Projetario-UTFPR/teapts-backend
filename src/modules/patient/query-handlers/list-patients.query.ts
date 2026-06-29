@@ -6,40 +6,30 @@ import { Injectable } from "@nestjs/common";
 import { taskEither as te } from "fp-ts";
 import { pipe } from "fp-ts/lib/function";
 import { UUID } from "@/common/uuid";
-import { PatientFindManyArgs } from "@prisma-gen/models";
+import { PatientFindManyArgs, ProjetoTerapeuticoSingularFindManyArgs } from "@prisma-gen/models";
 import { PatientWithAccountPresenter } from "@/modules/patient/presenters/prisma-patient-with-account.presenter";
 import { PaginatedPatientsPresenter } from "@/modules/patient/presenters/paginated-patients.presenter";
 
 export type Params = PaginationParams & {
-  professionalAccountId: UUID;
+  /**
+   * When present, list only those whom own a PTS that
+   * has the identified professional as responsible or
+   * as multidisciplinary team member.
+   */
+  professionalAccountId?: UUID;
+  /**
+   * When present, list only those with (any) or without (any) active PTS.
+   */
+  withActivePts?: boolean;
 };
 
 @Injectable()
-export class ListPatientsByProfessionalAccountQueryHandler {
+export class ListPatientsQueryHandler {
   public constructor(private readonly prisma: PrismaService) {}
 
-  public execute({ limit, page, professionalAccountId }: Params) {
+  public execute({ limit, page, ...params }: Params) {
     const { offset, resolvedPage, resolvedLimit } = paginationUtils.resolveOffset({ page, limit });
-
-    let where: PatientFindManyArgs["where"] = {
-      projetosTerapeuticosSingulares: {
-        some: {
-          AND: [
-            { status: { in: ["Running", "Planning"] } },
-            {
-              OR: [
-                { responsibleProfessional: { accountId: professionalAccountId.toString() } },
-                {
-                  multidisciplinaryTeam: {
-                    some: { professional: { accountId: professionalAccountId.toString() } },
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      },
-    };
+    const where = this.resolveWhereClause(params);
 
     return pipe(
       te.Do,
@@ -57,6 +47,44 @@ export class ListPatientsByProfessionalAccountQueryHandler {
         }),
       ),
     )();
+  }
+
+  private resolveWhereClause({
+    professionalAccountId,
+    withActivePts,
+  }: Omit<Params, "limit" | "page">) {
+    const where: PatientFindManyArgs["where"] = {};
+    const professionalId = professionalAccountId?.toString();
+
+    const professionalFilter = professionalId
+      ? ({
+          OR: [
+            { responsibleProfessional: { accountId: professionalId } },
+            { multidisciplinaryTeam: { some: { professional: { accountId: professionalId } } } },
+          ],
+        } satisfies ProjetoTerapeuticoSingularFindManyArgs["where"])
+      : undefined;
+
+    const inActiveStatus = {
+      status: { in: ["Running", "Planning"] },
+    } satisfies ProjetoTerapeuticoSingularFindManyArgs["where"];
+
+    if (withActivePts !== undefined) {
+      if (withActivePts) {
+        where.projetosTerapeuticosSingulares = {
+          some: professionalFilter ? { AND: [professionalFilter, inActiveStatus] } : inActiveStatus,
+        };
+      } else {
+        where.projetosTerapeuticosSingulares = {
+          some: professionalFilter,
+          none: inActiveStatus,
+        };
+      }
+    } else if (professionalId) {
+      where.projetosTerapeuticosSingulares = { some: professionalFilter };
+    }
+
+    return where;
   }
 
   private fetchPatients({
@@ -79,7 +107,7 @@ export class ListPatientsByProfessionalAccountQueryHandler {
           }),
         (error) =>
           new IrrecoverableError({
-            message: `Unexpected error occurred in ${ListPatientsByProfessionalAccountQueryHandler.name} when fetching patients.`,
+            message: `Unexpected error occurred in ${ListPatientsQueryHandler.name} when fetching patients.`,
             cause: error as Error,
           }),
       ),
@@ -92,7 +120,7 @@ export class ListPatientsByProfessionalAccountQueryHandler {
         () => this.prisma.patient.count({ where }),
         (error) =>
           new IrrecoverableError({
-            message: `Unexpected error occurred in ${ListPatientsByProfessionalAccountQueryHandler.name} when counting patients.`,
+            message: `Unexpected error occurred in ${ListPatientsQueryHandler.name} when counting patients.`,
             cause: error as Error,
           }),
       ),

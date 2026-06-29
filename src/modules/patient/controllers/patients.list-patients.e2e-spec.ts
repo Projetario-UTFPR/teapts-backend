@@ -1,4 +1,3 @@
-import { UUID } from "@/common/uuid";
 import { AssignTokenService } from "@/infra/auth/services/assign-token.service";
 import { PrismaService } from "@/infra/prisma/prisma";
 import { Hasher } from "@/modules/crypto/hasher";
@@ -26,7 +25,7 @@ describe("[e2e] Patients Controller :: List Patients (v1)", async () => {
   let professionalProfiles: Professional[] = [];
   let accessToken: string;
 
-  const ENDPOINT = "/v1/patients/me";
+  const ENDPOINT = "/v1/patients";
 
   beforeAll(async () => {
     app = await getTestingApp();
@@ -64,145 +63,112 @@ describe("[e2e] Patients Controller :: List Patients (v1)", async () => {
     accessToken = tokens.right.accessToken;
   });
 
-  const generatePatients = async (
-    count: number,
-    responsibleProfessionalId: UUID | undefined,
-    teamProfessionalId: UUID | undefined,
-  ) => {
-    for (let i = 0; i < count; i++) {
-      const patient = await patientsFactory.createAndPersist(prisma);
-      await ptsFactory.createAndPersist(prisma, {
-        patientId: patient.getId().toString(),
-        responsibleProfessionalId,
-        multidisciplinaryTeamIds: teamProfessionalId ? [teamProfessionalId] : [],
-        timeline: ptsFactory.createTimeline({
-          acceptedAt: new Date(),
-          status: PtsTimeline.Status.Planning,
-        }),
-      });
-    }
-  };
+  it("should return forbid if the authenticated account has no professional profiles", async () => {
+    const rawAccount = await accountsFactory.createAndPersist(
+      prisma,
+      { plainPassword: "12345678" },
+      { hasher },
+    );
 
-  it.each(["responsible", "member"] as const)(
-    "should list patients of a professional only when it has a $0 relationship with the patient's active PTS",
-    async (situation) => {
-      for (const profile of professionalProfiles) {
-        if (situation === "member") {
-          await generatePatients(5, undefined, profile.getId());
-          continue;
-        }
+    const tokens = await tokensService.execute({ account: rawAccount });
+    assert(e.isRight(tokens));
 
-        await generatePatients(5, profile.getId(), undefined);
-      }
+    await supertest(app.getHttpServer())
+      .get(ENDPOINT)
+      .set("authorization", `Bearer ${tokens.right.accessToken}`)
+      .expect(403);
+  });
 
-      const otherProfessionalAccount = await accountsFactory.createAndPersist(prisma);
-      const otherProfessional = await professionalsFactory.createAndPersist(prisma, {
-        account: otherProfessionalAccount,
-      });
+  it("should list patients who have at least one active PTS (even if they have inactive ones)", async () => {
+    const patient = await patientsFactory.createAndPersist(prisma);
 
-      // it should not count these pts as they does not belong to authenticated professional
-      for (let i = 0; i < 10; i++) {
-        const patient = await patientsFactory.createAndPersist(prisma);
-        await ptsFactory.createAndPersist(prisma, {
-          patientId: patient.getId().toString(),
-          responsibleProfessionalId: otherProfessional.getId().toString(),
-          timeline: ptsFactory.createTimeline({
-            acceptedAt: new Date(),
-            status: PtsTimeline.Status.Planning,
-          }),
-        });
-      }
-
-      const response = await supertest(app.getHttpServer())
-        .get(`${ENDPOINT}?limit=100`)
-        .set("authorization", `Bearer ${accessToken}`)
-        .expect(200);
-
-      const body = response.body as PaginatedPatientsPresenter;
-
-      expect(body.items.length).toBe(15);
-      expect(body.totalElements).toBe(15);
-    },
-  );
-
-  it(
-    "should not list patient's whose PTS are no longer active, even if they have " +
-      "something to do with the professional",
-    async () => {
-      const profile = professionalProfiles[0];
-      const activeStatuses = [PtsTimeline.Status.Planning, PtsTimeline.Status.Running];
-      const nonActiveStatuses = Object.values(PtsTimeline.Status).filter(
-        (status) => !activeStatuses.includes(status as PtsTimeline.Status),
-      );
-
-      for (const status of nonActiveStatuses) {
-        const patient = await patientsFactory.createAndPersist(prisma);
-        await ptsFactory.createAndPersist(prisma, {
-          patientId: patient.getId().toString(),
-          responsibleProfessionalId: profile.getId().toString(),
-          timeline: ptsFactory.createTimeline({ status }),
-        });
-      }
-
-      const response = await supertest(app.getHttpServer())
-        .get(ENDPOINT)
-        .set("authorization", `Bearer ${accessToken}`)
-        .expect(200);
-
-      const body = response.body as PaginatedPatientsPresenter;
-      expect(body.items.length).toBe(0);
-      expect(body.totalElements).toBe(0);
-    },
-  );
-
-  it("should order by account creation timestamp by default (latests first)", async () => {
-    const profile = professionalProfiles[0];
-    const firstPatient = await patientsFactory.createAndPersist(prisma);
-
-    // we need to force this to have a different creation timestamp to ensure the test works deterministically
-    const secondPatientAccount = await accountsFactory.createAndPersist(prisma, {
-      createdAt: new Date(new Date().getDate() + 10), // forces it to be second when ordering by creation timestamp
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Concluded }),
     });
 
-    const secondPatient = await patientsFactory.createAndPersist(prisma, {
-      accountId: secondPatientAccount.getId(),
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
     });
-
-    for (const patient of [firstPatient, secondPatient]) {
-      await ptsFactory.createAndPersist(prisma, {
-        patientId: patient.getId().toString(),
-        responsibleProfessionalId: profile.getId().toString(),
-        timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Running }),
-      });
-    }
 
     const response = await supertest(app.getHttpServer())
-      .get(ENDPOINT)
+      .get(`${ENDPOINT}?withActivePts=true`)
       .set("authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     const body = response.body as PaginatedPatientsPresenter;
+    expect(body.totalElements).toBe(1);
+    expect(body.items[0].accountId).toBe(patient.getId().toString());
+  });
 
-    expect(body).toEqual(
-      expect.objectContaining({
-        page: 1,
-        perPage: expect.any(Number),
-        totalElements: 2,
-        items: expect.arrayContaining([
-          expect.objectContaining({
-            accountId: secondPatient.getId().toString(),
-            createdAt: expect.any(String),
-            email: expect.any(String),
-            name: expect.any(String),
-            supportContacts: expect.arrayContaining([]),
-          }),
-          expect.objectContaining({ accountId: secondPatient.getId().toString() }),
-        ]),
-      } satisfies PaginatedPatientsPresenter),
+  it("should not list patients who have no active PTS", async () => {
+    const patient = await patientsFactory.createAndPersist(prisma);
+
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Cancelled }),
+    });
+
+    const response = await supertest(app.getHttpServer())
+      .get(`${ENDPOINT}?withActivePts=true`)
+      .set("authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    const body = response.body as PaginatedPatientsPresenter;
+    expect(body.totalElements).toBe(0);
+  });
+
+  it("should only list patients who has no active PTS", async () => {
+    const patientWithActivePts = await patientsFactory.createAndPersist(prisma);
+    const patientWithoutActivePts = await patientsFactory.createAndPersist(prisma);
+    const patientWithNoPts = await patientsFactory.createAndPersist(prisma);
+
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patientWithoutActivePts.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Cancelled }),
+    });
+
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patientWithActivePts.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Cancelled }),
+    });
+
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patientWithActivePts.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Concluded }),
+    });
+
+    const response = await supertest(app.getHttpServer())
+      .get(`${ENDPOINT}?withActivePts=false`)
+      .set("authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    const body = response.body as PaginatedPatientsPresenter;
+    expect(body.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ accountId: patientWithNoPts.getId().toString() }),
+        expect.objectContaining({ accountId: patientWithActivePts.getId().toString() }),
+      ]),
     );
+  });
 
-    // newest comes first
-    expect(body.items[0].accountId).toBe(secondPatient.getId());
-    expect(body.items[1].accountId).toBe(firstPatient.getId());
+  it("should list patients if there is any relationship, regardless of PTS status", async () => {
+    const profile = professionalProfiles[0];
+    const patient = await patientsFactory.createAndPersist(prisma);
+
+    await ptsFactory.createAndPersist(prisma, {
+      patientId: patient.getId().toString(),
+      responsibleProfessionalId: profile.getId().toString(),
+      timeline: ptsFactory.createTimeline({ status: PtsTimeline.Status.Concluded }),
+    });
+
+    const response = await supertest(app.getHttpServer())
+      .get(`${ENDPOINT}`)
+      .set("authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    const body = response.body as PaginatedPatientsPresenter;
+    expect(body.totalElements).toBe(1);
   });
 });

@@ -1,3 +1,4 @@
+import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { BasePaginationDto } from "@/common/pagination/pagination-dto";
 import { AuthCollection } from "@/infra/auth/auth-collection";
 import { CurrentUser } from "@/infra/auth/decorators/current-user";
@@ -6,9 +7,10 @@ import exceptionsFactory from "@/infra/http/exceptions/exceptions-factory";
 import { ValidationErrorBagPresenter } from "@/infra/http/exceptions/validation/presenter";
 import { AccountNotFoundError } from "@/modules/identity/errors/account-not-found.error";
 import { CreatePatientProfileDto } from "@/modules/patient/dtos/create-patient-profile.dto";
+import { ListPatientsDto } from "@/modules/patient/dtos/list-patients.dto";
 import { PaginatedPatientsPresenter } from "@/modules/patient/presenters/paginated-patients.presenter";
 import { PatientPresenter } from "@/modules/patient/presenters/patient.presenter";
-import { ListPatientsByProfessionalAccountQueryHandler } from "@/modules/patient/query-handlers/list-patients-by-professional-account.query";
+import { ListPatientsQueryHandler } from "@/modules/patient/query-handlers/list-patients.query";
 import { CreatePatientProfileService } from "@/modules/patient/services/create-patient-profile.service";
 import {
   BadRequestException,
@@ -34,7 +36,7 @@ import { pipe } from "fp-ts/lib/function";
 @Controller("/v1/patients")
 export class PatientsController {
   public constructor(
-    private readonly listPatientsQuery: ListPatientsByProfessionalAccountQueryHandler,
+    private readonly listPatientsQuery: ListPatientsQueryHandler,
     private readonly createPatientProfile: CreatePatientProfileService,
   ) {}
 
@@ -48,7 +50,7 @@ export class PatientsController {
     type: ValidationErrorBagPresenter,
   })
   @Get("me")
-  public listPatients(
+  public listPatientsOfProfessional(
     @Query() { page, limit }: BasePaginationDto,
     @CurrentUser() { account }: AuthCollection,
   ) {
@@ -56,6 +58,44 @@ export class PatientsController {
       () =>
         this.listPatientsQuery.execute({
           professionalAccountId: account.getId(),
+          withActivePts: true,
+          limit,
+          page,
+        }),
+      te.getOrElse(exceptionsFactory.fromError),
+    )();
+  }
+
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "The paginated list of patients.",
+    type: PaginatedPatientsPresenter,
+  })
+  @ApiForbiddenResponse({
+    description:
+      "The authenticated user is not a professional and thus cannot list other patients.",
+    type: BasicExceptionPresenter,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: "The query parameters are invalid.",
+    type: ValidationErrorBagPresenter,
+  })
+  @Get("")
+  public listPatients(
+    @Query() { page, limit, professionalAccountId, withActivePts }: ListPatientsDto,
+    @CurrentUser() { professionalProfiles, account }: AuthCollection,
+  ) {
+    if (professionalProfiles.length === 0 && !account.isAdmin()) {
+      return exceptionsFactory.fromError(
+        new ForbiddenError({ message: "Só profissionais têm acesso à listagem de pacientes." }),
+      );
+    }
+
+    return pipe(
+      () =>
+        this.listPatientsQuery.execute({
+          professionalAccountId,
+          withActivePts,
           limit,
           page,
         }),
