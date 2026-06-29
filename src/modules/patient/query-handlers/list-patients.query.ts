@@ -63,19 +63,21 @@ export class ListPatientsQueryHandler {
             { multidisciplinaryTeam: { some: { professional: { accountId: professionalId } } } },
           ],
         } satisfies ProjetoTerapeuticoSingularFindManyArgs["where"])
-      : {};
+      : undefined;
+
+    const inActiveStatus = {
+      status: { in: ["Running", "Planning"] },
+    } satisfies ProjetoTerapeuticoSingularFindManyArgs["where"];
 
     if (withActivePts !== undefined) {
       if (withActivePts) {
         where.projetosTerapeuticosSingulares = {
-          some: {
-            ...professionalFilter,
-            status: { in: ["Running", "Planning"] },
-          },
+          some: professionalFilter ? { AND: [professionalFilter, inActiveStatus] } : inActiveStatus,
         };
       } else {
         where.projetosTerapeuticosSingulares = {
-          none: { status: { in: ["Running", "Planning"] } },
+          some: professionalFilter,
+          none: inActiveStatus,
         };
       }
     } else if (professionalId) {
