@@ -9,7 +9,7 @@ import supertest from "supertest";
 import request from "supertest";
 import type { App } from "supertest/types";
 
-describe("[e2e] Identity Controller (v1)", () => {
+describe("[e2e] Identity Controller :: Create Account (v1)", () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let hasher: Hasher;
