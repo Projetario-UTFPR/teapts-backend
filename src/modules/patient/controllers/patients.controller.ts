@@ -8,7 +8,7 @@ import { AccountNotFoundError } from "@/modules/identity/errors/account-not-foun
 import { CreatePatientProfileDto } from "@/modules/patient/dtos/create-patient-profile.dto";
 import { PaginatedPatientsPresenter } from "@/modules/patient/presenters/paginated-patients.presenter";
 import { PatientPresenter } from "@/modules/patient/presenters/patient.presenter";
-import { ListPatientsByProfessionalAccountQueryHandler } from "@/modules/patient/query-handlers/list-patients-by-professional-account.query";
+import { ListPatientsQueryHandler } from "@/modules/patient/query-handlers/list-patients.query";
 import { CreatePatientProfileService } from "@/modules/patient/services/create-patient-profile.service";
 import {
   BadRequestException,
@@ -34,7 +34,7 @@ import { pipe } from "fp-ts/lib/function";
 @Controller("/v1/patients")
 export class PatientsController {
   public constructor(
-    private readonly listPatientsQuery: ListPatientsByProfessionalAccountQueryHandler,
+    private readonly listPatientsQuery: ListPatientsQueryHandler,
     private readonly createPatientProfile: CreatePatientProfileService,
   ) {}
 
@@ -48,7 +48,7 @@ export class PatientsController {
     type: ValidationErrorBagPresenter,
   })
   @Get("me")
-  public listPatients(
+  public listPatientsOfProfessional(
     @Query() { page, limit }: BasePaginationDto,
     @CurrentUser() { account }: AuthCollection,
   ) {
@@ -56,6 +56,7 @@ export class PatientsController {
       () =>
         this.listPatientsQuery.execute({
           professionalAccountId: account.getId(),
+          withActivePts: true,
           limit,
           page,
         }),

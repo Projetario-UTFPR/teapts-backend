@@ -16,7 +16,7 @@ import { either as e } from "fp-ts";
 import supertest from "supertest";
 import { type App } from "supertest/types";
 
-describe("[e2e] Patients Controller :: List Patients (v1)", async () => {
+describe("[e2e] Patients Controller :: List Professional's Patients (v1)", async () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let hasher: Hasher;
