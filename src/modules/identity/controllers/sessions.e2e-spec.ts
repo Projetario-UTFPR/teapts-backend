@@ -196,6 +196,7 @@ describe("[e2e] Sessions Controller (v1)", () => {
         authCollection: expect.objectContaining({
           account: expect.objectContaining({ id: expect.any(String) }),
           professionalProfiles: expect.arrayContaining([]),
+          isPatient: expect.any(Boolean),
         } satisfies AuthCollectionPresenter),
       }),
     );
