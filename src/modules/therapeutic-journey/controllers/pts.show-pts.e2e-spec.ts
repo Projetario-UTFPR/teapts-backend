@@ -199,4 +199,25 @@ describe("[e2e] PTS Controller :: Show PTS (v1)", () => {
       .set("Authorization", `Bearer ${accessTokenResult.right.accessToken}`)
       .expect(403);
   });
+
+  it.each(["Cancelled", "Concluded", "Draft", "Rejected"] as PtsStatus[])(
+    "should respond with not found when patient has no active PTS but wants to see his own active PTS",
+    async (nonActiveStatus) => {
+      const accessTokenResult = await tokensService.execute({
+        // note: it's the PATIENT itself trying to see his own active (and unexisting) PTS
+        account: patientAccount,
+      });
+      assert(either.isRight(accessTokenResult));
+
+      await prisma.projetoTerapeuticoSingular.update({
+        where: { id: pts.getId().toString() },
+        data: { status: nonActiveStatus },
+      });
+
+      await supertest(app.getHttpServer())
+        .get(getEndpoint())
+        .set("Authorization", `Bearer ${accessTokenResult.right.accessToken}`)
+        .expect(404);
+    },
+  );
 });

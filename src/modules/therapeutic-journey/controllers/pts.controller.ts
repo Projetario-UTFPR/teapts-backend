@@ -193,6 +193,13 @@ export class PtsController {
     description: "The PTS got to be successfully retrieved and presented!",
     type: PtsWithProfessionalAndPatientPresenter,
   })
+  @ApiNotFoundResponse({
+    description:
+      "This patient has no active PTS. This is only possible when it is " +
+      "the patient itself trying to look for his own possible active PTS. Professionals " +
+      "trying to access a patient's unexisting active PTS will find forbidden error instead.",
+    type: BasicExceptionPresenter,
+  })
   @ApiForbiddenResponse({
     description: "User has no access to this PTS.",
     content: {
